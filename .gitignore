@@ -1,0 +1,42 @@
+# Private working notes, never committed
+CLAUDE.local.md
+
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# Data (loaders fetch and verify; nothing raw is committed)
+data/raw/
+data/releases/
+corpus/generated/
+corpus/scans/
+
+# Reviewer app state, audit databases, exports (the evaluation corpus copies are committed by checksum only)
+*.duckdb
+*.sqlite
+*.sqlite3
+review/exports/
+.cache/
+
+# OCR and model caches
+tessdata/
+models/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
