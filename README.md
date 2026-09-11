@@ -64,7 +64,7 @@ over-redaction on real records.
 
 ## Part of a portfolio
 
-One of ten projects built over twelve months. It is built on the Compliant AI Gateway's
+One of fifteen projects built over twelve months. It is built on the Compliant AI Gateway's
 redaction engine and proxy and measured with the AI Release Gate. It is the clearest
 demonstration of what the gateway is for: a frontier model used on
 access-to-information records without personal data leaving the boundary, measured.
