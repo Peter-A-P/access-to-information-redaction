@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install
+        run: uv sync --extra detect --group dev
+
+      # en_core_web_sm rather than en_core_web_lg: 12 MB against 382 MB, and the detector
+      # evaluation reports both so the choice is made against a measured number rather
+      # than against a default. SEVER_SPACY_MODEL overrides it.
+      - name: Download the spaCy model
+        run: uv run python -m spacy download en_core_web_sm
+
+      - name: ruff
+        run: uv run ruff check .
+
+      - name: mypy
+        run: uv run mypy
+
+      - name: tests
+        run: uv run pytest -q
+
+      # The taxonomy is a claim about the law, so the generated page has to agree with the
+      # YAML it came from. The test covers this too; running the generator here means a
+      # drift shows up as a diff rather than as an assertion message.
+      - name: The generated taxonomy page is current
+        run: |
+          uv run sever taxonomy render
+          git diff --exit-code docs/taxonomy.md
+
+      # Redaction is destructive or it is decoration. This runs the real export path and
+      # fails the build if any applied box still has recoverable text.
+      - name: The PDF leak test, on real exports
+        run: uv run sever export --documents 6
+
+      - name: The results table is reproducible
+        run: uv run sever report --documents 60 --no-pdf-leak

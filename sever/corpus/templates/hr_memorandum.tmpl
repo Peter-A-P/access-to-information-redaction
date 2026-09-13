@@ -1,0 +1,52 @@
+@doc hr_memorandum
+@meta title: HR memorandum on a workplace complaint
+@meta subject: Complaint under the respectful workplace policy
+@meta traps: an official appearing as a complainant in their own grievance is R1, not K2
+@cast hr=official grievant=official respondent=official adm=official requester=requester
+@block letterhead
+{hr.organisation}
+Human Resources Division - IN CONFIDENCE
+
+@block body
+MEMORANDUM
+
+To: {adm.full_name}, {adm.title}
+From: {hr.full_name}, {hr.title}
+Date: 11 May
+Subject: Complaint under the Respectful Workplace Policy - file {hr.file_number!K6}
+
+@block body
+This memorandum sets out the findings of the review I was asked to conduct.
+
+The complaint was made by {grievant.full_name!R1}, who is employed in this Department as
+{grievant.title}. In the complaint {grievant.given_name!R1} describes a pattern of
+conduct over eleven months and states that the conduct has affected their health. A
+medical certificate was provided in support and is held separately; it records a period
+of leave from 3 February and gives a personal contact number of
+{grievant.personal_phone!R1}. {grievant.given_name!R1} asked that their home address,
+{grievant.home_address!R1}, not be shared with the respondent.
+
+The complaint names {respondent.full_name}, {respondent.title}, as the respondent. The
+conduct described concerns the allocation of work and the conduct of team meetings, all
+of it within the respondent's duties as {respondent.title}. {respondent.given_name}
+responded in writing on 24 April and was interviewed on 2 May.
+
+@block body
+Two further employees were interviewed. Both spoke about the operation of the unit rather
+than about either party personally, and both asked that their accounts be attributed to
+their positions rather than to their names.
+
+A member of the public, {requester.full_name}, who had a service complaint outstanding
+during the same period, is named in the complaint file at Tab 6 because a meeting about
+that complaint is one of the incidents described. Nothing in this review concerns
+{requester.given_name}'s own matter and no finding is made about it.
+
+@block body
+Findings: the allegation of an unreasonable allocation of work is not substantiated. The
+allegation concerning the conduct of meetings is partly substantiated. I recommend
+mediation and a review of the unit's meeting practice.
+
+@block signature
+{hr.full_name}
+{hr.title}
+{hr.work_email}

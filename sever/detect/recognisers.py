@@ -1,0 +1,202 @@
+"""Pattern recognisers for the identifiers a general PII engine does not know about.
+
+Presidio finds names, emails and phone numbers. It does not know that HCS-2024-0881 is a
+case file number, that "MCP 123 456 789 012" is a Newfoundland and Labrador medical care
+plan number, or that EMP-40912 is an employee identifier. Those are exactly the strings an
+access-to-information analyst spends the day on, and the smoke test in this project's
+first hour had Presidio classify a file number as a LOCATION.
+
+Each recogniser is a regular expression plus a confidence. The confidences are not tuned
+here: they are starting values, and `sever eval detector` reports precision and recall per
+recogniser on the labelled corpus so they can be set against evidence rather than taste.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
+
+from sever.detect.types import EntityType
+
+
+@dataclass(frozen=True, slots=True)
+class PatternRecogniser:
+    name: str
+    entity_type: EntityType
+    pattern: re.Pattern[str]
+    score: float
+    # When set, the match only counts if one of these words appears within
+    # `context_window` characters before it. Bare digit runs are ambiguous; "SIN 046 454
+    # 286" is not.
+    context_words: tuple[str, ...] = ()
+    context_window: int = 40
+    # The capture group holding the value, when the pattern needs to match a label it does
+    # not want to redact. Group 0 is the whole match.
+    group: int = 0
+
+    def finditer(self, text: str) -> Iterator[tuple[int, int, str]]:
+        for m in self.pattern.finditer(text):
+            start, end = m.span(self.group)
+            if start < 0:
+                continue
+            if self.context_words and not self._has_context(text, m.start()):
+                continue
+            yield start, end, text[start:end]
+
+    def _has_context(self, text: str, at: int) -> bool:
+        window = text[max(0, at - self.context_window) : at].lower()
+        return any(w in window for w in self.context_words)
+
+
+def _ci(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, re.IGNORECASE)
+
+
+# Newfoundland and Labrador MCP numbers are twelve digits, conventionally grouped in
+# threes. The context requirement is doing real work: twelve grouped digits also describe
+# a phone number written oddly and a purchase order.
+MCP_NUMBER = PatternRecogniser(
+    name="nl_mcp_number",
+    entity_type=EntityType.HEALTH_NUMBER,
+    pattern=re.compile(r"\b\d{3}[ -]?\d{3}[ -]?\d{3}[ -]?\d{3}\b"),
+    score=0.85,
+    context_words=("mcp", "medical care plan", "health card", "health number", "mcp#"),
+)
+
+# A social insurance number is nine digits in threes. Bare nine-digit runs are far too
+# common to redact unconditionally, so this needs either the label or the grouping.
+SIN_NUMBER = PatternRecogniser(
+    name="sin",
+    entity_type=EntityType.SIN,
+    pattern=re.compile(r"\b\d{3}[ -]\d{3}[ -]\d{3}\b"),
+    score=0.8,
+)
+SIN_LABELLED = PatternRecogniser(
+    name="sin_labelled",
+    entity_type=EntityType.SIN,
+    pattern=_ci(r"\b(?:sin|social insurance(?: number)?)\s*[:#]?\s*(\d{3}[ -]?\d{3}[ -]?\d{3})\b"),
+    score=0.95,
+    group=1,
+)
+
+# Departmental file and case numbers: two to five letters, a year, a sequence. This is the
+# shape used across the synthetic corpus and it matches the published federal releases'
+# request numbers (A-2023-00412) as well.
+FILE_NUMBER = PatternRecogniser(
+    name="file_number",
+    entity_type=EntityType.FILE_NUMBER,
+    pattern=re.compile(r"\b[A-Z]{1,5}-(?:19|20)\d{2}-\d{3,6}\b"),
+    score=0.9,
+)
+CASE_NUMBER = PatternRecogniser(
+    name="case_number",
+    entity_type=EntityType.CASE_NUMBER,
+    pattern=_ci(r"\b(?:case|file|reference|ref\.?|request)\s*(?:no\.?|number|#)?\s*[:#]?\s*([A-Z0-9][A-Z0-9\-/]{4,20})\b"),
+    score=0.8,
+    group=1,
+)
+
+EMPLOYEE_ID = PatternRecogniser(
+    name="employee_id",
+    entity_type=EntityType.EMPLOYEE_ID,
+    pattern=_ci(r"\b(?:emp(?:loyee)?|staff|payroll)\s*(?:id|no\.?|number|#)?\s*[:#-]?\s*([A-Z]{0,3}-?\d{4,8})\b"),
+    score=0.85,
+    group=1,
+)
+
+# Email addresses. Presidio has a recogniser for these and it is not enough: it missed
+# "aaronpenashue@gov.nl.ca.example" outright, classifying only the "gov.nl.ca" inside it as
+# a URL. Multi-label government domains are exactly the ones that appear in these records,
+# and a missed work address is a leak, so the pattern here is deliberately permissive about
+# the domain and the overlap rule lets it win over Presidio's URL claim.
+EMAIL = PatternRecogniser(
+    name="email",
+    entity_type=EntityType.EMAIL,
+    pattern=re.compile(r"[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+"),
+    score=0.95,
+)
+
+# Canadian postal codes. Format is strict enough to stand alone.
+POSTAL_CODE = PatternRecogniser(
+    name="postal_code",
+    entity_type=EntityType.POSTAL_CODE,
+    pattern=re.compile(r"\b[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d\b"),
+    score=0.9,
+)
+
+# Street addresses. Loose on purpose: a missed address is a leak and a false positive is
+# a K6 the decision layer discards cheaply.
+STREET_ADDRESS = PatternRecogniser(
+    name="street_address",
+    entity_type=EntityType.ADDRESS,
+    pattern=_ci(
+        r"\b\d{1,5}[A-Z]?\s+(?:[A-Z][\w'.-]*\s+){0,3}"
+        r"(?:street|st\.?|road|rd\.?|avenue|ave\.?|drive|dr\.?|place|pl\.?|lane|ln\.?|"
+        r"crescent|cres\.?|boulevard|blvd\.?|court|ct\.?|way|terrace|highway|hwy\.?)\b"
+    ),
+    score=0.75,
+)
+
+DATE_OF_BIRTH = PatternRecogniser(
+    name="date_of_birth",
+    entity_type=EntityType.DATE_OF_BIRTH,
+    pattern=_ci(
+        r"\b(?:d\.?o\.?b\.?|date of birth|born(?: on)?)\s*[:#]?\s*"
+        r"((?:\d{4}-\d{2}-\d{2})|(?:\d{1,2}\s+\w+\s+\d{4})|(?:\w+\s+\d{1,2},?\s+\d{4}))"
+    ),
+    score=0.9,
+    group=1,
+)
+
+BANK_ACCOUNT = PatternRecogniser(
+    name="bank_account",
+    entity_type=EntityType.FINANCIAL,
+    pattern=_ci(r"\b(?:account|acct\.?|transit|institution)\s*(?:no\.?|number|#)?\s*[:#]?\s*(\d{5,12})\b"),
+    score=0.8,
+    group=1,
+)
+
+# Job titles. Not personal information in themselves, but the decision layer needs them:
+# a title next to a name in a signature block is the strongest K2 signal there is.
+JOB_TITLE = PatternRecogniser(
+    name="job_title",
+    entity_type=EntityType.JOB_TITLE,
+    pattern=_ci(
+        r"\b(?:assistant deputy minister|deputy minister|minister|director(?: of [A-Z][\w ]{2,30})?|"
+        r"regional director|executive director|assistant director|manager|senior manager|"
+        r"coordinator|co-ordinator|supervisor|analyst|policy analyst|senior policy analyst|"
+        r"program officer|programme officer|officer|administrator|clerk|inspector|"
+        r"investigator|adjudicator|registrar|commissioner|solicitor|counsel|"
+        r"chief executive officer|chief[\w ]{0,20}officer|superintendent|principal|"
+        r"social worker|case worker|nurse practitioner|physician|receptionist)\b"
+    ),
+    score=0.7,
+)
+
+DEFAULT_RECOGNISERS: tuple[PatternRecogniser, ...] = (
+    EMAIL,
+    SIN_LABELLED,
+    SIN_NUMBER,
+    MCP_NUMBER,
+    FILE_NUMBER,
+    CASE_NUMBER,
+    EMPLOYEE_ID,
+    POSTAL_CODE,
+    STREET_ADDRESS,
+    DATE_OF_BIRTH,
+    BANK_ACCOUNT,
+    JOB_TITLE,
+)
+
+
+def run(
+    text: str, recognisers: Sequence[PatternRecogniser] = DEFAULT_RECOGNISERS
+) -> list[tuple[int, int, str, PatternRecogniser]]:
+    """Every match from every recogniser, unsorted and possibly overlapping. Overlap
+    resolution belongs to the engine, which also has the Presidio results to weigh."""
+    out: list[tuple[int, int, str, PatternRecogniser]] = []
+    for r in recognisers:
+        for start, end, matched in r.finditer(text):
+            out.append((start, end, matched, r))
+    return out

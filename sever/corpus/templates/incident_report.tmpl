@@ -1,0 +1,61 @@
+@doc incident_report
+@meta title: Incident report
+@meta subject: Incident report and follow-up
+@meta traps: the requester appears as a witness and is still K1; a historical individual dead more than twenty years is K4; an official's personal mobile is R1
+@cast officer=official supervisor=official requester=requester injured=third_party historical=deceased
+@block letterhead
+{officer.organisation}
+INCIDENT REPORT - {officer.file_number!K6}
+
+@block body
+Reported by: {officer.full_name}, {officer.title}
+Employee ID: {officer.employee_id}
+Date of incident: 4 October
+Location: regional office, {officer.office_address}
+
+@block heading
+1. Summary
+
+@block body
+At approximately 10:20 an individual attending the office fell on the stair between the
+first and second floors. The individual, {injured.full_name}, date of birth
+{injured.date_of_birth}, sustained an injury to the left wrist. An ambulance was called
+and {injured.given_name} was taken to hospital. {injured.given_name}'s MCP number, taken
+for the ambulance service, is {injured.mcp} and the contact number given was
+{injured.personal_phone}.
+
+@block heading
+2. Witnesses
+
+@block body
+{requester.full_name}, who was in the waiting area for an unrelated appointment, saw the
+fall and assisted before staff arrived. {requester.given_name} gave an account at the
+time and can be contacted at {requester.personal_phone}. A second member of the public
+declined to give their name.
+
+I was called from the front desk and attended within a minute. I remained with
+{injured.given_name} until the ambulance arrived. My personal mobile,
+{officer.personal_phone}, is recorded here because it is the number the ambulance service
+called back on.
+
+@block heading
+3. History of the stairwell
+
+@block body
+The stairwell was the subject of a report in 1994 prepared by {historical.full_name},
+then the building's inspector, who died on {historical.date_of_death}. That report
+recommended a handrail on both sides. The recommendation does not appear to have been
+carried out.
+
+@block heading
+4. Action taken
+
+@block body
+The stair has been closed pending inspection. {supervisor.full_name},
+{supervisor.title}, was notified at 11:05 and has asked for a follow-up report within
+five working days.
+
+@block signature
+{officer.full_name}
+{officer.title}
+{officer.work_email}

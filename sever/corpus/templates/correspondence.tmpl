@@ -1,0 +1,57 @@
+@doc correspondence
+@meta title: Decision letter on an access request
+@meta subject: Response to your request for records
+@cast minister=public_figure official=official requester=requester neighbour=third_party clerk=official
+@block letterhead
+{official.organisation}
+Office of the {minister.title}
+{minister.full_name}
+
+@block address
+{requester.full_name}
+{requester.home_address}
+{requester.town}, NL {requester.postal_code}
+
+@block body
+Our file: {requester.file_number}
+
+@block salutation
+Dear {requester.given_name} {requester.surname}:
+
+@block body
+I am writing further to your request of 14 March, received by this Department under the
+Access to Information and Protection of Privacy Act, 2015, for records concerning the
+inspection carried out at your property.
+
+Our records confirm that the inspection was scheduled following a report received by the
+Department. The report was made by {neighbour.full_name} of {neighbour.home_address},
+who provided a contact telephone number of {neighbour.personal_phone} and asked to be
+kept informed of the outcome. {neighbour.given_name} declined to provide a written
+statement.
+
+The inspecting officer, {clerk.full_name}, attended on 22 March and prepared the report
+enclosed at Tab 2. {clerk.given_name} can be reached at {clerk.work_email} or
+{clerk.work_phone} should you wish to discuss the findings.
+
+Your own contact details as recorded on the file are {requester.personal_phone} and
+{requester.personal_email}. Please advise this office if either has changed.
+
+@block body
+Portions of the enclosed records have been withheld. A schedule setting out each
+severance and the provision relied upon is enclosed.
+
+You may ask the Information and Privacy Commissioner to review this decision, or you may
+appeal directly to the Supreme Court of Newfoundland and Labrador Trial Division, within
+sixty business days of receiving this letter.
+
+@block signature
+Sincerely,
+
+{official.full_name}
+{official.title}
+{official.organisation}
+{official.work_phone}
+
+@block attachment_note
+Encl. Records (14 pages); Schedule of severances
+c.c. {minister.full_name}, {minister.title}

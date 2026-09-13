@@ -1,0 +1,47 @@
+@doc case_note
+@meta title: Client case notes
+@meta subject: Case notes, client file
+@cast requester=requester worker=official sibling=third_party physician=third_party supervisor=official
+@block heading
+CLIENT CASE NOTES - CONFIDENTIAL
+
+@block body
+Client: {requester.full_name}
+Date of birth: {requester.date_of_birth}
+MCP: {requester.mcp}
+File: {requester.file_number}
+Address: {requester.home_address}, {requester.town}, NL {requester.postal_code}
+Assigned worker: {worker.full_name}, {worker.title}
+
+@block heading
+Contact log
+
+@block body
+02 April - Telephone contact with client at {requester.personal_phone}. Client reports
+ongoing difficulty attending appointments at the Health Sciences Centre. Client consented
+to the Department contacting the clinic on their behalf.
+
+09 April - Client's sibling, {sibling.full_name}, telephoned this office from
+{sibling.personal_phone} without the client's knowledge. {sibling.given_name} stated that
+they hold power of attorney and asked to be added to the file. No documentation was
+produced. {sibling.given_name} became agitated and the call was ended. A note of the call
+was placed on the file and the client was advised.
+
+16 April - Letter received from Dr. {physician.full_name}, whose practice is at
+{physician.home_address}. The letter confirms a diagnosis and recommends that the client
+be prioritised for supported housing. The letter records the client's MCP number as
+{requester.mcp} and gives the physician's direct line as {physician.personal_phone}.
+
+23 April - Case conference. Present: {worker.full_name} ({worker.title}) and
+{supervisor.full_name} ({supervisor.title}). Agreed to escalate the housing request.
+{supervisor.given_name} noted that the sibling has no standing on this file and that any
+further contact from {sibling.full_name} should be logged and not acted upon.
+
+@block body
+Worker's assessment: the client is engaged and cooperative. The pressure from the
+sibling is the principal risk to the plan. I recommend the file be reviewed in six weeks.
+
+@block signature
+{worker.full_name}
+{worker.title}
+Employee ID {worker.employee_id}

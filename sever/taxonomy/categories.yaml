@@ -1,0 +1,212 @@
+# The exemption taxonomy: the fixed set of decisions this tool is allowed to propose.
+#
+# This file is the source of truth. docs/taxonomy.md is generated from it and from the
+# jurisdiction files beside it; never hand-edit the Markdown.
+#
+# A category is not a legal determination. It is a proposal, tied to a provision, that a
+# reviewer approves or rejects. See the README's first screen.
+
+version: 1
+updated: 2026-09-13
+
+# Every code carries one of these decisions. The set is closed: sever.decide may not
+# invent a decision that is not here, and the loader rejects a code that uses another.
+decisions:
+  redact:
+    label: Redact
+    description: >
+      The span is withheld from the released record and appears in the redaction
+      schedule with its category and provision.
+  keep:
+    label: Keep
+    description: >
+      The span is released. A keep proposal is the number nobody publishes: a tool that
+      redacts every official's name is safe and useless.
+  escalate:
+    label: Escalate
+    description: >
+      The tool declines to decide. The span is withheld in the proposal and flagged for
+      the reviewer with the question it could not answer. Withhold and ask, never
+      release and hope.
+  flag:
+    label: Flag only
+    description: >
+      The span or block is surfaced to the reviewer with a provision and no proposal.
+      Used for exemptions this tool does not decide.
+
+codes:
+  - code: R1
+    decision: redact
+    name: Third-party personal information
+    definition: >
+      Personal information about an identifiable individual who is not the requester and
+      who is not acting in an official capacity: identity, contact details, identifiers,
+      health, financial, educational, criminal or employment history, and the views or
+      opinions of others about them.
+    reviewer_question: >
+      Is this individual a third party, and is the information about them personal
+      rather than about the functions of a position they hold?
+    examples:
+      - The complainant's home address in a case note.
+      - A member of the public's date of birth in an incident report.
+      - A named neighbour's account of what they saw.
+    traps:
+      - >
+        An official who is also a complainant in the same record is a third party in that
+        capacity: their complaint is personal information even though their job title is
+        not.
+
+  - code: R2
+    decision: redact
+    name: Mixed span, third-party information entangled with the requester's
+    definition: >
+      A span in which a third party's personal information cannot be separated from the
+      requester's own without severing inside the span. The third party's part is
+      withheld; the remainder of the record is released.
+    reviewer_question: >
+      Can this span be severed so the requester keeps their own information and the
+      third party keeps their privacy?
+    examples:
+      - >
+        "Ms Okonkwo told the investigator that Mr Byrne had shouted at her", on a request
+        made by Mr Byrne.
+    traps:
+      - >
+        Severing the whole sentence over-redacts the requester's own information;
+        severing nothing leaks the third party's.
+
+  - code: K1
+    decision: keep
+    name: The requester's own personal information
+    definition: >
+      Personal information about the individual who made the request. It is released to
+      them. This is the single most consequential keep: a tool that redacts a requester's
+      own information from their own file has failed at the thing they asked for.
+    reviewer_question: >
+      Does this information belong to the requester as configured for this request?
+    examples:
+      - The requester's own address, file number, medical detail or stated opinion.
+    traps:
+      - >
+        The requester mentioned as a witness to someone else's matter is still the
+        requester; the span stays.
+      - A requester's name appearing inseparably next to a third party's is R2, not K1.
+
+  - code: K2
+    decision: keep
+    name: An officer or employee acting in an official capacity
+    definition: >
+      Information about an officer or employee of a public body, or an individual
+      performing services under contract, that relates to the position or the functions
+      of the position: the fact of employment, name, title, business address and
+      telephone number, classification and salary range, the name on a document they
+      prepared in the course of employment, and opinions or views they gave in the course
+      of employment.
+    reviewer_question: >
+      Is this about the person, or about the job they were doing when they did it?
+    examples:
+      - The signature block of the officer who wrote the letter.
+      - A manager's recommendation in a briefing note, given in the course of duty.
+    traps:
+      - An official's personal mobile number or home address is not about the position.
+      - An official's own grievance or medical leave is not about the position.
+
+  - code: K3
+    decision: keep
+    name: Already publicly available
+    definition: >
+      Personal information that is already public: a minister or deputy head named in a
+      published list, a name on the record's own letterhead, an individual named in a
+      published organisation chart or a public register.
+    reviewer_question: >
+      Is this already published somewhere a member of the public can read it?
+    examples:
+      - The name of the minister in the address block of a letter.
+    traps:
+      - Widely known inside the department is not the same as publicly available.
+
+  - code: K4
+    decision: keep
+    name: An individual dead more than twenty years
+    definition: >
+      Information about an individual who has been dead for more than twenty years is
+      outside the definition of personal information.
+    reviewer_question: >
+      Is the date of death in the record, and is it more than twenty years ago?
+    examples:
+      - A historical file naming a person who died in 1968.
+    traps:
+      - >
+        A date of death that is not in the record cannot be assumed. Absent a date in the
+        record, this is E1, not K4.
+
+  - code: K5
+    decision: keep
+    name: Consent given, or a discretionary benefit of a financial nature
+    definition: >
+      Information the individual has consented to disclose, and information relating to a
+      discretionary benefit of a financial nature conferred on an individual, including
+      the name of the individual and the exact nature of the benefit.
+    reviewer_question: >
+      Is there consent on the file, or is this a licence, permit or grant the public body
+      conferred?
+    examples:
+      - The name of a grant recipient and the amount of the grant.
+    traps:
+      - A benefit that is an entitlement rather than discretionary is not K5.
+
+  - code: K6
+    decision: keep
+    name: Not personal information
+    definition: >
+      The detector flagged a span that is not personal information about an identifiable
+      individual: an organisation, a place, a date, a generic role, a program name, a
+      statute.
+    reviewer_question: >
+      Is there an identifiable individual behind this span at all?
+    examples:
+      - Department of Health and Community Services, detected as a person.
+      - The Regional Director, with no name attached anywhere in the record.
+    traps:
+      - >
+        A generic role in a small unit can identify one individual; where it does, it is
+        not K6.
+
+  - code: E1
+    decision: escalate
+    name: Role undeterminable from the record
+    definition: >
+      The record does not say whether the individual is an official acting in an official
+      capacity or a third party, and no rule and no model reached the confidence
+      threshold. The proposal is to withhold; the reviewer is asked the role question.
+    reviewer_question: >
+      Who is this person in this record?
+    examples:
+      - >
+        A surname in a distribution list with no title, no letterhead match and no other
+        mention in the record.
+
+  - code: E2
+    decision: escalate
+    name: Mixed span the rules cannot sever cleanly
+    definition: >
+      A span containing more than one individual's information where the severance point
+      is not determinable. The proposal is to withhold the whole span; the reviewer is
+      asked where to cut.
+    reviewer_question: >
+      Where does the requester's information end and the third party's begin?
+
+  - code: E3
+    decision: flag
+    name: Candidate non-personal exemption
+    definition: >
+      A block that may attract an exemption this tool does not decide: advice and
+      recommendations, solicitor-client privilege, law enforcement, or a third party's
+      business interests. Surfaced to the reviewer with the provision and no proposal.
+      This tool decides personal-information questions; the rest is a different
+      judgement.
+    reviewer_question: >
+      Does one of these exemptions apply? This tool does not say.
+    examples:
+      - A paragraph headed Recommendation in a briefing note.
+      - A paragraph marked Privileged and confidential, legal advice.

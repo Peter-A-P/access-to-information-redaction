@@ -40,3 +40,6 @@ models/
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated results are committed (they are the evidence); scratch exports are not.
+results/*.tmp

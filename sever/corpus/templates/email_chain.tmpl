@@ -1,0 +1,57 @@
+@doc email_chain
+@meta title: Email chain on a service complaint
+@meta subject: RE: Service complaint - follow up required
+@meta traps: a quoted reply has a different author; a signature inside a quote belongs to the quoted sender
+@cast coordinator=official manager=official requester=requester witness=third_party director=official
+@block email_header
+From: {coordinator.full_name} <{coordinator.work_email}>
+Sent: Thursday, 18 June, 4:12 PM
+To: {manager.full_name} <{manager.work_email}>
+Cc: {director.full_name} <{director.work_email}>
+Subject: RE: Service complaint - follow up required
+
+@block body
+Thanks. I have added the note to the file and told the client we will write this week.
+
+For the record, the client is {requester.full_name}, file {requester.file_number}, and
+the best number is {requester.personal_phone}. The client has asked that we not call
+before 10 AM.
+
+The other individual mentioned in the complaint is {witness.full_name}, who was in the
+waiting area and has since written to us separately from {witness.personal_email}. I do
+not think we need anything further from {witness.given_name} at this stage.
+
+@block signature
+{coordinator.full_name}
+{coordinator.title}
+{coordinator.organisation}
+{coordinator.work_phone}
+
+@block email_header
+From: {manager.full_name} <{manager.work_email}>
+Sent: Thursday, 18 June, 2:45 PM
+To: {coordinator.full_name} <{coordinator.work_email}>
+Subject: Service complaint - follow up required
+
+@block body
+Can you confirm whether the client has been contacted? {director.given_name} asked at
+the operations meeting this morning and I did not have an answer.
+
+If it helps, the original complaint came in through the online form on 2 June and the
+acknowledgement went out the same day.
+
+@block signature
+{manager.full_name}
+{manager.title}
+{manager.work_phone}
+
+@block email_header
+From: {witness.full_name} <{witness.personal_email}>
+Sent: Wednesday, 17 June, 9:03 AM
+To: {coordinator.full_name} <{coordinator.work_email}>
+Subject: What I saw on 2 June
+
+@block body
+I was waiting for my own appointment and I saw what happened. I live at
+{witness.home_address} and you can reach me on {witness.personal_phone} if you need a
+statement. I would rather my name was not given to the other person involved.

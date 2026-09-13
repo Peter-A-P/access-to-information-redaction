@@ -1,0 +1,42 @@
+# A public register: names that are already public, and where that was checked.
+#
+# This file is SYNTHETIC. It exists to exercise the K3 rule and to document the format. It
+# is not an authority on who holds any office, and nobody named in it is real: the names
+# are drawn from the same invented pools as the corpus personas.
+#
+# A public body replaces this with its own published lists (the ministry list, the
+# published organisation chart, the deputy heads list) and points the configuration at
+# them. Every entry needs a source and a date, for the same reason every taxonomy provision
+# does: "publicly available" is a claim, it ends up in a redaction schedule, and a claim in
+# a schedule needs somewhere a reader can go and check it.
+#
+# Note what is NOT in here. Names printed on a record's own letterhead are added to the
+# register at run time, scoped to that one document, by
+# PublicRegister.extended_with_letterhead. A name on this letter's letterhead is being
+# published by the department in the act of writing the letter; carrying it into the
+# register for every other record in the request would be an inference rather than an
+# observation, and the scoping is what keeps the two apart.
+
+name: synthetic-illustrative
+description: >
+  Invented office holders, for exercising the already-publicly-available rule. Replace with
+  a real published list before using this tool on a real request.
+
+entries:
+  - name: Perpetua Quirke
+    title: Minister of Health and Community Services
+    organisation: Department of Health and Community Services
+    source: an invented ministry list, for illustration only
+    checked_on: 2026-09-13
+
+  - name: Ignatius Bonnell
+    title: Deputy Minister of Health and Community Services
+    organisation: Department of Health and Community Services
+    source: an invented deputy heads list, for illustration only
+    checked_on: 2026-09-13
+
+  - name: Delphine Rowsell
+    title: Information and Privacy Commissioner
+    organisation: Office of the Information and Privacy Commissioner
+    source: an invented list of officers of the House of Assembly, for illustration only
+    checked_on: 2026-09-13

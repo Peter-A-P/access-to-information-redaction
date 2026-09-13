@@ -1,0 +1,260 @@
+# Canada, federal: the taxonomy codes mapped to provisions of the Access to Information
+# Act and the Privacy Act.
+#
+# Verification rule enforced by the loader and by tests/test_taxonomy.py: a provision is
+# verified only if it carries a quote, the date it was checked and the URL it was checked
+# against. Anything else must say, in "unverified", why it has not been checked. There is
+# no third state and nothing defaults to verified.
+#
+# Adding a jurisdiction is another file exactly like this one.
+
+jurisdiction: federal
+name: Canada (federal)
+version: 1
+updated: 2026-09-13
+
+statutes:
+  atia:
+    title: Access to Information Act
+    citation: R.S.C., 1985, c. A-1
+    url: https://laws-lois.justice.gc.ca/eng/acts/A-1/
+    consolidated_to: 2026-07-21
+  privacy:
+    title: Privacy Act
+    citation: R.S.C., 1985, c. P-21
+    url: https://laws-lois.justice.gc.ca/eng/acts/P-21/
+    consolidated_to: 2026-07-21
+
+mappings:
+  R1:
+    provisions:
+      - statute: atia
+        section: 19(1)
+        heading: Personal information
+        quote: >-
+          Subject to subsection (2), the head of a government institution shall refuse to
+          disclose any record requested under this Part that contains personal
+          information.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-19.html
+      - statute: privacy
+        section: "3"
+        heading: Definition of personal information
+        quote: >-
+          personal information means information about an identifiable individual that is
+          recorded in any form.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+    note: >
+      Section 19 of the Act imports the Privacy Act definition wholesale, so the question
+      the tool actually answers for R1 is the definitional one: is there an identifiable
+      individual, and is the information about them.
+
+  R2:
+    provisions:
+      - statute: atia
+        section: "25"
+        heading: Severability
+        quote: >-
+          where a request is made to a government institution for access to a record that
+          the head of the institution is authorized to refuse to disclose under this Part
+          by reason of information or other material contained in the record, the head of
+          the institution shall disclose any part of the record that does not contain, and
+          can reasonably be severed from any part that contains, any such information or
+          material.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-25.html
+      - statute: atia
+        section: 19(1)
+        heading: Personal information
+        quote: >-
+          Subject to subsection (2), the head of a government institution shall refuse to
+          disclose any record requested under this Part that contains personal
+          information.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-19.html
+    note: >
+      R2 exists because section 25 makes severance mandatory, not optional. Withholding a
+      whole sentence to protect one name in it is a section 25 failure, and it is the
+      failure this project measures as over-redaction.
+
+  K1:
+    provisions:
+      - statute: privacy
+        section: 12(1)
+        heading: Right of access
+        quote: >-
+          Subject to this Act, every individual who is a Canadian citizen or a permanent
+          resident within the meaning of subsection 2(1) of the Immigration and Refugee
+          Protection Act has a right to and shall, on request, be given access to (a) any
+          personal information about the individual contained in a personal information
+          bank.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-12.html
+    note: >
+      Federally this is the one code whose anchor sits outside the Access to Information
+      Act. A requester's own personal information is still "personal information" for
+      section 19, so on a pure Access to Information Act request it is technically
+      exempt; the right of access to one's own information lives in section 12 of the
+      Privacy Act and such requests are handled there. The tool proposes K1 because the
+      releasing analyst is almost always working a combined or a Privacy Act file, and
+      because redacting a requester's own information from their own record is the
+      failure that makes a tool useless. A public body that wants the strict Access to
+      Information Act reading sets keep_requester_information to false in the request
+      configuration and K1 becomes R1.
+
+  K2:
+    provisions:
+      - statute: privacy
+        section: 3(j)
+        heading: Exclusion, officers and employees of a government institution
+        quote: >-
+          information about an individual who is or was an officer or employee of a
+          government institution that relates to the position or functions of the
+          individual.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+      - statute: privacy
+        section: 3(k)
+        heading: Exclusion, individuals performing services under contract
+        quote: >-
+          information about an individual who is or was performing services under contract
+          for a government institution that relates to the services performed.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+      - statute: privacy
+        section: 3(j.1)
+        heading: Exclusion, ministerial advisers and staff
+        unverified: >
+          The paragraph exists in the consolidated text and covers the identity of
+          ministerial advisers and ministers' staff, but the exact wording was not
+          captured on 2026-09-13 and no quote is claimed. K2 does not depend on it: (j)
+          and (k) carry the code on their own.
+    note: >
+      The exclusion is expressly limited to sections 7, 8 and 26 of the Privacy Act and
+      section 19 of the Access to Information Act. That is the section this tool operates
+      under, so the exclusion applies. The words that do the work are "relates to the
+      position or functions": an official's own grievance, medical leave or home address
+      does not, and is R1.
+
+  K3:
+    provisions:
+      - statute: atia
+        section: 19(2)(b)
+        heading: Where disclosure authorized, publicly available
+        quote: >-
+          The head of a government institution may disclose any record requested under
+          this Part that contains personal information if the information is publicly
+          available.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-19.html
+    note: >
+      Subsection 19(2) is discretionary ("may disclose"), so K3 is a proposal to exercise
+      a discretion, not a statement that the head must. The reviewer holds the discretion;
+      the tool supplies the register match that makes it available.
+
+  K4:
+    provisions:
+      - statute: privacy
+        section: 3(m)
+        heading: Exclusion, individuals dead more than twenty years
+        quote: >-
+          information about an individual who has been dead for more than twenty years.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+
+  K5:
+    provisions:
+      - statute: atia
+        section: 19(2)(a)
+        heading: Where disclosure authorized, consent
+        quote: >-
+          The head of a government institution may disclose any record requested under
+          this Part that contains personal information if the individual to whom it
+          relates consents to the disclosure.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-19.html
+      - statute: privacy
+        section: 3(l)
+        heading: Exclusion, discretionary benefit of a financial nature
+        quote: >-
+          information relating to any discretionary benefit of a financial nature,
+          including the granting of a licence or permit, conferred on an individual,
+          including the name of the individual and the exact nature of the benefit.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+    note: >
+      Two different mechanisms share one code because they share one reviewer question
+      ("is there a reason on the file that this may be released"). The generated schedule
+      cites whichever provision the rule fired on, not both.
+
+  K6:
+    provisions:
+      - statute: privacy
+        section: "3"
+        heading: Definition of personal information
+        quote: >-
+          personal information means information about an identifiable individual that is
+          recorded in any form.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-3.html
+    note: >
+      K6 is not an exemption and not an exception to one. It records that the detector
+      fired on something the definition does not reach. It is carried in the taxonomy so
+      that a detector false positive is measured as a detector error rather than
+      disappearing into the decision layer's accuracy.
+
+  E1:
+    provisions: []
+    note: >
+      An escalation is a question, not a provision. The record does not answer the role
+      question, so no section can be cited yet. The reviewer's answer selects K2 or R1 and
+      the schedule cites that code's provision.
+
+  E2:
+    provisions:
+      - statute: atia
+        section: "25"
+        heading: Severability
+        quote: >-
+          the head of the institution shall disclose any part of the record that does not
+          contain, and can reasonably be severed from any part that contains, any such
+          information or material.
+        checked_on: 2026-09-13
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-25.html
+    note: >
+      E2 is escalated rather than decided precisely because section 25 requires a
+      judgement about what can reasonably be severed, and "reasonably" is the reviewer's
+      word, not the tool's.
+
+  E3:
+    provisions:
+      - statute: atia
+        section: "16"
+        heading: Law enforcement and investigations
+        unverified: >
+          Section number and marginal heading read from the consolidated text on
+          2026-09-13; no quote captured because E3 makes no proposal and cites the
+          heading only, so the reviewer opens the section themselves.
+      - statute: atia
+        section: "20"
+        heading: Third party information
+        unverified: >
+          Section number and marginal heading read from the consolidated text on
+          2026-09-13; no quote captured, same reason as section 16.
+      - statute: atia
+        section: "21"
+        heading: Advice, etc.
+        unverified: >
+          Section number and marginal heading read from the consolidated text on
+          2026-09-13; no quote captured, same reason as section 16.
+      - statute: atia
+        section: "23"
+        heading: Protected information, solicitors, advocates and notaries
+        unverified: >
+          Section number and marginal heading read from the consolidated text on
+          2026-09-13; no quote captured, same reason as section 16.
+    note: >
+      These four are flags with no proposal. They are in the taxonomy so that a reviewer
+      reading a briefing note is not left to notice the advice exemption unaided, and so
+      that the evaluation can report how often the flag was useful.

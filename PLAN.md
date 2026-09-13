@@ -1,6 +1,9 @@
 # Plan: Access-to-Information Redaction
 
-**Written:** 2026-09-07. **Status:** plan only, nothing built.
+**Written:** 2026-09-07. **Status:** building. Started 2026-09-13, about eleven months
+ahead of the Aug 2027 slot, because nothing in the portfolio blocks it. Week 1 and most
+of week 2 are built and measured; section 12 records every place the build departed
+from this plan and why.
 
 **Build:** three weeks, Aug 2 to Aug 22 2027, slack to Aug 31 (the last month of the
 twelve). **Package:** `sever`, after the access-law term for redacting part of a record and
@@ -287,3 +290,131 @@ Whichever produces the clearest evidence becomes `docs/rejected.md`.
 | Consultation workflow with third parties (notice and representations) | The schedule already identifies third-party spans by category |
 | Learning from reviewer decisions | The audit log has every reviewer correction; training on it is a data question for later, with consent and jurisdiction rules first |
 | A French-language track | Templates and personas are language-parameterised; the detector's French recognisers are the missing piece |
+
+---
+
+## 12. Amendments from the build
+
+Written 2026-09-13, the first build day. This plan is not edited in place: what turned out
+differently is recorded here, with the reason, so the plan and the code can be read against
+each other.
+
+### 12.1 The build started eleven months early
+
+The Aug 2027 slot was chosen because this project is fed by 04 and 03. Neither blocks the
+parts built here, and the portfolio has been running ahead across the board, so the work
+started on 2026-09-13. Nothing else in the sequence moves.
+
+### 12.2 04 Part B does not exist, so this project owns a detector and a placeholder policy
+
+The plan has detection coming from `boundary.redact` and substitution from the gateway's
+policy for data class `personal`, both due in 04 Part B in May 2027. Section 8 anticipated
+the **proxy** slipping and said the decision layer would "call the library directly with
+the same redaction module". That contingency does not apply: `boundary` v0.2.0 has
+`Gateway`, `ChatRequest` and the ledger, and no redaction module at all. There is no
+library to call.
+
+So `sever` owns both, behind seams:
+
+- `sever.detect.types.Detector` is a protocol, and `SeverDetector` implements it on the
+  same stack the plan named (Presidio plus spaCy) with recognisers for the identifiers a
+  general engine does not know. When 04 Part B lands, a `BoundaryDetector` implements the
+  same protocol and nothing downstream changes.
+- `sever.decide.placeholders` performs the substitution locally and the request still goes
+  through `boundary.Gateway` with the data class recorded on the call. When the gateway's
+  policy exists, this module becomes the fallback and the guard stays where it is.
+
+The paired placeholders-against-raw-text ablation is unaffected: it compares two payloads,
+and which component builds them does not change what it measures.
+
+### 12.3 A second, detector-independent scrub was added to the outbound boundary
+
+Not in the plan, and the plan was wrong to omit it. Section 2.3 assumed that substituting
+detected entities was sufficient to keep personal information inside the boundary. The
+corpus-wide test found 74 real values leaving it, from three causes, the third of which is
+structural: **Presidio's recall is not 100 percent, and a boundary built on detections
+inherits every miss.**
+
+`sever.decide.placeholders.scrub_unrecognised` now masks anything proper-noun-shaped or
+identifier-shaped that survives substitution, unless it is on a list of terms that carry
+decision-relevant meaning and identify nobody. The full account is in `docs/rejected.md`.
+This costs the model context and therefore accuracy, and the ablation in section 1 measures
+that cost; the alternative costs a name.
+
+### 12.4 The PDF leak test asks a different question than section 2.5 specified
+
+Section 2.5 says the test "asserts that no redacted string is recoverable" from the text
+layer or an OCR of the rendering. Implemented literally, that test is wrong in both
+directions. It over-reports: on the first run it flagged ten leaks, all of them the word
+"Minister" appearing correctly in an unredacted heading elsewhere on the page. And it
+under-reports, because a name that survives inside a box but is split across a line by the
+extractor does not match a substring test.
+
+The test now extracts the text clipped to **each applied rectangle** and asserts it is
+empty, which is what a redaction actually claims to have done and is checkable exactly. The
+export returns the rectangles it applied so the checker can do this. A companion test builds
+a deliberately broken export, a filled rectangle drawn over live text, and asserts the
+checker catches it.
+
+### 12.5 The audit log's immutability rests on a hash chain, not on the database
+
+Section 2.6 says rows are never edited. The first implementation added DuckDB rules to
+refuse UPDATE and DELETE. DuckDB has neither rules nor triggers, the statements were parser
+errors, and the code swallowed them and set a `rules_enforced` flag that was always false
+and read like a guarantee. That is worse than no defence and it is gone.
+
+Immutability now rests on two things that are real: the module exposes no method that can
+change a row, and every row carries a hash chained to its predecessor, so a row that is
+changed, removed or reordered breaks the chain and `verify_chain` says which one. The
+audit log also stores a sha256 of the severed text rather than the text, so the log of what
+was withheld does not itself contain the personal information.
+
+### 12.6 An official's employee number is R1, not K2
+
+A judgement the plan's table did not reach. The Privacy Act exclusion for officials covers
+information that "relates to the position or functions", and its examples are the title,
+the business address and telephone number, the classification and the salary range. A
+payroll identifier is an identifying number assigned to the individual, which is the
+definition's own paragraph (c), and releasing bodies redact them in practice. This moves
+the K2 column, so it is written down in `sever/corpus/personas.py` where it can be argued
+with rather than discovered in a confusion matrix.
+
+For the same reason, an organisation name is K6 for every persona rather than K2 for an
+official's employer: a department is an institution, not a person.
+
+### 12.7 The corpus is 210 single-page documents
+
+The plan says 200-plus pages across six document types, roughly 150 native and 50 scanned.
+The native track is built: 210 documents, one page each, 5,355 labelled spans, six
+templates cycled with a fresh cast per document. Persona names are unique within a document
+and repeat across the corpus, which is both necessary (a pool of 32 forenames and 32
+surnames cannot make 1,000 unique casts) and right (a real disclosure package names the
+same officials repeatedly, and a corpus that invents fresh people every time would be
+testing an easier problem).
+
+Multi-page documents and the scanned track are not built. Section 5 named the scan track as
+the first thing to drop if behind; it is not dropped, it is not yet started.
+
+### 12.8 Provision verification is partial, and the format makes that visible
+
+Section 2.1 says provisions are "verified against the consolidated texts in week 1". 18 of
+33 are. The federal mapping is 13 of 18; the Newfoundland and Labrador mapping is 5 of 15,
+and the largest gap is the paragraph letters inside ATIPPA section 40(2), which is the
+exception K2 rests on and therefore the code the whole over-redaction number turns on.
+
+Rather than leave this as an omission, the taxonomy format refuses a provision that is
+neither verified (quote, date read, URL read from) nor explicitly marked unverified with a
+reason. `docs/taxonomy.md` prints the count at the top. Nothing defaults to verified.
+
+### 12.9 Not built yet
+
+From the definition of done in section 10, still outstanding: the model layer has been
+written and tested but never run against a live model, so there is no measured
+model-through-the-gateway result, no placeholders ablation, and no cost per page; the
+model-only and rules-only baselines (the sentence-only and blunt ones are measured); the
+scanned track and its character error rate; the published-federal-releases track; the
+reviewer web app and the reviewer time study; the hosted demo.
+
+The model layer is switched off by default and the CLI will not turn it on by accident,
+because a corpus run is thousands of calls and the portfolio's rule is a hard spend cap
+before the first call. No cap has been set for this project, so nothing has been spent.

@@ -1,0 +1,194 @@
+# Newfoundland and Labrador: the taxonomy codes mapped to provisions of the Access to
+# Information and Protection of Privacy Act, 2015.
+#
+# Same verification rule as federal.yaml: quote, checked_on and checked_against, or an
+# explicit reason in "unverified". The NL Act is a single statute covering both access and
+# privacy, so the mapping is simpler than the federal pair but the paragraph-level
+# exceptions inside section 40(2) are numerous and several are recorded here unverified
+# rather than guessed.
+
+jurisdiction: nl
+name: Newfoundland and Labrador
+version: 1
+updated: 2026-09-13
+
+statutes:
+  atippa:
+    title: Access to Information and Protection of Privacy Act, 2015
+    citation: SNL 2015, c. A-1.2
+    url: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+    consolidated_to: unknown
+
+mappings:
+  R1:
+    provisions:
+      - statute: atippa
+        section: 40(1)
+        heading: Disclosure harmful to personal privacy
+        quote: >-
+          The head of a public body shall refuse to disclose personal information to an
+          applicant where the disclosure would be an unreasonable invasion of a third
+          party's personal privacy.
+        checked_on: 2026-09-13
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+      - statute: atippa
+        section: "2"
+        heading: Definition of personal information
+        unverified: >
+          The definition was read on 2026-09-13 and is materially the federal one plus
+          sex, sexual orientation, political belief and health care status, but it was
+          read in summary rather than captured verbatim, so no quote is claimed here.
+    note: >
+      The NL test is different in kind from the federal one and the difference matters.
+      Federally, section 19 refuses disclosure of personal information as such. Here the
+      refusal is triggered by an "unreasonable invasion" of privacy, section 40(4) sets
+      out presumptions of unreasonable invasion and section 40(5) sets out the factors to
+      weigh. A single R1 code cannot carry that weighing, so under this configuration R1
+      means "presumptively an unreasonable invasion, for the reviewer to weigh", and
+      docs/escalation.md records that the tool does not perform the section 40(5) balance.
+
+  R2:
+    provisions:
+      - statute: atippa
+        section: 8(2)
+        heading: Right of access, severance
+        quote: >-
+          The right of access to a record does not extend to information excepted from
+          disclosure under this Act, but if it is reasonable to sever that information
+          from the record, an applicant has a right of access to the remainder of the
+          record.
+        checked_on: 2026-09-13
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+      - statute: atippa
+        section: 40(1)
+        heading: Disclosure harmful to personal privacy
+        quote: >-
+          The head of a public body shall refuse to disclose personal information to an
+          applicant where the disclosure would be an unreasonable invasion of a third
+          party's personal privacy.
+        checked_on: 2026-09-13
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+
+  K1:
+    provisions:
+      - statute: atippa
+        section: 8(1)
+        heading: Right of access
+        quote: >-
+          A person who makes a request under section 11 has a right of access to a record
+          in the custody or under the control of a public body, including a record
+          containing personal information about the applicant.
+        checked_on: 2026-09-13
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+    note: >
+      Cleaner than the federal position: the NL right of access expressly includes the
+      applicant's own personal information in the same section, and section 40 protects a
+      third party's privacy rather than personal information at large. K1 needs no
+      configuration switch under this jurisdiction.
+
+  K2:
+    provisions:
+      - statute: atippa
+        section: 40(2)
+        heading: Exceptions, employment responsibilities of a public body officer
+        unverified: >
+          Section 40(2) contains an exception for information about a third party's
+          position, functions or remuneration as an officer, employee or member of a
+          public body, and a further one for services performed under contract. The
+          paragraph letters were not confirmed on 2026-09-13 and are not guessed here.
+          Confirm the letters against the consolidated text before the schedule generated
+          under this jurisdiction is shown to anyone.
+    note: >
+      This is the largest open item in the NL mapping and it is the code the whole
+      over-redaction number turns on, so it is flagged rather than filled in.
+
+  K3:
+    provisions:
+      - statute: atippa
+        section: 40(2)
+        heading: Exceptions, information available to the public
+        unverified: >
+          Section 40(2) includes exceptions covering information a third party has
+          provided for a public event or a published honour or award. Whether the Act
+          carries a general "publicly available" exception in the same terms as the
+          federal 19(2)(b) was not confirmed on 2026-09-13. Do not rely on this row.
+
+  K4:
+    provisions:
+      - statute: atippa
+        section: 40(5)
+        heading: Relevant circumstances, information about a deceased person
+        unverified: >
+          NL treats the passage of time since a death as a factor in the section 40(5)
+          weighing rather than as a hard exclusion from the definition, which is a real
+          difference from the federal paragraph 3(m). The exact paragraph and the period
+          were not confirmed on 2026-09-13.
+    note: >
+      Because this is a factor rather than an exclusion, the NL configuration should
+      arguably route K4 to escalation rather than to keep. That is a taxonomy question,
+      not a code question, and it is recorded in docs/escalation.md as open.
+
+  K5:
+    provisions:
+      - statute: atippa
+        section: 40(2)
+        heading: Exceptions, consent and discretionary benefits
+        unverified: >
+          Section 40(2) includes both an applicant-consent exception and a
+          discretionary-benefit exception. Paragraph letters not confirmed on 2026-09-13.
+
+  K6:
+    provisions:
+      - statute: atippa
+        section: "2"
+        heading: Definition of personal information
+        unverified: >
+          Same definition row as R1: read on 2026-09-13, summarised rather than quoted.
+    note: >
+      As federally, K6 records a detector false positive rather than an exemption.
+
+  E1:
+    provisions: []
+    note: >
+      Same as federally: an escalation is a question, so there is no provision to cite.
+
+  E2:
+    provisions:
+      - statute: atippa
+        section: 8(2)
+        heading: Right of access, severance
+        quote: >-
+          The right of access to a record does not extend to information excepted from
+          disclosure under this Act, but if it is reasonable to sever that information
+          from the record, an applicant has a right of access to the remainder of the
+          record.
+        checked_on: 2026-09-13
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+
+  E3:
+    provisions:
+      - statute: atippa
+        section: "29"
+        heading: Policy advice or recommendations
+        unverified: >
+          Section number and heading read from the consolidated text on 2026-09-13; no
+          quote captured because E3 makes no proposal and cites the heading only.
+      - statute: atippa
+        section: "30"
+        heading: Legal advice
+        unverified: >
+          Section number and heading read on 2026-09-13; no quote captured, same reason.
+      - statute: atippa
+        section: "31"
+        heading: Disclosure harmful to law enforcement
+        unverified: >
+          Section number and heading read on 2026-09-13; no quote captured, same reason.
+      - statute: atippa
+        section: "39"
+        heading: Disclosure harmful to business interests of a third party
+        unverified: >
+          Section number and heading read on 2026-09-13; no quote captured, same reason.
+    note: >
+      NL also has a public-interest override at section 9 that can defeat a discretionary
+      exception. This tool does not apply it and does not flag for it; that is recorded in
+      docs/escalation.md as out of scope rather than left implicit.

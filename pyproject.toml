@@ -1,0 +1,111 @@
+[project]
+name = "sever"
+version = "0.0.1"
+description = "Context-dependent redaction proposals for access-to-information requests: an exemption taxonomy mapped to public legislation, a rules-then-model decision layer, a reviewer workflow with an append-only audit log, and true-redaction output."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+authors = [{ name = "Peter Parker" }]
+license = { text = "MIT" }
+dependencies = [
+  # Validates the taxonomy YAML, the corpus manifests and the model's constrained JSON.
+  # A taxonomy that parses but is wrong is the failure mode this guards against.
+  "pydantic>=2,<3",
+  # The taxonomy, the persona and template files, and the corpus manifests are YAML.
+  # 6.x is the only maintained line.
+  "pyyaml>=6,<7",
+  # PDF ingestion and, more importantly, true redaction: apply_redactions removes the
+  # text under the box. Pinned to 1.x because the redaction API is what the leak test
+  # exercises and a major bump would change it.
+  "pymupdf>=1.26,<2",
+  # DOCX ingestion. 1.x has been the stable line for years.
+  "python-docx>=1,<2",
+  # The audit log. Append-only is enforced in code over a DuckDB table; 1.x is stable
+  # and its file format is stable within the major.
+  "duckdb>=1,<2",
+  # The reviewer app. FastAPI's 0.x is de facto stable but minor bumps do move things,
+  # so the range is narrow.
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+  # Server-rendered reviewer pages; the app is htmx over Jinja, not a SPA.
+  "jinja2>=3,<4",
+  # The CLI. Typer 0.x again, narrow range, same reason as FastAPI.
+  "typer>=0.15,<1",
+  # Bootstrap intervals and the confusion matrices. 2.x is the current line.
+  "numpy>=2,<3",
+]
+
+[project.optional-dependencies]
+# The scanned track. Tesseract is a system binary that is not installed everywhere, so
+# the OCR path is an extra and the CLI says so when it is missing.
+ocr = [
+  "pytesseract>=0.3,<1",
+  "pillow>=11,<12",
+]
+# Model decisions go through project 04's gateway library. It is a private repository, so
+# it is an extra rather than a hard dependency and the rules-only path runs without it.
+gateway = [
+  "boundary>=0.2,<1",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9,<10",
+  "mypy>=1,<2",
+  "ruff>=0.13,<1",
+  "types-PyYAML>=6,<7",
+  # The reviewer app's endpoint tests drive FastAPI through its test client.
+  "httpx>=0.28,<1",
+]
+
+[project.scripts]
+sever = "sever.cli:main"
+
+[build-system]
+requires = ["hatchling>=1,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sever"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "N", "RUF"]
+ignore = [
+  # Line length is the formatter's job.
+  "E501",
+  # RawEntityLeak, PresidioUnavailable, ModelUnavailable and AuditImmutable read as
+  # statements about what went wrong, which is what a traceback should say. An Error
+  # suffix would add nothing: they are already exceptions.
+  "N818",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["sever", "tests"]
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["pytesseract", "docx", "docx.*", "presidio_analyzer", "presidio_analyzer.*"]
+ignore_missing_imports = true
+
+# PyMuPDF ships annotations that are incomplete rather than absent, so strict mode reports
+# every call into it as a call to an untyped function. Skipping the import treats the
+# module as Any, which is honest about how much the stubs actually tell us and keeps the
+# strictness where it belongs: on this project's own code.
+[[tool.mypy.overrides]]
+module = ["pymupdf", "pymupdf.*", "fitz", "fitz.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
