@@ -31,10 +31,15 @@ from sever.decide.placeholders import PlaceholderPolicy, redact_context
 from sever.decide.rules import RuleOutcome
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
-# The gateway records this on every call. 04's policy for the class is what will perform
-# the substitution once Part B exists; until then the substitution happens here and the
-# header is the honest declaration of what the payload contains.
+# The data class this project's calls carry. PLAN.md section 2.3 has the gateway applying a
+# policy for the class and performing the substitution; that is 04 Part B and it does not
+# exist. `boundary` v0.3's frozen interface has no data-class concept and no free-form
+# metadata on a call, so until it does, the class travels in `purpose`, which is the one
+# free-text field that reaches the ledger row. That is not a policy and it does not redact
+# anything; the substitution happens in sever.decide.placeholders. It does mean a ledger
+# audit can tell which calls carried personal data, which is the part worth having now.
 DATA_CLASS = "personal"
+CAPS_PROJECT = "access-to-information-redaction"
 DEFAULT_MODEL = "anthropic/claude-haiku-4-5-20251001"
 DEFAULT_MAX_TOKENS = 400
 
@@ -131,7 +136,12 @@ class GatewayModelDecider:
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     max_tokens: int = DEFAULT_MAX_TOKENS
     temperature: float = 0.0
-    purpose: str = "sever.decide"
+    # Reaches the ledger row. Carries the data class because `chat` has nowhere else to put
+    # it; see DATA_CLASS above.
+    purpose: str = f"sever.decide:{DATA_CLASS}"
+    # Groups a run's rows in the ledger and is what the per-run spend cap is measured
+    # against. A corpus run is thousands of calls and wants to be one run, not thousands.
+    run_id: str | None = None
     enabled: bool = False
     # Every request built, kept for the test that asserts no raw entity left and for the
     # cost ledger reconciliation. Bounded so a full corpus run does not hold the whole
@@ -208,11 +218,12 @@ class GatewayModelDecider:
             temperature=self.temperature,
         )
         self._record({"payload": payload, "message": message, "model": self.model})
-        response = gateway.chat(
-            request,
-            purpose=self.purpose,
-            metadata={"data_class": DATA_CLASS, "doc_id": ctx.doc_id, "page": ctx.page_number},
-        )
+        # purpose and run_id only: `Gateway.chat` takes no metadata mapping, and an earlier
+        # version of this call passed one. It typechecked, it passed every test, and it
+        # would have raised TypeError the first time the model layer was switched on,
+        # because nothing exercised this line. tests/test_model_layer.py now does, against
+        # a fake built from the real signature.
+        response = gateway.chat(request, purpose=self.purpose, run_id=self.run_id)
         answer = parse_answer(_text_of(response), self.taxonomy)
         if answer is None:
             return None
@@ -255,4 +266,8 @@ def _default_gateway() -> Any:  # pragma: no cover - needs a configured gateway
             "BOUNDARY_CONFIG is not set, so there is no gateway configuration to route "
             "through. Point it at a boundary.yaml with a spend cap set."
         )
-    return Gateway.from_config(config, project="sever")
+    # The project key is the repository name, not the package name, because that is what
+    # keys caps.yaml in the 04 repository and what every other project uses. A key with no
+    # entry there silently falls to the US$10 monthly default, which a full corpus run
+    # would hit partway through.
+    return Gateway.from_config(config, project=CAPS_PROJECT)

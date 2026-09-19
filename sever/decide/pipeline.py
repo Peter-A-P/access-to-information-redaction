@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
+from typing import Protocol, runtime_checkable
 
 from sever.context.record import SENTENCE_ONLY_BLANKS, ContextBuilder, ContextRecord
 from sever.context.register import PublicRegister
@@ -103,15 +104,16 @@ class DocumentProposals:
         return dict(sorted(out.items()))
 
 
-class ModelDecider:
+@runtime_checkable
+class ModelDecider(Protocol):
     """The interface the model layer satisfies. See sever.decide.model.
 
-    Kept as a protocol-shaped base rather than imported directly so that the rules-only
-    pipeline, which is a published baseline and runs in CI, has no import path to anything
-    that can make a network call.
+    An actual Protocol rather than a base class, so that nothing in this module imports
+    anything that can make a network call: the rules-only pipeline is a published baseline
+    and runs in CI, and it should not be able to reach a gateway even by accident.
     """
 
-    name = "model"
+    name: str
 
     def decide(
         self,
@@ -122,7 +124,7 @@ class ModelDecider:
         """Decide `contexts`. `universe` is every context in the document, which the
         implementation needs in order to build a placeholder policy that covers the
         entities appearing *around* the spans being sent, not only the spans themselves."""
-        raise NotImplementedError
+        ...
 
 
 @dataclass
