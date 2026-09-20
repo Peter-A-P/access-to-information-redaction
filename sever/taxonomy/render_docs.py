@@ -43,8 +43,19 @@ def _decision_label(t: Taxonomy, d: Decision) -> str:
     return t.categories.decisions[d.value].label
 
 
+def last_updated(t: Taxonomy) -> dt.date:
+    """The most recent `updated:` date across the YAML files.
+
+    The generated page is stamped with this rather than with today's date so that
+    rendering is a pure function of the YAML: CI re-renders the page and fails on any
+    diff, and a stamp that changed every day would fail that check on every day but one.
+    """
+    dates = [t.categories.updated, *(j.updated for j in t.jurisdictions.values())]
+    return max(dates)
+
+
 def render(t: Taxonomy, *, generated_on: dt.date | None = None) -> str:
-    on = generated_on or dt.date.today()
+    on = generated_on or last_updated(t)
     lines: list[str] = [_BANNER, "", "# The exemption taxonomy", ""]
 
     lines += [
@@ -57,7 +68,7 @@ def render(t: Taxonomy, *, generated_on: dt.date | None = None) -> str:
         "proposal a reviewer applies. A public body brings its own interpretation, and the",
         "mapping is a YAML file precisely so that it can.",
         "",
-        f"Generated {on.isoformat()} from `sever/taxonomy/`.",
+        f"Generated {on.isoformat()} from `sever/taxonomy/`, the date of its last update.",
         "",
     ]
 

@@ -11,7 +11,7 @@ escalation code rather than on a guess.
 proposal a reviewer applies. A public body brings its own interpretation, and the
 mapping is a YAML file precisely so that it can.
 
-Generated 2026-09-13 from `sever/taxonomy/`.
+Generated 2026-09-13 from `sever/taxonomy/`, the date of its last update.
 
 ## How much of this has been checked
 

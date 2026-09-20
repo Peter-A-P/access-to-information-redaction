@@ -35,6 +35,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Detection. Presidio runs on a spaCy pipeline; the model itself (en_core_web_sm by
+# default) is downloaded separately because spaCy models are not on PyPI. Presidio is
+# 2.2.x and has been for years; spaCy 3.x is the line its NLP engine targets, and 4 will
+# change the pipeline API. Without this extra only the pattern recognisers run and the
+# CLI says so.
+detect = [
+  "presidio-analyzer>=2.2,<3",
+  "spacy>=3.8,<4",
+]
 # The scanned track. Tesseract is a system binary that is not installed everywhere, so
 # the OCR path is an extra and the CLI says so when it is missing.
 ocr = [
@@ -93,8 +102,22 @@ files = ["sever", "tests"]
 plugins = ["pydantic.mypy"]
 warn_unreachable = true
 
+# Every module here is an optional extra or ships no stubs, and CI runs with only the
+# detect extra installed. `boundary` and `PIL` in particular are absent there: the gateway
+# is a private package and Pillow belongs to the OCR extra. The code already holds what it
+# imports from them as Any, so skipping the import changes nothing about what is checked.
 [[tool.mypy.overrides]]
-module = ["pytesseract", "docx", "docx.*", "presidio_analyzer", "presidio_analyzer.*"]
+module = [
+  "pytesseract",
+  "docx",
+  "docx.*",
+  "presidio_analyzer",
+  "presidio_analyzer.*",
+  "boundary",
+  "boundary.*",
+  "PIL",
+  "PIL.*",
+]
 ignore_missing_imports = true
 
 # PyMuPDF ships annotations that are incomplete rather than absent, so strict mode reports

@@ -115,19 +115,12 @@ def test_generated_docs_are_current() -> None:
         pytest.skip("docs/taxonomy.md has not been generated yet")
     t = load_taxonomy()
     on_disk = DOCS_TAXONOMY.read_text(encoding="utf-8")
-    # The generated file records the day it was written, so compare everything else.
-    expected = render(t, generated_on=_generated_date(on_disk))
-    assert on_disk == expected, (
+    # The stamp is the YAML's own `updated:` date, not the day of rendering, so the
+    # whole file has to match byte for byte. CI runs the same comparison as a git diff.
+    assert on_disk == render(t), (
         "docs/taxonomy.md is out of date with the YAML. Run `sever taxonomy render` and "
         "commit the result in the same commit as the YAML change."
     )
-
-
-def _generated_date(text: str) -> dt.date:
-    for line in text.splitlines():
-        if line.startswith("Generated "):
-            return dt.date.fromisoformat(line.split()[1])
-    return dt.date.today()
 
 
 def test_yaml_files_have_no_typographic_dashes() -> None:

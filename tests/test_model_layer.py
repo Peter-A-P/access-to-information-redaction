@@ -13,12 +13,18 @@ between it and a live run was that it looked right.
 Two defences here:
 
   * `test_the_call_matches_the_real_gateway_signature` introspects `boundary.Gateway.chat`
-    and asserts the arguments this project passes are the arguments it accepts. It skips
-    where `boundary` is not installed, so the rules-only path still runs anywhere, and it
-    fails loudly on any drift in a library this project does not own.
+    and asserts the arguments this project passes are the arguments it accepts. It fails
+    loudly on any drift in a library this project does not own.
   * The rest drive the whole decide path through a fake whose signature is the real one,
     so a parsing change, a threshold change or a disagreement path is covered without a
     network call or a cent of spend.
+
+The whole module is skipped where `boundary` is not installed: the send path builds a real
+`boundary.ChatRequest`, and a stand-in request type would test a path that is never run.
+`boundary` is a private extra, so this is the case in CI. The privacy property the send
+path depends on, that no raw detected entity is in an outbound request, does not need
+`boundary` and is asserted for the whole corpus in `tests/test_no_raw_entity_leaves.py`,
+which does run in CI.
 """
 
 from __future__ import annotations
@@ -28,6 +34,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
+
+pytest.importorskip("boundary", reason="the gateway extra is not installed")
 
 from sever.context.record import ContextRecord
 from sever.decide.model import (
