@@ -16,7 +16,7 @@ and it takes about twenty lines of code. It is implemented in
 same detections, as the tool itself.
 
 **Why it is tempting.** It is safe in the direction people worry about. On the corpus it
-leaks 1.8 percent against this tool's 7.9, and every one of its leaks is a span the
+leaks 1.1 percent against this tool's 5.3, and every one of its leaks is a span the
 detector never found rather than a decision it got wrong. If leak rate were the only
 number, the blunt baseline would win and this project would not need to exist.
 
@@ -24,19 +24,22 @@ number, the blunt baseline would win and this project would not need to exist.
 
 | System | Leak rate | Over-redaction rate |
 |---|---|---|
-| Blunt redact-all-PII | 1.8% (1.1 to 2.5) | **97.2% (96.5 to 97.9)** |
-| This tool, rules then the model on the residual | 7.9% (6.3 to 9.5) | **22.7% (21.4 to 24.0)** |
-| This tool, rules only | 5.4% (3.9 to 7.0) | **29.7% (28.5 to 30.8)** |
+| Blunt redact-all-PII | 1.1% (0.6 to 1.7) | **98.5% (97.9 to 99.0)** |
+| This tool, rules then the model on the residual | 5.3% (4.1 to 6.5) | **23.3% (21.9 to 24.6)** |
+| This tool, rules only | 2.8% (1.8 to 4.0) | **30.3% (29.1 to 31.4)** |
 
-It withholds **97.2 percent of everything that must be released**. On the corpus that means
+It withholds **98.5 percent of everything that must be released**. On the corpus that means
 the signing officer's name and title, the minister on the letterhead, the department, the
 requester's own address in their own file. What it produces is not a redacted record, it is
 a page of black boxes with the prepositions left in, and a requester who receives one has
 been answered in form and refused in substance.
 
-The 6.1-point leak gap is the honest cost of releasing anything at all. It is smaller than
-it looks: 25 of this tool's 110 leaks are the same detector misses the blunt baseline has,
-so the decision layer contributes 85 of them, 50 from the rules and 35 more from the model.
+The 4.2-point leak gap is the honest cost of releasing anything at all, and it is smaller
+than it looks. Of this tool's 74 leaks, 16 are the same detector misses the blunt baseline
+has and 23 more are spans the detector found and typed as a place or an organisation, which
+released them. The deterministic rules contribute none. The model contributes the remaining
+35, which is what entry 4 below is about: the decomposition had to gain a third column
+before any of that was visible.
 
 **What that means for anyone choosing a tool.** Ask a vendor for the must-keep column. It
 is the number nobody publishes, and it is the one that decides whether the output is

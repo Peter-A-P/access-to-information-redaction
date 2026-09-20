@@ -19,7 +19,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 8 model calls, US$0.0089, US$0.00111 per call, 6031 in / 564 out tokens, 2598 replayed from the answer cache, free.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2606 answers replayed from the cache, nothing spent.
 
 **Per category, this tool**
 
@@ -43,12 +43,14 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Where the leaks come from**
 
-| System | Leaks | The detector never found the span | The decision was wrong |
-|---|---:|---:|---:|
-| sever, rules then the model on the residual | 74 | 16 | 58 |
-| sever, rules only | 39 | 16 | 23 |
-| blunt redact-all-PII | 16 | 16 | 0 |
-| sentence-only, no document context | 39 | 16 | 23 |
+| System | Leaks | Never found | Found, called impersonal | The decision was wrong |
+|---|---:|---:|---:|---:|
+| sever, rules then the model on the residual | 74 | 16 | 23 | 35 |
+| sever, rules only | 39 | 16 | 23 | 0 |
+| blunt redact-all-PII | 16 | 16 | 0 | 0 |
+| sentence-only, no document context | 39 | 16 | 23 | 0 |
+
+The middle column is the one worth knowing about. A span typed as a place or an organisation is not personal information, so the rule releases it and says why, and recall counts it as found the whole time. It is a wrong label rather than a wrong decision, and a two-column decomposition blamed the decision layer for it.
 
 **PDF leak test**
 
@@ -68,7 +70,7 @@ to within Monte Carlo noise; `tests/test_confusion.py` pins that.
 
 **The number that matters is the second column.** Any tool can get the leak rate down by
 redacting everything, and the blunt baseline in the table does exactly that: it withholds
-97.2 percent of the information that must be released. A record that comes back with the
+98.5 percent of the information that must be released. A record that comes back with the
 signing officer's name, the minister on the letterhead, the department and the requester's
 own address blacked out has been answered in form and refused in substance. That column is
 what nobody publishes.
@@ -77,10 +79,10 @@ what nobody publishes.
 
 **The model layer buys usefulness with leaks, and this is what the exchange rate is.**
 
-With the rules alone the tool leaks 5.4 percent and withholds 29.7 percent of what must be
+With the rules alone the tool leaks 2.8 percent and withholds 30.3 percent of what must be
 released. With the model deciding what the rules could not, at the confidence threshold
-measured in [`results/thresholds.md`](results/thresholds.md), it leaks 7.9 percent and
-withholds 22.7 percent. In counts, over 5,355 labelled spans: turning the model on
+measured in [`results/thresholds.md`](results/thresholds.md), it leaks 5.3 percent and
+withholds 23.3 percent. In counts, over 5,355 labelled spans: turning the model on
 correctly releases **277 spans the rules had withheld** and wrongly releases **35 that had
 to go**. Both rows are in the table above and neither is hidden behind the other.
 
@@ -90,7 +92,14 @@ stranger's hands, and it cannot be recalled. Which configuration to run is a pub
 decision and this repository does not make it: the rules-only row is the safer one, costs
 nothing to reproduce and needs no gateway.
 
-**And the leak rate is still well above the blunt baseline's 1.8 percent.** That gap is
+**Read the leak decomposition above before deciding the rules are the weak part.** Every
+one of the 39 leaks in the rules-only row is the detector's fault: 16 spans it never found
+and 23 it found and called a place or an organisation, which is not personal information,
+so the rule released them and said so. The deterministic rules contribute **zero**. That
+column only exists because a two-bucket decomposition filed those 23 under "the decision
+was wrong" and pointed the next fix at the wrong module.
+
+**And the leak rate is still above the blunt baseline's 1.1 percent.** That gap is
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
@@ -142,8 +151,8 @@ Three more limitations, none of them small:
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the
   plain corpus so they stay comparable; the harder numbers sit beside them.
-- **33.3 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table, and 23.8 of those 33.3 points are escalation rather than a
+- **34.0 percent over-redaction on officials acting in an official capacity** is the
+  weakest number in the table, and 24.3 of those 34.0 points are escalation rather than a
   wrong answer: names the rules could not pair with a title anywhere in the record, which
   the model was also unwilling to place. It rose once when detection improved, because
   finding more of a record's people means more of them reaching the escalation path.
@@ -177,7 +186,7 @@ whether they appear in a public register or on the letterhead, which other menti
 record are the same person, and whether they match the configured requester. That record is
 the whole argument of the project, and the sentence-only row in the results table is what
 it is worth: judging a name from its sentence alone nearly doubles over-redaction, from
-29.7 percent to 56.4 percent with the same rules, because a person's capacity is almost
+30.3 percent to 58.0 percent with the same rules, because a person's capacity is almost
 never in the sentence
 that names them. It is three inches lower, in the signature block.
 
@@ -317,7 +326,7 @@ pages without refusing; all three are fixed. The comparison also found two here,
 being personas generating social insurance numbers that failed the Luhn checksum, so no
 correct detector would ever have flagged them and the corpus had never exercised that path.
 And it settled the spaCy model: `en_core_web_lg` over `en_core_web_sm` is 97.4 percent
-recall against 92.6, which cut the leak rate from 14.1 percent to 5.4.
+recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the time.
 
 The comparison was worth running in both directions. It found three defects in the
 gateway's engine, all since fixed, the worst of which returned a Medical Care Plan number

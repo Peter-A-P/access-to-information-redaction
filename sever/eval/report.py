@@ -349,14 +349,22 @@ def to_markdown(report: Report) -> str:
         "",
         "**Where the leaks come from**",
         "",
-        "| System | Leaks | The detector never found the span | The decision was wrong |",
-        "|---|---:|---:|---:|",
+        "| System | Leaks | Never found | Found, called impersonal | The decision was wrong |",
+        "|---|---:|---:|---:|---:|",
     ]
     for s in report.systems:
         d = s.scored.decomposition()
         lines.append(
-            f"| {s.name} | {d['leaks']} | {d['detector_missed']} | {d['decision_wrong']} |"
+            f"| {s.name} | {d['leaks']} | {d['detector_missed']} | "
+            f"{d['detector_mislabelled']} | {d['decision_wrong']} |"
         )
+    lines += [
+        "",
+        "The middle column is the one worth knowing about. A span typed as a place or an "
+        "organisation is not personal information, so the rule releases it and says why, "
+        "and recall counts it as found the whole time. It is a wrong label rather than a "
+        "wrong decision, and a two-column decomposition blamed the decision layer for it.",
+    ]
     if report.leak_report is not None:
         lines += [
             "",

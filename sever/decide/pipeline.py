@@ -39,7 +39,7 @@ from sever.taxonomy.loader import Decision, Provision, Taxonomy, default_taxonom
 # answers dropped in that range are the ones where the model itself said E1, and an
 # escalation discarded for low confidence and an escalation the model asked for are the
 # same decision. The threshold only starts doing work at 0.90, where the leak rate falls
-# from 13.4 percent to 7.9 and over-redaction rises from 15.6 to 22.7. Above 0.90 it is
+# from 10.9 percent to 5.3 and over-redaction rises from 16.2 to 23.3. Above 0.90 it is
 # flat again: 0.95 moves nothing, because the model almost never answers between the two.
 #
 # That shape says something about the model as much as about the threshold. Haiku 4.5

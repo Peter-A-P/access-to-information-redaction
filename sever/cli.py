@@ -597,6 +597,57 @@ def eval_sweep(
         typer.echo(f"\nwrote {out}")
 
 
+@app.command("eval-placeholders")
+def eval_placeholders(
+    documents: Annotated[int, typer.Option(help="Corpus size.")] = 60,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    model: Annotated[
+        str, typer.Option(help="A model on this machine. Anything else is refused.")
+    ] = "local/qwen2.5:7b",
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/placeholders.md"
+    ),
+) -> None:
+    """What the privacy boundary costs in accuracy: the paired placeholders ablation.
+
+    The same spans decided twice by the same model, once on typed placeholders and once on
+    the raw record. The raw arm sends names, so it runs only against a model on this
+    machine: the provider must be price-zero, declare single-region residency and answer on
+    loopback, and the run refuses before it builds a payload otherwise.
+
+    Spends nothing, and needs no vendor key.
+    """
+    import os
+
+    from sever.eval import placeholders as ablation
+
+    config = boundary_config or Path(
+        os.environ.get("BOUNDARY_CONFIG", "").strip() or DEFAULT_BOUNDARY_CONFIG
+    )
+    if not config.is_file():
+        raise typer.BadParameter(f"no gateway configuration at {config}")
+    try:
+        from boundary import Gateway
+    except ImportError as exc:
+        raise typer.BadParameter("boundary is not installed; see sever/gateway.py") from exc
+
+    from sever.decide.model import CAPS_PROJECT
+
+    gateway = Gateway.from_config(config, project=CAPS_PROJECT)
+    try:
+        ablation.assert_loopback(gateway, model)
+    except ablation.NotLoopback as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"both arms on {model}, over loopback. Nothing leaves this machine.")
+
+    result = ablation.run(gateway=gateway, model=model, documents=documents, seed=seed)
+    typer.echo("")
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"\nwrote {ablation.write(result, out)}")
+
+
 @app.command("eval-thresholds")
 def eval_thresholds(
     documents: Annotated[int, typer.Option(help="Corpus size.")] = 210,

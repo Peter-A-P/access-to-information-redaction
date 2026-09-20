@@ -153,8 +153,29 @@ class SpanOutcome:
 
     @property
     def failed_because_undetected(self) -> bool:
-        """A leak the detector caused. The other kind is a decision error."""
+        """A leak the detector caused by not finding the span at all."""
         return self.is_leak and not self.detected
+
+    @property
+    def failed_because_mislabelled(self) -> bool:
+        """A leak the detector caused by naming the span, having found it.
+
+        This is the third bucket and it exists because a two-bucket decomposition put it in
+        the wrong one. A span typed LOCATION or ORGANISATION is not information about an
+        identifiable individual, so `not_personal_information` returns K6 and K6 releases.
+        The span was found, so recall counts it; the rule then behaved correctly on a false
+        premise, so it reads as a decision error. It is neither. It is a wrong label, and
+        blaming the decision layer for it sends the next fix to the wrong module.
+
+        Found the hard way. A bare Labrador surname is typed as a LOCATION and released with
+        "not information about an identifiable individual" printed beside it in the
+        schedule, and every recall figure in the repository stayed healthy while it
+        happened. Project 04 observed that neither project had a measurement that would
+        catch a wrong label without someone going looking. This is that measurement.
+        """
+        if not (self.is_leak and self.detected) or self.proposal is None:
+            return False
+        return not self.proposal.detection.entity_type.is_about_a_person
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,13 +229,17 @@ class Scored:
         return _rate(pool, lambda o: o.detected, seed=seed)
 
     def decomposition(self) -> dict[str, int]:
-        """Where the leaks came from. The plan's error decomposition table."""
+        """Where the leaks came from. The plan's error decomposition table, in three
+        buckets rather than two: see `SpanOutcome.failed_because_mislabelled` for why the
+        middle one had to be split out of the last one."""
         leaks = [o for o in self.outcomes if o.is_leak]
         undetected = sum(1 for o in leaks if o.failed_because_undetected)
+        mislabelled = sum(1 for o in leaks if o.failed_because_mislabelled)
         return {
             "leaks": len(leaks),
             "detector_missed": undetected,
-            "decision_wrong": len(leaks) - undetected,
+            "detector_mislabelled": mislabelled,
+            "decision_wrong": len(leaks) - undetected - mislabelled,
             "must_redact_spans": sum(1 for o in self.outcomes if o.must_redact),
         }
 

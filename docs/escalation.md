@@ -59,9 +59,9 @@ escalated with the model's reasoning attached, so the reviewer sees what it thou
 why it was not trusted.
 
 The threshold is 0.90 and it is measured, not chosen: `results/thresholds.md` sweeps it
-over one recorded set of model answers. On 2,550 answers, 43 percent clear 0.90 and the
+over one recorded set of model answers. On 2,606 answers, 43 percent clear 0.90 and the
 rest land here. That is the single largest lever on this page, and the sweep shows why it
-sits where it does: below 0.90 the leak rate is 13.4 percent, at 0.90 it is 7.9.
+sits where it does: below 0.90 the leak rate is 10.9 percent, at 0.90 it is 5.3.
 
 ### 6. The rules and the model disagreed
 
@@ -99,14 +99,13 @@ These are not escalations. The tool does not attempt them at all, and says so.
 
 ## The number this page is about
 
-At the last full run, **26.9 percent** of spans were escalated with the model layer on, and
-**45.4 percent** with the rules alone. On the must-redact category the figures are 56.1 and
-89.6 percent.
+At the last full run, **27.7 percent** of spans were escalated with the model layer on, and
+**46.5 percent** with the rules alone.
 
 The gap between those two columns is the whole argument of the model layer, and it is worth
 reading in the right direction. The model does not make the tool decisive by being clever
 about hard cases; it makes it decisive by answering 43 percent of the questions the rules
-could not, and it is wrong on some of them. Escalation falls by 18.5 points and the leak
+could not, and it is wrong on some of them. Escalation falls by 18.8 points and the leak
 rate rises by 2.5. The reviewer's queue halves and a few more third parties are named in a
 released record.
 

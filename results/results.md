@@ -1,6 +1,6 @@
 **Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 8 model calls, US$0.0089, US$0.00111 per call, 6031 in / 564 out tokens, 2598 replayed from the answer cache, free.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2606 answers replayed from the cache, nothing spent.
 
 **Per category, this tool**
 
@@ -24,12 +24,14 @@
 
 **Where the leaks come from**
 
-| System | Leaks | The detector never found the span | The decision was wrong |
-|---|---:|---:|---:|
-| sever, rules then the model on the residual | 74 | 16 | 58 |
-| sever, rules only | 39 | 16 | 23 |
-| blunt redact-all-PII | 16 | 16 | 0 |
-| sentence-only, no document context | 39 | 16 | 23 |
+| System | Leaks | Never found | Found, called impersonal | The decision was wrong |
+|---|---:|---:|---:|---:|
+| sever, rules then the model on the residual | 74 | 16 | 23 | 35 |
+| sever, rules only | 39 | 16 | 23 | 0 |
+| blunt redact-all-PII | 16 | 16 | 0 | 0 |
+| sentence-only, no document context | 39 | 16 | 23 | 0 |
+
+The middle column is the one worth knowing about. A span typed as a place or an organisation is not personal information, so the rule releases it and says why, and recall counts it as found the whole time. It is a wrong label rather than a wrong decision, and a two-column decomposition blamed the decision layer for it.
 
 **PDF leak test**
 
