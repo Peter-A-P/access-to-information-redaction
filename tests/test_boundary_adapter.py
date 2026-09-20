@@ -150,3 +150,38 @@ def test_a_substituted_name_rehydrates(detector: BoundaryDetector) -> None:
     substituted = layered.policy.outbound(text)
     assert "Doucette" not in substituted, substituted
     assert "Doucette" in layered.rehydrate(substituted)
+
+
+def test_the_layered_policy_never_feeds_boundary_its_own_output() -> None:
+    """boundary 0.5.4 makes that an error, and it is right to.
+
+    `Policy.outbound` refuses text carrying a placeholder it minted, because a document
+    that already contains the literal string a placeholder looks like used to rehydrate
+    into a real name: a name in a released record that was never in the source. 04 shipped
+    the guard; this asserts that `LayeredPolicy` is on the correct side of it, since it
+    runs one substitution pass and then applies this project's scrub on top rather than
+    calling `outbound` twice.
+    """
+    from boundary.redact import Analyzer, Policy
+
+    source = "Odette Tulk lives at 14 Bannerman Street."
+    spans = Analyzer().analyze([source])
+    layered = LayeredPolicy(policy=Policy(spans))
+
+    once = layered.outbound(source)
+    assert "Odette" not in once and "Tulk" not in once
+
+    # The round trip still works through this project's scrub, which is what would break
+    # if the scrub mangled a placeholder.
+    assert layered.rehydrate(once) == source
+
+    # And the underlying policy does refuse a second pass, so the guard is real and this
+    # test is not asserting against a version that lacks it.
+    #
+    # Through the same policy object, deliberately. The refusal is keyed on placeholders
+    # *this* policy minted, so a freshly constructed one over the same spans does not
+    # refuse: it has minted nothing yet. That is worth knowing rather than assuming,
+    # because it means the protection is per-instance and a pipeline that rebuilds its
+    # policy between passes does not get it.
+    with pytest.raises(Exception, match=r"(?i)refus|placeholder"):
+        layered.policy.outbound(once)
