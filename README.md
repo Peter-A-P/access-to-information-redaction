@@ -204,6 +204,17 @@ That the class is actually recorded is checkable rather than asserted: the gatew
 its own ledger, and as of 2026-09-20 all 999 rows this project has written carry
 `data_class = personal`, across 999 calls costing US$1.10 in total.
 
+**And the boundary turns out not to cost accuracy.** The paired ablation in
+[`results/placeholders.md`](results/placeholders.md) runs the same spans through the same
+model twice, on placeholders and on the raw record, and taking the names away **halves the
+leak rate**, from 60.2 to 30.1 percent. Shown a plausible name the model becomes willing to
+place the person and is wrong more often than not; deprived of it, it reasons from the
+structure, which is the evidence that actually decides the question, and escalates when the
+structure does not settle it. Both arms run on a model on this machine, because the raw arm
+carries names and this repository will not send those to a vendor, so the absolute figures
+belong to a 7B model rather than to the pipeline. The direction is the finding, and it
+reverses the assumption this project had been publishing.
+
 The boundary is not built on the detector. A name the detector missed is exactly the one
 that would slip through a guard made of detections, so a second pass masks anything
 proper-noun-shaped or identifier-shaped regardless of whether anything detected it, and the
@@ -281,7 +292,7 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [data](docs/data.md) · [what did not work](docs/rejected.md) ·
 [detector comparison](results/detectors.md) · [threshold sweep](results/thresholds.md) ·
 [name shapes](results/names.md) · [the name sweep, ablated](results/sweep.md) ·
-[plan](PLAN.md)
+[what the privacy boundary costs](results/placeholders.md) · [plan](PLAN.md)
 
 ## Engineering
 

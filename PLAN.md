@@ -634,3 +634,45 @@ recall number cannot see a span that was found and mislabelled, and mislabelling
 category that releases is worse than missing the span, because a miss at least leaves the
 blunt baseline's behaviour intact while a wrong label produces a confident, reasoned,
 wrong release.
+
+### 12.14 The placeholders ablation ran, and the premise was backwards
+
+2026-09-20. Section 1 asks what the privacy boundary costs in accuracy, and `docs/rejected.md`
+entry 2 answered the question before measuring it: over-masking costs the model context and
+therefore accuracy, and the ablation would price that cost. The ablation has now run and
+there is no cost to price. Taking the names away **halved the leak rate**, from 60.2 percent
+to 30.1, while raising over-redaction from 7.4 to 19.0.
+
+The mechanism is visible in the escalation column. Shown a plausible name the model's
+escalation rate falls from 30.5 percent to 14.1: it becomes willing to place the person. It
+is then wrong about which side of the line they are on more often than not, and the two arms
+agree on only 55.7 percent of the spans they were both asked. The name is doing a great deal
+of work in the model's reasoning and the work is harmful. Deprived of it the model has only
+the structure to reason from, which is the evidence that actually decides the question, and
+when the structure does not settle it the model says so.
+
+So the sentence this project has been repeating, that the boundary costs accuracy and is
+worth paying for anyway, was a concession that did not need making.
+
+**A design decision inside the measurement, which matters more than the measurement.** The
+raw arm sends names. Running it through a vendor would break the rule in CLAUDE.md, the
+guard in `PlaceholderPolicy`, and the corpus-wide test, and the personas being invented does
+not rescue it: what this project sells is that the pipeline *cannot* send a name, not that
+the names it sends do not matter. So both arms run on a model on this machine, and
+`assert_loopback` refuses to construct the raw decider unless the provider is price-zero,
+declares single-region residency, and answers on a loopback host. All three are required and
+each is tested alone; the case worth having is a billing host reachable on loopback, which a
+URL check alone would wave through.
+
+Two consequences. The honest one: both arms run on a 7B model, so they leak far more than
+the pipeline does on Haiku and these absolute numbers are not the pipeline's. The pairing
+supports the direction and the rough size, on 20 documents, with the intervals printed. The
+good one: this is the only part of the model layer a stranger can reproduce with no key, no
+vendor account and no spend.
+
+One incidental observation, recorded because it is a privacy property rather than a
+performance one. The placeholder arm needed 171 distinct requests where the raw arm needed
+240 for the same spans. Placeholder payloads repeat across documents because the structure
+repeats once the names are gone; raw payloads are unique because the names are. A redacted
+corpus is more cacheable than an unredacted one, which is a small argument for the boundary
+that has nothing to do with privacy at all.

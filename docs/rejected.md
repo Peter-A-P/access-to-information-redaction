@@ -78,11 +78,37 @@ unless it is on a 247-word list of terms that carry decision-relevant meaning an
 identify anyone (months, job titles, the names of public bodies, the words of the
 legislation). `sever/decide/placeholders.py::scrub_unrecognised`.
 
-**The trade, stated plainly.** Over-masking costs the model context and therefore accuracy,
-and the paired placeholders-against-raw-text ablation is designed to measure exactly that
-cost. Under-masking sends a real person's name to a vendor, which is not measurable and not
-reversible. When one side of a trade shows up in a results table and the other shows up in
-a breach, the choice makes itself.
+**The trade, as it was assumed to be.** Over-masking costs the model context and therefore
+accuracy; under-masking sends a real person's name to a vendor, which is not measurable and
+not reversible. When one side of a trade shows up in a results table and the other shows up
+in a breach, the choice makes itself. That argument stood here for weeks and it did not need
+the trade to be real, only to be worth paying.
+
+**The trade, as measured.** It is not a trade. `results/placeholders.md` runs the same
+spans through the same model twice, once on placeholders and once on the raw record:
+
+| Arm | Leak rate | Over-redaction |
+|---|---|---|
+| typed placeholders | **30.1% (21.7 to 39.0)** | 19.0% (15.4 to 22.8) |
+| raw text | **60.2% (53.7 to 66.7)** | 7.4% (5.2 to 9.7) |
+
+Taking the names away **halved the leak rate**. The two arms agreed on 55.7 percent of the
+spans, so the name is doing a great deal of work in the model's reasoning; it is simply
+doing harmful work. Shown a plausible name the model becomes willing to place the person,
+its escalation rate falls from 30.5 to 14.1 percent, and it is wrong about which side of
+the line they are on more often than not. Deprived of the name it has only the structure to
+reason from, which is the evidence that actually decides the question, and when the
+structure does not settle it the model says so.
+
+Read on this corpus and this model, the privacy boundary is not a cost centre that needs
+justifying. It is the reason the model layer withholds when it should.
+
+**What is and is not claimed.** Both arms run on a 7B model on this laptop, because the raw
+arm carries names and this repository's rule is that names do not leave the machine. Both
+arms therefore leak far more than the production pipeline does on Haiku, and these absolute
+numbers are not the pipeline's. What the pairing supports is the direction and the rough
+size of the effect, on 20 documents with the intervals shown. The same run on a frontier
+model would need the raw arm to reach a vendor, which this project will not do.
 
 **The general lesson.** A privacy boundary whose strength equals a model's recall is not a
 boundary. Test it against ground truth, not against the component you are testing.
