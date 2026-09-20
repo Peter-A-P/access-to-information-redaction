@@ -17,32 +17,36 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-19 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
+
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
-| `K1` | 980 | n/a | 8.5% (7.3% to 9.6%), n=980 | 8.5% (7.3% to 9.6%), n=980 |
-| `K2` | 2345 | n/a | 42.0% (40.3% to 43.7%), n=2345 | 42.0% (40.3% to 43.7%), n=2345 |
-| `K3` | 280 | n/a | 14.3% (9.6% to 18.9%), n=280 | 14.3% (9.6% to 18.9%), n=280 |
+| `K1` | 980 | n/a | 6.3% (5.2% to 7.5%), n=980 | 4.7% (3.5% to 6.0%), n=980 |
+| `K2` | 2345 | n/a | 33.3% (31.3% to 35.4%), n=2345 | 23.8% (21.8% to 25.9%), n=2345 |
+| `K3` | 280 | n/a | 7.1% (4.3% to 10.4%), n=280 | 7.1% (4.3% to 10.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
-| `K6` | 280 | n/a | 25.0% (21.3% to 28.6%), n=280 | 25.0% (21.3% to 28.6%), n=280 |
-| `R1` | 1400 | 5.4% (3.9% to 7.0%), n=1400 | n/a | 89.6% (87.6% to 91.6%), n=1400 |
+| `K6` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
+| `R1` | 1400 | 7.9% (6.3% to 9.5%), n=1400 | n/a | 56.1% (53.3% to 59.1%), n=1400 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules over the full document context | 5.4% (3.9% to 7.0%), n=1400 | 30.6% (29.4% to 31.8%), n=3955 | 46.1% (44.9% to 47.1%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sever, rules then the model on the residual | 7.9% (6.3% to 9.5%), n=1400 | 22.7% (21.4% to 24.0%), n=3955 | 26.9% (25.7% to 28.3%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sever, rules only | 5.4% (3.9% to 7.0%), n=1400 | 29.7% (28.5% to 30.8%), n=3955 | 45.4% (44.3% to 46.3%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
 | blunt redact-all-PII | 1.8% (1.1% to 2.5%), n=1400 | 97.2% (96.5% to 97.9%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
-| sentence-only, no document context | 5.4% (3.9% to 7.0%), n=1400 | 57.0% (55.0% to 58.9%), n=3955 | 65.5% (64.0% to 67.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sentence-only, no document context | 5.4% (3.9% to 7.0%), n=1400 | 56.4% (54.4% to 58.3%), n=3955 | 65.1% (63.6% to 66.5%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
 
 **Where the leaks come from**
 
 | System | Leaks | The detector never found the span | The decision was wrong |
 |---|---:|---:|---:|
-| sever, rules over the full document context | 75 | 25 | 50 |
+| sever, rules then the model on the residual | 110 | 25 | 85 |
+| sever, rules only | 75 | 25 | 50 |
 | blunt redact-all-PII | 25 | 25 | 0 |
 | sentence-only, no document context | 75 | 25 | 50 |
 
@@ -50,7 +54,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2756 | 0 | text layer only |
+| 2224 | 0 | text layer only |
 
 _OCR channel disabled for this run._
 
@@ -71,15 +75,24 @@ what nobody publishes.
 
 ## The honest limitation
 
-**This tool still leaks more than the blunt baseline it replaces, and the model layer
-that is meant to close the gap has not been run.**
+**The model layer buys usefulness with leaks, and this is what the exchange rate is.**
 
-The rules decide the clear cases and escalate the rest, and an escalated span is withheld,
-so nothing is released on a guess. But 50 spans that must be withheld are released by a
-wrong decision rather than by a detector miss, and the decision layer designed to catch
-them (a frontier model, on placeholders, through the gateway) is built and tested but has
-never been run against a live model. What is published here is the rules-only
-configuration, labelled as such.
+With the rules alone the tool leaks 5.4 percent and withholds 29.7 percent of what must be
+released. With the model deciding what the rules could not, at the confidence threshold
+measured in [`results/thresholds.md`](results/thresholds.md), it leaks 7.9 percent and
+withholds 22.7 percent. In counts, over 5,355 labelled spans: turning the model on
+correctly releases **277 spans the rules had withheld** and wrongly releases **35 that had
+to go**. Both rows are in the table above and neither is hidden behind the other.
+
+Eight to one is a reason to run the model, not a reason to trust it. The eight are a
+requester receiving their own record; the one is a third party's personal information in a
+stranger's hands, and it cannot be recalled. Which configuration to run is a public body's
+decision and this repository does not make it: the rules-only row is the safer one, costs
+nothing to reproduce and needs no gateway.
+
+**And the leak rate is still well above the blunt baseline's 1.8 percent.** That gap is
+what releasing anything at all costs. A tool that never released a span would have no leak
+rate and no reason to exist.
 
 **There is no reviewer app yet.** The audit log, the true-redaction export and the
 generated schedule are built and tested; the page-by-page web interface that a reviewer
@@ -94,9 +107,10 @@ Three more limitations, none of them small:
   also means the documents are template-shaped. The real-record test that would check this
   (published federal releases, where everything visible was judged releasable by a human)
   is designed and not built.
-- **42.0 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table and it is mostly escalation, not error: names the rules could
-  not pair with a title anywhere in the record. It rose when detection improved, because
+- **33.3 percent over-redaction on officials acting in an official capacity** is the
+  weakest number in the table, and 23.8 of those 33.3 points are escalation rather than a
+  wrong answer: names the rules could not pair with a title anywhere in the record, which
+  the model was also unwilling to place. It rose once when detection improved, because
   finding more of a record's people means more of them reaching the escalation path.
 - **18 of 33 statutory provisions are verified** against the consolidated texts. The rest
   are marked unverified with the reason, in the YAML and on the generated page. Nothing
@@ -128,7 +142,8 @@ whether they appear in a public register or on the letterhead, which other menti
 record are the same person, and whether they match the configured requester. That record is
 the whole argument of the project, and the sentence-only row in the results table is what
 it is worth: judging a name from its sentence alone nearly doubles over-redaction, from
-30.6 percent to 57.0 percent, because a person's capacity is almost never in the sentence
+29.7 percent to 56.4 percent with the same rules, because a person's capacity is almost
+never in the sentence
 that names them. It is three inches lower, in the signature block.
 
 **Deterministic rules** decide the clear cases in a fixed order that is itself the design:
@@ -136,9 +151,16 @@ the requester's own information first, then inherently sensitive identifiers (a 
 health number is not about being a director), then non-personal entity types, then
 capacity, then the public register, then the twenty-year rule. Whatever is left goes to a
 **model** through the portfolio's Compliant AI Gateway with the personal data class,
-seeing typed placeholders and never a name. When neither is
-sure, the proposal is to withhold and escalate. There is no rule that releases a span
-because nothing matched.
+seeing typed placeholders and never a name. Its answer is taken only above a measured
+confidence threshold; below it the span is escalated with the model's reasoning attached.
+When neither is sure, the proposal is to withhold and escalate. There is no rule that
+releases a span because nothing matched.
+
+The boundary is not built on the detector. A name the detector missed is exactly the one
+that would slip through a guard made of detections, so a second pass masks anything
+proper-noun-shaped or identifier-shaped regardless of whether anything detected it, and the
+test that polices this checks finished requests against the **personas**, which are ground
+truth. It found 74 real values the first time it ran.
 
 Every reviewer action is an append-only audit row, hash-chained so a rewritten row is
 detectable, and the row stores a hash of the severed text rather than the text, so the log
@@ -172,9 +194,22 @@ sever export --documents 3            # truly redacted PDFs, schedules, and the 
 sever report --readme README.md       # every number above
 ```
 
-`sever report` is the one command behind every published figure. It takes about ninety
-seconds and spends nothing: the model layer is off by default, because a corpus run is
-thousands of calls and the safe default is the one that cannot spend money by accident.
+`sever report` is the one command behind every published figure. With no flags it runs
+the rules-only configuration, spends nothing and needs no gateway: the model layer is off
+by default because a corpus run is thousands of calls, and the safe default is the one
+that cannot spend money by accident.
+
+The model row reproduces for nothing too. Every answer the model gave is committed in
+`results/model-answers.jsonl`, and `--replay-only` reads it instead of calling out:
+
+```bash
+sever report --model --replay-only --answer-cache results/model-answers.jsonl
+sever eval-thresholds                 # the confidence threshold, swept, also from the cache
+```
+
+The cache is publishable for the same reason the requests are: it holds what the model
+said about typed placeholders, and a test asserts that no persona value appears in it.
+Reproducing the paid run itself needs the gateway and costs about US$0.51.
 
 ## Repository
 
@@ -186,10 +221,13 @@ thousands of calls and the safe default is the one that cannot spend money by ac
 | `sever/context/` | Signature blocks, letterheads, public registers, requester matching, the context record |
 | `sever/decide/` | The rules in precedence order, the placeholder policy, the model layer |
 | `sever/review/` | True-redaction export, the generated schedule, the append-only audit log |
-| `sever/eval/` | Confusion matrices with bootstrap intervals, the baselines, the PDF leak test |
+| `sever/eval/` | Confusion matrices with bootstrap intervals, the baselines, the PDF leak test, the threshold sweep |
+| `results/` | The generated tables, and `model-answers.jsonl`: every answer the model gave, so the model row replays without a gateway |
 
 Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.md) ·
-[data](docs/data.md) · [what did not work](docs/rejected.md) · [plan](PLAN.md)
+[data](docs/data.md) · [what did not work](docs/rejected.md) ·
+[detector comparison](results/detectors.md) · [threshold sweep](results/thresholds.md) ·
+[plan](PLAN.md)
 
 ## Engineering
 

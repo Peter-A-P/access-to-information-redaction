@@ -1,5 +1,5 @@
 {
- "generated_on": "2026-09-19",
+ "generated_on": "2026-09-20",
  "corpus": {
   "documents": 210,
   "pages": 210,
@@ -14,16 +14,45 @@
   }
  },
  "detector": "sever-detector",
+ "model": "anthropic/claude-haiku-4-5-20251001",
+ "model_run": "466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free",
  "systems": [
   {
-   "name": "sever, rules over the full document context",
-   "note": "The model layer is off in this run, so the residual the rules could not decide stays escalated rather than being decided. Escalations withhold, so they are counted in over-redaction.",
+   "name": "sever, rules then the model on the residual",
+   "note": "The full configuration. The rules decide what they can; what is left goes to the model on typed placeholders through the 04 gateway, and an answer below the confidence threshold is escalated rather than used.",
    "spans": 5355,
    "documents": 210,
-   "over_redaction_rate": "30.6% (29.4% to 31.8%), n=3955",
-   "escalation_rate": "46.1% (44.9% to 47.1%), n=5355",
+   "over_redaction_rate": "22.7% (21.4% to 24.0%), n=3955",
+   "escalation_rate": "26.9% (25.7% to 28.3%), n=5355",
    "detector_recall": "97.4% (96.9% to 97.9%), n=5355",
-   "false_positive_spans": 2457,
+   "false_positive_spans": 2387,
+   "decomposition_leaks": 110,
+   "decomposition_detector_missed": 25,
+   "decomposition_decision_wrong": 85,
+   "decomposition_must_redact_spans": 1400,
+   "leak_rate": "7.9% (6.3% to 9.5%), n=1400",
+   "category_accuracy": "39.1% (36.2% to 41.7%), n=1290",
+   "per_code_over_redaction": {
+    "K1": "6.3% (5.2% to 7.5%), n=980",
+    "K2": "33.3% (31.3% to 35.4%), n=2345",
+    "K3": "7.1% (4.3% to 10.4%), n=280",
+    "K4": "48.6% (45.7% to 50.0%), n=70",
+    "K6": "0.0% (0.0% to 0.0%), n=280"
+   },
+   "documents_resampled": 210,
+   "per_code_leak": {
+    "R1": "7.9% (6.3% to 9.5%), n=1400"
+   }
+  },
+  {
+   "name": "sever, rules only",
+   "note": "The model layer is off, so the residual the rules could not decide stays escalated rather than being decided. Escalations withhold, so they are counted in over-redaction. This row costs nothing to reproduce.",
+   "spans": 5355,
+   "documents": 210,
+   "over_redaction_rate": "29.7% (28.5% to 30.8%), n=3955",
+   "escalation_rate": "45.4% (44.3% to 46.3%), n=5355",
+   "detector_recall": "97.4% (96.9% to 97.9%), n=5355",
+   "false_positive_spans": 2387,
    "decomposition_leaks": 75,
    "decomposition_detector_missed": 25,
    "decomposition_decision_wrong": 50,
@@ -32,7 +61,7 @@
    "category_accuracy": "5.3% (3.9% to 6.8%), n=1325",
    "per_code_over_redaction": {
     "K1": "8.5% (7.3% to 9.6%), n=980",
-    "K2": "42.0% (40.3% to 43.7%), n=2345",
+    "K2": "40.4% (38.7% to 42.0%), n=2345",
     "K3": "14.3% (9.6% to 18.9%), n=280",
     "K4": "48.6% (45.7% to 50.0%), n=70",
     "K6": "25.0% (21.3% to 28.6%), n=280"
@@ -50,7 +79,7 @@
    "over_redaction_rate": "97.2% (96.5% to 97.9%), n=3955",
    "escalation_rate": "0.0% (0.0% to 0.0%), n=5355",
    "detector_recall": "97.4% (96.9% to 97.9%), n=5355",
-   "false_positive_spans": 2457,
+   "false_positive_spans": 2387,
    "decomposition_leaks": 25,
    "decomposition_detector_missed": 25,
    "decomposition_decision_wrong": 0,
@@ -74,10 +103,10 @@
    "note": "The same rules with the context record blanked: no block kind, no signature-block title, no register, no coreference.",
    "spans": 5355,
    "documents": 210,
-   "over_redaction_rate": "57.0% (55.0% to 58.9%), n=3955",
-   "escalation_rate": "65.5% (64.0% to 67.0%), n=5355",
+   "over_redaction_rate": "56.4% (54.4% to 58.3%), n=3955",
+   "escalation_rate": "65.1% (63.6% to 66.5%), n=5355",
    "detector_recall": "97.4% (96.9% to 97.9%), n=5355",
-   "false_positive_spans": 2457,
+   "false_positive_spans": 2387,
    "decomposition_leaks": 75,
    "decomposition_detector_missed": 25,
    "decomposition_decision_wrong": 50,
@@ -86,7 +115,7 @@
    "category_accuracy": "5.3% (3.9% to 6.8%), n=1325",
    "per_code_over_redaction": {
     "K1": "8.5% (7.3% to 9.6%), n=980",
-    "K2": "81.0% (79.2% to 82.6%), n=2345",
+    "K2": "80.0% (78.1% to 81.7%), n=2345",
     "K3": "60.0% (54.6% to 65.7%), n=280",
     "K4": "48.6% (45.7% to 50.0%), n=70",
     "K6": "25.0% (21.3% to 28.6%), n=280"
@@ -98,7 +127,7 @@
   }
  ],
  "pdf_leak_test": {
-  "boxes_tested": 2756,
+  "boxes_tested": 2224,
   "recoverable": 0,
   "documents": 210,
   "ocr_channel_ran": false,

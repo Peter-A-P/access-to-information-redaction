@@ -19,11 +19,13 @@ Three properties are enforced in this file rather than assumed:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from sever.context.record import ContextRecord
@@ -31,13 +33,14 @@ from sever.decide.placeholders import PlaceholderPolicy, redact_context
 from sever.decide.rules import RuleOutcome
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
-# The data class this project's calls carry. PLAN.md section 2.3 has the gateway applying a
-# policy for the class and performing the substitution; that is 04 Part B and it does not
-# exist. `boundary` v0.3's frozen interface has no data-class concept and no free-form
-# metadata on a call, so until it does, the class travels in `purpose`, which is the one
-# free-text field that reaches the ledger row. That is not a policy and it does not redact
-# anything; the substitution happens in sever.decide.placeholders. It does mean a ledger
-# audit can tell which calls carried personal data, which is the part worth having now.
+# The data class this project's calls carry. CLAUDE.md requires that every model call
+# goes through the 04 gateway with class `personal`, and as of boundary 0.5.1 that is a
+# real parameter on `Gateway.chat` with its own ledger column, so it is passed as one.
+#
+# Earlier versions had nowhere to put it and it travelled inside `purpose`, which reached
+# the ledger as free text and could not be queried. That workaround is gone. What the
+# class does NOT do is redact anything: the gateway records it, and the substitution
+# happens here, in sever.decide.placeholders, before the request is built.
 DATA_CLASS = "personal"
 CAPS_PROJECT = "access-to-information-redaction"
 DEFAULT_MODEL = "anthropic/claude-haiku-4-5-20251001"
@@ -136,9 +139,10 @@ class GatewayModelDecider:
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     max_tokens: int = DEFAULT_MAX_TOKENS
     temperature: float = 0.0
-    # Reaches the ledger row. Carries the data class because `chat` has nowhere else to put
-    # it; see DATA_CLASS above.
-    purpose: str = f"sever.decide:{DATA_CLASS}"
+    # Reaches the ledger row as free text. The data class travels in its own field now;
+    # this says what the call was for.
+    purpose: str = "sever.decide: the residual the rules could not place"
+    data_class: str = DATA_CLASS
     # Groups a run's rows in the ledger and is what the per-run spend cap is measured
     # against. A corpus run is thousands of calls and wants to be one run, not thousands.
     run_id: str | None = None
@@ -149,6 +153,59 @@ class GatewayModelDecider:
     sent: list[dict[str, Any]] = field(default_factory=list)
     keep_last: int = 200
     name: str = "gateway-model"
+    # The run's own accounting, filled from each response. See `_account`.
+    calls: int = 0
+    cost_usd: float = 0.0
+    uncosted: int = 0
+    cache_hits: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    call_uids: list[str] = field(default_factory=list)
+    # An on-disk cache of replies, keyed by the exact request. Off unless a path is given.
+    #
+    # This is not a speed optimisation, it is what makes the threshold defensible. The
+    # confidence threshold is applied to the model's answer *after* the answer comes back,
+    # so a sweep over thresholds does not need new answers, it needs the same answers read
+    # again. Without a cache, measuring five thresholds means paying five times and
+    # comparing five different sets of model answers, which is not a sweep, it is five
+    # runs. With it, one paid run buys every threshold and the comparison is exact.
+    #
+    # Safe to commit only because the requests contain placeholders and never names, which
+    # is the same property tests/test_no_raw_entity_leaves.py asserts for the corpus.
+    cache_path: Path | None = None
+    _cache: dict[str, str] = field(default_factory=dict, repr=False)
+    cache_reads: int = 0
+    # Replay the cache and refuse to send anything. This is what makes the model numbers
+    # reproducible from a clone: the cache is committed, the gateway is a private
+    # repository, and a stranger checking the published table has neither a key nor a
+    # reason to spend money. A cache miss is an error rather than a quiet call, because
+    # the failure it guards against is a run that was meant to be free and was not.
+    replay_only: bool = False
+
+    def __post_init__(self) -> None:
+        if self.cache_path is not None and self.cache_path.is_file():
+            with self.cache_path.open(encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    row = json.loads(line)
+                    self._cache[str(row["key"])] = str(row["reply"])
+
+    def _cache_key(self, message: str) -> str:
+        h = hashlib.sha256()
+        for part in (self.model, SYSTEM_PROMPT, message):
+            h.update(part.encode("utf-8"))
+            h.update(b"\x00")
+        return h.hexdigest()
+
+    def _cache_put(self, key: str, reply: str) -> None:
+        self._cache[key] = reply
+        if self.cache_path is None:
+            return
+        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.cache_path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"key": key, "reply": reply}, ensure_ascii=False) + "\n")
 
     def decide(
         self,
@@ -201,6 +258,18 @@ class GatewayModelDecider:
 
     def _decide_one(self, ctx: ContextRecord, policy: PlaceholderPolicy) -> RuleOutcome | None:
         message, payload = self.build_request(ctx, policy)
+        key = self._cache_key(message)
+        hit = self._cache.get(key)
+        if hit is not None:
+            self.cache_reads += 1
+            return self._outcome(parse_answer(hit, self.taxonomy))
+        if self.replay_only:
+            raise ModelUnavailable(
+                f"replay-only, and the answer cache does not hold this span "
+                f"({ctx.doc_id} {ctx.text!r}). The cache was recorded against a particular "
+                f"corpus, seed and prompt; changing any of them invalidates it, and the "
+                f"run has to be paid for again."
+            )
         gateway = self.gateway or _default_gateway()
         try:
             from boundary import ChatRequest
@@ -218,13 +287,23 @@ class GatewayModelDecider:
             temperature=self.temperature,
         )
         self._record({"payload": payload, "message": message, "model": self.model})
-        # purpose and run_id only: `Gateway.chat` takes no metadata mapping, and an earlier
-        # version of this call passed one. It typechecked, it passed every test, and it
-        # would have raised TypeError the first time the model layer was switched on,
-        # because nothing exercised this line. tests/test_model_layer.py now does, against
-        # a fake built from the real signature.
-        response = gateway.chat(request, purpose=self.purpose, run_id=self.run_id)
-        answer = parse_answer(_text_of(response), self.taxonomy)
+        # purpose, run_id and data_class, and no metadata mapping: an earlier version of
+        # this call passed one. It typechecked, it passed every test, and it would have
+        # raised TypeError the first time the model layer was switched on, because nothing
+        # exercised this line. tests/test_model_layer.py now does, against a fake built
+        # from the real signature.
+        response = gateway.chat(
+            request,
+            purpose=self.purpose,
+            run_id=self.run_id,
+            data_class=self.data_class,
+        )
+        self._account(response)
+        reply = _text_of(response)
+        self._cache_put(key, reply)
+        return self._outcome(parse_answer(reply, self.taxonomy))
+
+    def _outcome(self, answer: ModelAnswer | None) -> RuleOutcome | None:
         if answer is None:
             return None
         return RuleOutcome(
@@ -237,6 +316,50 @@ class GatewayModelDecider:
             ),
             rule="model",
         )
+
+    def _account(self, response: Any) -> None:
+        """What the run cost, from the gateway's own costing rather than an estimate.
+
+        The ledger is the record of truth and `boundary ledger` can be queried directly;
+        this is here so `sever report` can print the cost of the run beside the numbers
+        the run produced, which is the pairing the portfolio's budget rule wants.
+        """
+        self.calls += 1
+        cost = getattr(response, "cost_usd", None)
+        if isinstance(cost, int | float):
+            self.cost_usd += float(cost)
+        else:
+            self.uncosted += 1
+        if getattr(response, "cached", False):
+            self.cache_hits += 1
+        usage = getattr(response, "usage", None)
+        if usage is not None:
+            self.input_tokens += int(getattr(usage, "input_tokens", 0) or 0)
+            self.output_tokens += int(getattr(usage, "output_tokens", 0) or 0)
+        uid = getattr(response, "call_uid", None)
+        if isinstance(uid, str) and len(self.call_uids) < self.keep_last:
+            # 04 asked for these so a ledger row can be joined to the decision it made.
+            self.call_uids.append(uid)
+
+    def spend_summary(self) -> str:
+        if not self.calls:
+            if self.cache_reads:
+                return f"{self.cache_reads} answers replayed from the cache, nothing spent"
+            return "no model calls"
+        per = self.cost_usd / self.calls
+        parts = [
+            f"{self.calls} model calls",
+            f"US${self.cost_usd:.4f}",
+            f"US${per:.5f} per call",
+            f"{self.input_tokens} in / {self.output_tokens} out tokens",
+        ]
+        if self.cache_hits:
+            parts.append(f"{self.cache_hits} served from the gateway cache")
+        if self.cache_reads:
+            parts.append(f"{self.cache_reads} replayed from the answer cache, free")
+        if self.uncosted:
+            parts.append(f"{self.uncosted} uncosted, so the total is a floor")
+        return ", ".join(parts)
 
     def _record(self, entry: dict[str, Any]) -> None:
         self.sent.append(entry)

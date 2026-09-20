@@ -406,15 +406,43 @@ Rather than leave this as an omission, the taxonomy format refuses a provision t
 neither verified (quote, date read, URL read from) nor explicitly marked unverified with a
 reason. `docs/taxonomy.md` prints the count at the top. Nothing defaults to verified.
 
-### 12.9 Not built yet
+### 12.9 The model layer has been run, and the threshold was the finding
 
-From the definition of done in section 10, still outstanding: the model layer has been
-written and tested but never run against a live model, so there is no measured
-model-through-the-gateway result, no placeholders ablation, and no cost per page; the
-model-only and rules-only baselines (the sentence-only and blunt ones are measured); the
-scanned track and its character error rate; the published-federal-releases track; the
-reviewer web app and the reviewer time study; the hosted demo.
+2026-09-20. Caps were entered in 04's `caps.yaml` (US$50 monthly, US$12 per run) and
+confirmed, and the model layer ran against Haiku 4.5 over the full 210-document corpus
+through `boundary.Gateway` with data class `personal`. Section 2.3's property held: the
+corpus-wide test asserts no persona value reaches a request, and the run itself sent none.
 
-The model layer is switched off by default and the CLI will not turn it on by accident,
-because a corpus run is thousands of calls and the portfolio's rule is a hard spend cap
-before the first call. No cap has been set for this project, so nothing has been spent.
+Three things the plan did not anticipate.
+
+**The confidence threshold was the wrong number and the sweep that found it was nearly
+unaffordable.** Section 2.4 fixed 0.7 and section 9 promised to set it on a validation
+split. Swept, 0.7 turns out to change nothing: a third of the model's answers are discarded
+at that setting and not one published figure moves, because the discarded answers are the
+ones where the model itself answered E1. The real boundary is 0.90, where the leak rate
+falls from 13.4 percent to 7.9 and over-redaction rises from 15.6 to 22.7, and above it
+nothing moves again. The full account is entry 3 of `docs/rejected.md`.
+
+A sweep is only honest if every row scores the *same* model answers, so the decider records
+each reply to `results/model-answers.jsonl` and replays it. That was not in the plan and it
+is what made the sweep cost nothing: one paid run of US$0.51 bought all eight rows, and
+`--replay-only` reproduces the model row of the published table from a clone with no
+gateway, no key and no spend. The plan assumed the model numbers would be the part of this
+repository a stranger could not check. They are not.
+
+**The spend was two orders of magnitude below the estimate.** Section 6 budgeted CA$55 and
+this project told 04 to expect about US$5.70 a full run. The measured figure is US$0.51,
+because the corpus is template-generated and after placeholder substitution 2,084 of the
+2,550 requests in a run are byte-identical to one already made. Total spend across the
+smoke runs, the 60-document run and the full run is about US$1.10.
+
+**Running the model exposed a detector bug that a corpus evaluation could not see.** The
+case-number recogniser matched the heading "CASE NOTES" and proposed "NOTES" as a case
+number. Recall cannot see a false entity over ordinary prose, and this one was found by
+reading six proposals on the first live call. `tests/test_recognisers.py` did not exist
+before this; it does now, and it holds both label-word bugs as fixtures.
+
+Still outstanding from the definition of done in section 10: the placeholders ablation and
+the cost per page; the model-only baseline (rules-only, sentence-only and blunt are
+measured); the scanned track and its character error rate; the published-federal-releases
+track; the reviewer web app and the reviewer time study; the hosted demo.

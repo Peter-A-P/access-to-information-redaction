@@ -92,13 +92,20 @@ FILE_NUMBER = PatternRecogniser(
 CASE_NUMBER = PatternRecogniser(
     name="case_number",
     entity_type=EntityType.CASE_NUMBER,
-    # The label word needs a boundary after it as well as before. Without the trailing
-    # \b, "ref" matched inside "referred" and the group then captured "erred" as a case
-    # number, which drew a redaction box over the middle of an ordinary word. The bug was
-    # invisible until a better language model stopped claiming the surrounding span.
+    # Two guards on the label word, and each was a bug before it was a guard.
+    #
+    # The trailing \b: without it "ref" matched inside "referred" and the group captured
+    # "erred" as a case number, drawing a redaction box over the middle of an ordinary
+    # word. Invisible until a better language model stopped claiming the surrounding span.
+    #
+    # The lookahead: a case number contains a digit. Without it the heading "CASE NOTES"
+    # matched and "NOTES" was proposed as a case number, as were "case REVIEW" and "file
+    # REPORT". Found on the first live model run, which was the first time anything read
+    # the proposals one at a time. Project 04's equivalent patterns carry the same
+    # lookahead and have neither bug; this one was fixed after checking against theirs.
     pattern=_ci(
         r"\b(?:case|file|reference|ref\.?|request)\b\s*(?:no\.?|number|#)?\s*[:#]?\s*"
-        r"([A-Z0-9][A-Z0-9\-/]{4,20})\b"
+        r"((?=[A-Z0-9\-/]*\d)[A-Z0-9][A-Z0-9\-/]{4,20})\b"
     ),
     score=0.8,
     group=1,

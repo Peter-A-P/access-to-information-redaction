@@ -11,11 +11,14 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from sever import __version__
+
+if TYPE_CHECKING:
+    from sever.decide.model import GatewayModelDecider
 
 app = typer.Typer(
     add_completion=False,
@@ -29,6 +32,91 @@ app.add_typer(corpus_app, name="corpus")
 
 DEFAULT_CORPUS = Path("corpus/generated")
 DEFAULT_RESULTS = Path("results")
+
+# The gateway configuration is not in this repository and must not be: it names providers
+# and points at a caps file, and this repository is public. The sibling checkout is the
+# convenient default for the one machine that has it; BOUNDARY_CONFIG overrides it and is
+# what anyone else would set.
+DEFAULT_BOUNDARY_CONFIG = Path("../04-compliant-ai-gateway/config/boundary.yaml")
+
+
+def _build_model(
+    *,
+    enabled: bool,
+    model_name: str,
+    boundary_config: Path | None,
+    run_id: str | None,
+    answer_cache: Path | None = None,
+    replay_only: bool = False,
+) -> GatewayModelDecider | None:
+    """Construct the model decider, or None.
+
+    Every branch that can spend money goes through here, and it is deliberately loud: the
+    command prints the gateway configuration, the model and the run id before the first
+    call, because a spend that nobody saw start is the one that goes wrong.
+    """
+    if not enabled:
+        return None
+    import os
+    import uuid
+
+    from sever.decide.model import CAPS_PROJECT, DATA_CLASS, GatewayModelDecider
+
+    if replay_only:
+        if answer_cache is None or not answer_cache.is_file():
+            raise typer.BadParameter(
+                "--replay-only needs an answer cache to replay. Point --answer-cache at "
+                "the file a paid run recorded."
+            )
+        typer.echo(
+            f"model layer ON, replaying {answer_cache} only: no gateway, no network, no "
+            f"spend. A span the cache does not hold is an error rather than a call."
+        )
+        return GatewayModelDecider(
+            gateway=None,
+            model=model_name,
+            enabled=True,
+            run_id=run_id,
+            cache_path=answer_cache,
+            replay_only=True,
+        )
+
+    # Path("") is Path("."), which is truthy and is not a configuration file, so the
+    # environment variable is checked as a string before it becomes a path.
+    from_env = os.environ.get("BOUNDARY_CONFIG", "").strip()
+    config = boundary_config or (Path(from_env) if from_env else DEFAULT_BOUNDARY_CONFIG)
+    if not config.is_file():
+        raise typer.BadParameter(
+            f"no gateway configuration at {config}. Point --boundary-config or "
+            f"BOUNDARY_CONFIG at a boundary.yaml whose caps file has an entry for "
+            f"{CAPS_PROJECT!r}."
+        )
+    try:
+        from boundary import Gateway
+    except ImportError as exc:
+        raise typer.BadParameter(
+            "boundary is not installed. `uv pip install -e '.[gateway]'`, or drop --model."
+        ) from exc
+
+    gateway = Gateway.from_config(config, project=CAPS_PROJECT)
+    run = run_id or f"sever-{uuid.uuid4().hex[:8]}"
+    typer.echo(
+        f"model layer ON: {model_name} through {config}, project {CAPS_PROJECT}, "
+        f"data class {DATA_CLASS}, run id {run}"
+    )
+    if answer_cache is not None:
+        state = "replaying" if answer_cache.is_file() else "new"
+        typer.echo(
+            f"answer cache: {answer_cache} ({state}). A span already in the cache is not "
+            f"re-sent and costs nothing."
+        )
+    return GatewayModelDecider(
+        gateway=gateway,
+        model=model_name,
+        enabled=True,
+        run_id=run,
+        cache_path=answer_cache,
+    )
 
 
 @app.callback()
@@ -118,26 +206,48 @@ def propose(
     sentence_only: Annotated[
         bool, typer.Option(help="Blank the document context: the ablation baseline.")
     ] = False,
+    model: Annotated[
+        bool, typer.Option("--model/--no-model", help="Send the residual to the gateway. Spends money.")
+    ] = False,
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[
+        Path | None, typer.Option(help="Path to boundary.yaml. Defaults to BOUNDARY_CONFIG.")
+    ] = None,
+    run_id: Annotated[
+        str | None, typer.Option(help="Ledger run id. The per-run spend cap is measured against it.")
+    ] = None,
 ) -> None:
     """Propose redactions over corpus documents and print them with their reasons."""
     from sever.corpus.generate import build
+    from sever.decide.model import DEFAULT_MODEL
     from sever.decide.pipeline import DecisionEngine
     from sever.detect.engine import SeverDetector
     from sever.eval.report import config_for
 
+    decider = _build_model(
+        enabled=model,
+        model_name=model_name or DEFAULT_MODEL,
+        boundary_config=boundary_config,
+        run_id=run_id,
+    )
     detector = SeverDetector()
     for item in build(documents=documents, seed=seed):
         doc = item.rendered.document
         engine = DecisionEngine(
-            config=config_for(item), detector=detector, sentence_only=sentence_only
+            config=config_for(item),
+            detector=detector,
+            sentence_only=sentence_only,
+            model=decider,
         )
         proposals = engine.propose(doc)
         typer.echo(f"\n=== {doc.doc_id} ({doc.doc_type.value}) ===")
         typer.echo(f"{len(proposals)} spans; {len(proposals.withheld)} withheld; "
                    f"{len(proposals.escalations)} escalated; codes {proposals.by_code()}")
         for p in list(proposals)[:show]:
-            typer.echo(f"  [{p.code}] {p.detection.text!r}")
+            typer.echo(f"  [{p.code}] {p.detection.text!r}  ({p.source.value})")
             typer.echo(f"        {p.reason}")
+    if decider is not None:
+        typer.echo(f"\n{decider.spend_summary()}")
 
 
 @app.command()
@@ -184,24 +294,71 @@ def export(
 
 @app.command()
 def report(
-    documents: Annotated[int, typer.Option(help="Corpus size.")] = 60,
+    documents: Annotated[int, typer.Option(help="Corpus size.")] = 210,
     seed: Annotated[int, typer.Option()] = 20270802,
     out: Annotated[Path, typer.Option(help="Where to write results.")] = DEFAULT_RESULTS,
     readme: Annotated[
         Path | None, typer.Option(help="Splice the tables into this README.")
     ] = None,
     pdf_leak: Annotated[bool, typer.Option(help="Run the PDF leak test too.")] = True,
+    model: Annotated[
+        bool,
+        typer.Option(
+            "--model/--no-model",
+            help="Add the rules-then-model row. Spends money through the 04 gateway.",
+        ),
+    ] = False,
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[
+        Path | None, typer.Option(help="Path to boundary.yaml. Defaults to BOUNDARY_CONFIG.")
+    ] = None,
+    run_id: Annotated[
+        str | None,
+        typer.Option(help="Ledger run id. The per-run spend cap is measured against it."),
+    ] = None,
+    answer_cache: Annotated[
+        Path | None,
+        typer.Option(help="Replay model answers from here, and record new ones into it."),
+    ] = None,
+    threshold: Annotated[
+        float, typer.Option(help="Below this confidence a model answer is escalated.")
+    ] = -1.0,
+    replay_only: Annotated[
+        bool,
+        typer.Option(
+            "--replay-only",
+            help="Read the answer cache and never send. Reproduces the model row for free.",
+        ),
+    ] = False,
 ) -> None:
     """Run every system over the corpus and write the published tables.
 
-    This is the one command behind every number in the README.
+    This is the one command behind every number in the README. Without --model it makes no
+    network call and costs nothing, which is the configuration CI runs.
     """
+    from sever.decide.model import DEFAULT_MODEL
+    from sever.decide.pipeline import DEFAULT_THRESHOLD
     from sever.eval import report as report_mod
 
+    decider = _build_model(
+        enabled=model,
+        model_name=model_name or DEFAULT_MODEL,
+        boundary_config=boundary_config,
+        run_id=run_id,
+        answer_cache=answer_cache,
+        replay_only=replay_only,
+    )
     tmp = Path(tempfile.mkdtemp(prefix="sever-export-"))
     try:
         result = report_mod.run(
-            documents=documents, seed=seed, with_pdf_leak=pdf_leak, tmp_dir=tmp
+            documents=documents,
+            seed=seed,
+            with_pdf_leak=pdf_leak,
+            tmp_dir=tmp,
+            model=decider,
+            model_confidence_threshold=(
+                DEFAULT_THRESHOLD if threshold < 0 else threshold
+            ),
         )
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -263,6 +420,48 @@ def eval_detector(
         )
         out.write_text(header + text + "\n", encoding="utf-8")
         typer.echo(f"\nwrote {out}")
+
+
+@app.command("eval-thresholds")
+def eval_thresholds(
+    documents: Annotated[int, typer.Option(help="Corpus size.")] = 210,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    answer_cache: Annotated[
+        Path, typer.Option(help="The model answers to sweep over.")
+    ] = Path("results/model-answers.jsonl"),
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    run_id: Annotated[str | None, typer.Option()] = None,
+    replay_only: Annotated[
+        bool, typer.Option("--replay-only", help="Read the cache and never send.")
+    ] = True,
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/thresholds.md"
+    ),
+) -> None:
+    """Sweep the model confidence threshold against one set of model answers.
+
+    Reads the answer cache, so a sweep over a cache that already covers the corpus makes no
+    call and spends nothing. A span the cache does not hold is sent, which is how the cache
+    is filled in the first place.
+    """
+    from sever.decide.model import DEFAULT_MODEL
+    from sever.eval import thresholds as sweep_mod
+
+    decider = _build_model(
+        enabled=True,
+        model_name=model_name or DEFAULT_MODEL,
+        boundary_config=boundary_config,
+        run_id=run_id,
+        answer_cache=answer_cache,
+        replay_only=replay_only,
+    )
+    assert decider is not None
+    result = sweep_mod.sweep(decider, documents=documents, seed=seed)
+    typer.echo("")
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"\nwrote {sweep_mod.write(result, out)}")
 
 
 @app.command()

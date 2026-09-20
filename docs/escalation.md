@@ -58,6 +58,11 @@ Below the configured confidence threshold, a model answer is discarded and the s
 escalated with the model's reasoning attached, so the reviewer sees what it thought and
 why it was not trusted.
 
+The threshold is 0.90 and it is measured, not chosen: `results/thresholds.md` sweeps it
+over one recorded set of model answers. On 2,550 answers, 43 percent clear 0.90 and the
+rest land here. That is the single largest lever on this page, and the sweep shows why it
+sits where it does: below 0.90 the leak rate is 13.4 percent, at 0.90 it is 7.9.
+
 ### 6. The rules and the model disagreed
 
 Not resolved silently in either direction. The proposal is the withholding one and the
@@ -94,17 +99,22 @@ These are not escalations. The tool does not attempt them at all, and says so.
 
 ## The number this page is about
 
-At the last full run, 46.1 percent of spans were escalated, and the escalation rate on the
-must-redact category was 89.6 percent. That second figure is not a defect, it is the
-current configuration: the model layer is off, so almost every third party the rules cannot
-place lands here rather than being decided. Turning the model on is what moves it, and what
-it costs in accuracy is the paired ablation that has not been run yet.
+At the last full run, **26.9 percent** of spans were escalated with the model layer on, and
+**45.4 percent** with the rules alone. On the must-redact category the figures are 56.1 and
+89.6 percent.
 
-Both numbers rose when detection improved, and the reason is worth stating because it looks
-like a regression. A better detector finds more of the people in a record; the ones it newly
-finds are, by definition, the ones the weaker detector missed, and they arrive with no title
-and no register entry attached. So they escalate. The leak rate fell from 14.1 percent to
-5.4 at the same time, which is the trade this tool is designed to make: withhold and ask
-rather than release and hope.
+The gap between those two columns is the whole argument of the model layer, and it is worth
+reading in the right direction. The model does not make the tool decisive by being clever
+about hard cases; it makes it decisive by answering 43 percent of the questions the rules
+could not, and it is wrong on some of them. Escalation falls by 18.5 points and the leak
+rate rises by 2.5. The reviewer's queue halves and a few more third parties are named in a
+released record.
+
+An earlier run escalated 46.1 percent with the rules alone, and both escalation figures rose
+once when detection improved. That looks like a regression and is not. A better detector
+finds more of the people in a record; the ones it newly finds are, by definition, the ones
+the weaker detector missed, and they arrive with no title and no register entry attached. So
+they escalate. The leak rate fell from 14.1 percent to 5.4 at the same time, which is the
+trade this tool is designed to make: withhold and ask rather than release and hope.
 
 Regenerate both with `sever report`.

@@ -72,8 +72,16 @@ class FakeGateway:
         purpose: str,
         run_id: str | None = None,
         mode: Any = None,
+        data_class: Any = None,
     ) -> FakeResponse:
-        self.calls.append({"request": request, "purpose": purpose, "run_id": run_id})
+        self.calls.append(
+            {
+                "request": request,
+                "purpose": purpose,
+                "run_id": run_id,
+                "data_class": data_class,
+            }
+        )
         return FakeResponse(text=self.reply)
 
 
@@ -103,7 +111,7 @@ def test_the_call_matches_the_real_gateway_signature() -> None:
     boundary = pytest.importorskip("boundary", reason="the gateway extra is not installed")
     parameters = inspect.signature(boundary.Gateway.chat).parameters
 
-    for name in ("purpose", "run_id"):
+    for name in ("purpose", "run_id", "data_class"):
         assert name in parameters, (
             f"sever passes {name!r} to Gateway.chat and the installed boundary does not "
             f"accept it. Either the interface moved or this project is wrong."
@@ -117,8 +125,8 @@ def test_the_call_matches_the_real_gateway_signature() -> None:
         and p.kind is not inspect.Parameter.VAR_KEYWORD
     }
     assert required <= {"purpose"}, (
-        f"Gateway.chat now requires {sorted(required)}; sever supplies only purpose and "
-        f"run_id, so the model layer would fail on the first live call."
+        f"Gateway.chat now requires {sorted(required)}; sever supplies only purpose, "
+        f"run_id and data_class, so the model layer would fail on the first live call."
     )
     # The fake in this file has to stay honest about the real thing.
     fake = set(inspect.signature(FakeGateway.chat).parameters) - {"self"}
@@ -126,10 +134,17 @@ def test_the_call_matches_the_real_gateway_signature() -> None:
     assert fake <= real, f"the fake accepts {sorted(fake - real)}, which the real one does not"
 
 
-def test_the_data_class_reaches_the_ledger_somehow() -> None:
-    """Until 04 Part B gives a call a data class, it rides in purpose. If that stops being
-    true, the ledger can no longer tell which calls carried personal data."""
-    assert DATA_CLASS in GatewayModelDecider().purpose
+def test_every_call_carries_the_personal_data_class() -> None:
+    """CLAUDE.md: every model call goes through the 04 gateway with class `personal`.
+
+    boundary 0.5.1 made this a real parameter with its own ledger column, so it is checked
+    as one. Before that it rode inside `purpose` as free text, which the ledger could store
+    and not query. If this assertion is ever relaxed, a ledger audit can no longer answer
+    which calls carried personal data, which is the whole point of the class.
+    """
+    gateway = FakeGateway()
+    GatewayModelDecider(gateway=gateway, enabled=True).decide([a_context()])
+    assert gateway.calls[0]["data_class"] == DATA_CLASS
 
 
 # --- the send path ------------------------------------------------------------
@@ -142,7 +157,7 @@ def test_a_confident_answer_becomes_a_proposal() -> None:
 
     assert len(gateway.calls) == 1
     assert gateway.calls[0]["run_id"] == "run-1"
-    assert DATA_CLASS in gateway.calls[0]["purpose"]
+    assert gateway.calls[0]["data_class"] == DATA_CLASS
 
     outcome = answers[0]
     assert isinstance(outcome, RuleOutcome)

@@ -33,7 +33,12 @@ from pathlib import Path
 from sever.context.requester import RequestConfig
 from sever.corpus.generate import Corpus, CorpusItem, build
 from sever.corpus.personas import PersonaRole
-from sever.decide.pipeline import DecisionEngine, blunt_baseline
+from sever.decide.pipeline import (
+    DEFAULT_THRESHOLD,
+    DecisionEngine,
+    ModelDecider,
+    blunt_baseline,
+)
 from sever.detect.engine import SeverDetector
 from sever.detect.types import Detection, Detector
 from sever.eval.confusion import Interval, Scored, score
@@ -120,6 +125,9 @@ class Report:
     systems: list[SystemResult] = field(default_factory=list)
     leak_report: LeakReport | None = None
     detector_name: str = ""
+    # Empty when the model layer was off, which is the default and the CI configuration.
+    model_name: str = ""
+    model_note: str = ""
 
     @property
     def primary(self) -> SystemResult:
@@ -135,6 +143,8 @@ class Report:
                 "labels_by_code": self.corpus.label_counts(),
             },
             "detector": self.detector_name,
+            "model": self.model_name or None,
+            "model_run": self.model_note or None,
             "systems": [
                 {
                     "name": s.name,
@@ -170,13 +180,23 @@ class Report:
 
 def run(
     *,
-    documents: int = 60,
+    documents: int = 210,
     seed: int = 20270802,
     detector: Detector | None = None,
     corpus: Corpus | None = None,
     with_pdf_leak: bool = True,
     tmp_dir: Path | None = None,
+    model: ModelDecider | None = None,
+    model_confidence_threshold: float = DEFAULT_THRESHOLD,
 ) -> Report:
+    """Every system over the corpus.
+
+    `model` adds a system rather than replacing one. The rules-only configuration stays in
+    the table because it is the row a stranger can reproduce for nothing, and because the
+    difference between the two rows is the only honest statement of what the model layer
+    buys. The PDF export and the leak test run on the model's proposals when there are
+    any, because that is what would actually be released.
+    """
     det = CachingDetector(inner=detector or SeverDetector())
     c = corpus or build(documents=documents, seed=seed)
     taxonomy = default_taxonomy()
@@ -184,6 +204,7 @@ def run(
     ours: dict[str, tuple[object, object]] = {}
     blunt: dict[str, tuple[object, object]] = {}
     sentence: dict[str, tuple[object, object]] = {}
+    modelled: dict[str, tuple[object, object]] = {}
     leak = LeakChecker(use_ocr=False) if with_pdf_leak else None
 
     for item in c:
@@ -200,10 +221,22 @@ def run(
             ).propose(doc),
             labels,
         )
+        released = full
+        if model is not None:
+            released = DecisionEngine(
+                config=config,
+                detector=det,
+                taxonomy=taxonomy,
+                model=model,
+                model_confidence_threshold=model_confidence_threshold,
+            ).propose(doc)
+            modelled[doc.doc_id] = (released, labels)
 
         if leak is not None and tmp_dir is not None:
             src = render_pdf(doc, tmp_dir / f"{doc.doc_id}.pdf")
-            out = apply_redactions(src, tmp_dir / f"{doc.doc_id}-released.pdf", doc, full)
+            out = apply_redactions(
+                src, tmp_dir / f"{doc.doc_id}-released.pdf", doc, released
+            )
             leak.check(out.path, out.regions, document=doc.doc_id)
 
     report = Report(
@@ -211,14 +244,30 @@ def run(
         corpus=c,
         detector_name=getattr(det, "name", type(det).__name__),
         leak_report=leak.report() if leak is not None else None,
+        model_name=str(getattr(model, "model", "")) if model is not None else "",
+        model_note=_spend_summary(model),
     )
-    report.systems = [
+    report.systems = []
+    if modelled:
+        report.systems.append(
+            SystemResult(
+                name="sever, rules then the model on the residual",
+                note=(
+                    "The full configuration. The rules decide what they can; what is left "
+                    "goes to the model on typed placeholders through the 04 gateway, and "
+                    "an answer below the confidence threshold is escalated rather than "
+                    "used."
+                ),
+                scored=score(modelled, taxonomy=taxonomy),  # type: ignore[arg-type]
+            )
+        )
+    report.systems += [
         SystemResult(
-            name="sever, rules over the full document context",
+            name="sever, rules only",
             note=(
-                "The model layer is off in this run, so the residual the rules could not "
-                "decide stays escalated rather than being decided. Escalations withhold, "
-                "so they are counted in over-redaction."
+                "The model layer is off, so the residual the rules could not decide stays "
+                "escalated rather than being decided. Escalations withhold, so they are "
+                "counted in over-redaction. This row costs nothing to reproduce."
             ),
             scored=score(ours, taxonomy=taxonomy),  # type: ignore[arg-type]
         ),
@@ -239,6 +288,15 @@ def run(
     return report
 
 
+def _spend_summary(model: ModelDecider | None) -> str:
+    """What the run cost, when the implementation keeps track. The protocol does not
+    require it, so this asks rather than assumes."""
+    if model is None:
+        return ""
+    summary = getattr(model, "spend_summary", None)
+    return str(summary()) if callable(summary) else ""
+
+
 def _cell(i: Interval) -> str:
     return "n/a" if not i.is_defined else str(i)
 
@@ -253,6 +311,15 @@ def to_markdown(report: Report) -> str:
         f"Labels known by construction. Detector: {report.detector_name}. "
         f"Generated {report.generated_on.isoformat()} by `sever report`.",
         "",
+        *(
+            [
+                f"**Model layer:** {report.model_name}, through the 04 gateway with data "
+                f"class `personal`. {report.model_note}.",
+                "",
+            ]
+            if report.model_note
+            else []
+        ),
         "**Per category, this tool**",
         "",
         "| Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |",

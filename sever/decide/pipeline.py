@@ -27,6 +27,30 @@ from sever.detect.types import Detection, Detector
 from sever.ingest.document import Document
 from sever.taxonomy.loader import Decision, Provision, Taxonomy, default_taxonomy
 
+# Below this confidence a model answer is discarded and the span is escalated instead.
+#
+# 0.90, and it is measured rather than chosen. `sever eval-thresholds` sweeps it against
+# one recorded set of model answers, so every row is the same answers read again rather
+# than a fresh run of a system that varies; `results/thresholds.md` is the table and it is
+# reproducible from the committed answer cache without a gateway.
+#
+# The curve is not smooth and that is the finding. Between 0.00 and 0.70 the published
+# numbers do not move at all, even though acceptance falls from 100 percent to 66: the
+# answers dropped in that range are the ones where the model itself said E1, and an
+# escalation discarded for low confidence and an escalation the model asked for are the
+# same decision. The threshold only starts doing work at 0.90, where the leak rate falls
+# from 13.4 percent to 7.9 and over-redaction rises from 15.6 to 22.7. Above 0.90 it is
+# flat again: 0.95 moves nothing, because the model almost never answers between the two.
+#
+# That shape says something about the model as much as about the threshold. Haiku 4.5
+# reports its confidence in a handful of clusters rather than on a continuum, so this is a
+# switch with one useful position rather than a dial.
+#
+# The reason it sits at the withholding end of that switch is the rule in CLAUDE.md:
+# withhold and escalate when unsure. Releasing a third party's information cannot be
+# undone; an escalation costs a reviewer a minute.
+DEFAULT_THRESHOLD = 0.90
+
 
 class Source(StrEnum):
     RULE = "rule"
@@ -137,10 +161,8 @@ class DecisionEngine:
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     rules: Sequence[rules_mod.Rule] = rules_mod.DEFAULT_RULES
     model: ModelDecider | None = None
-    # Below this, a model answer is not trusted and the span is escalated instead. Set on
-    # the validation split and reported; the default here is a starting value, not a
-    # measured one, and `sever eval thresholds` is what replaces it.
-    model_confidence_threshold: float = 0.7
+    # Below this, a model answer is not trusted and the span is escalated instead.
+    model_confidence_threshold: float = DEFAULT_THRESHOLD
     # Blank the document context before deciding. The sentence-only baseline.
     sentence_only: bool = False
 

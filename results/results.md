@@ -1,29 +1,33 @@
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-19 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
+
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
-| `K1` | 980 | n/a | 8.5% (7.3% to 9.6%), n=980 | 8.5% (7.3% to 9.6%), n=980 |
-| `K2` | 2345 | n/a | 42.0% (40.3% to 43.7%), n=2345 | 42.0% (40.3% to 43.7%), n=2345 |
-| `K3` | 280 | n/a | 14.3% (9.6% to 18.9%), n=280 | 14.3% (9.6% to 18.9%), n=280 |
+| `K1` | 980 | n/a | 6.3% (5.2% to 7.5%), n=980 | 4.7% (3.5% to 6.0%), n=980 |
+| `K2` | 2345 | n/a | 33.3% (31.3% to 35.4%), n=2345 | 23.8% (21.8% to 25.9%), n=2345 |
+| `K3` | 280 | n/a | 7.1% (4.3% to 10.4%), n=280 | 7.1% (4.3% to 10.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
-| `K6` | 280 | n/a | 25.0% (21.3% to 28.6%), n=280 | 25.0% (21.3% to 28.6%), n=280 |
-| `R1` | 1400 | 5.4% (3.9% to 7.0%), n=1400 | n/a | 89.6% (87.6% to 91.6%), n=1400 |
+| `K6` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
+| `R1` | 1400 | 7.9% (6.3% to 9.5%), n=1400 | n/a | 56.1% (53.3% to 59.1%), n=1400 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules over the full document context | 5.4% (3.9% to 7.0%), n=1400 | 30.6% (29.4% to 31.8%), n=3955 | 46.1% (44.9% to 47.1%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sever, rules then the model on the residual | 7.9% (6.3% to 9.5%), n=1400 | 22.7% (21.4% to 24.0%), n=3955 | 26.9% (25.7% to 28.3%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sever, rules only | 5.4% (3.9% to 7.0%), n=1400 | 29.7% (28.5% to 30.8%), n=3955 | 45.4% (44.3% to 46.3%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
 | blunt redact-all-PII | 1.8% (1.1% to 2.5%), n=1400 | 97.2% (96.5% to 97.9%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
-| sentence-only, no document context | 5.4% (3.9% to 7.0%), n=1400 | 57.0% (55.0% to 58.9%), n=3955 | 65.5% (64.0% to 67.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sentence-only, no document context | 5.4% (3.9% to 7.0%), n=1400 | 56.4% (54.4% to 58.3%), n=3955 | 65.1% (63.6% to 66.5%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
 
 **Where the leaks come from**
 
 | System | Leaks | The detector never found the span | The decision was wrong |
 |---|---:|---:|---:|
-| sever, rules over the full document context | 75 | 25 | 50 |
+| sever, rules then the model on the residual | 110 | 25 | 85 |
+| sever, rules only | 75 | 25 | 50 |
 | blunt redact-all-PII | 25 | 25 | 0 |
 | sentence-only, no document context | 75 | 25 | 50 |
 
@@ -31,7 +35,7 @@
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2756 | 0 | text layer only |
+| 2224 | 0 | text layer only |
 
 _OCR channel disabled for this run._
 
