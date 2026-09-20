@@ -135,7 +135,13 @@ STREET_ADDRESS = PatternRecogniser(
         r"(?:street|st\.?|road|rd\.?|avenue|ave\.?|drive|dr\.?|place|pl\.?|lane|ln\.?|"
         r"crescent|cres\.?|boulevard|blvd\.?|court|ct\.?|way|terrace|highway|hwy\.?)\b"
     ),
-    score=0.75,
+    # Scored above Presidio's LOCATION (0.85) deliberately. Project 04's analyzer resolves
+    # an overlap by score first, and Presidio calls "Bannerman Street" a LOCATION at 0.85
+    # while this pattern calls "14 Bannerman Street" an ADDRESS. At 0.75 the higher score
+    # won, the longer span lost, and the house number went into the released record. A
+    # number plus a street name in a Canadian government record is an address; a general
+    # model recognising the street name alone is a weaker claim about a smaller span.
+    score=0.9,
 )
 
 DATE_OF_BIRTH = PatternRecogniser(

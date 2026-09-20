@@ -202,7 +202,30 @@ def _mcp(rng: random.Random) -> str:
 
 
 def _sin(rng: random.Random) -> str:
-    return " ".join(f"{rng.randint(0, 999):03d}" for _ in range(3))
+    """A structurally valid but invented social insurance number.
+
+    The check digit matters. A real SIN satisfies the Luhn checksum, and a detector worth
+    anything uses that to tell a SIN from any other nine digits: project 04's
+    `boundary:sin` does exactly that. This generator used to emit nine random digits, so
+    roughly nine in ten personas carried a number no correct detector would ever flag, and
+    the corpus quietly failed to exercise the SIN path at all. The number is still
+    invented and belongs to nobody; it is merely shaped like the real thing, which is the
+    whole point of a corpus.
+    """
+    digits = [rng.randint(0, 9) for _ in range(8)]
+    # Luhn over the nine digits: the second, fourth, sixth and eighth are doubled, which
+    # are indices 1, 3, 5 and 7 of these eight. Checked against the published example
+    # 046 454 286, whose weighted digits sum to 50.
+    total = 0
+    for i, d in enumerate(digits):
+        if i % 2 == 1:
+            doubled = d * 2
+            total += doubled - 9 if doubled > 9 else doubled
+        else:
+            total += d
+    digits.append((10 - total % 10) % 10)
+    text = "".join(str(d) for d in digits)
+    return f"{text[0:3]} {text[3:6]} {text[6:9]}"
 
 
 def _slug(name: str) -> str:

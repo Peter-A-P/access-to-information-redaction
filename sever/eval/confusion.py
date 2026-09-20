@@ -43,6 +43,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Protocol
 
 import numpy as np
 
@@ -246,9 +247,25 @@ class Scored:
         return out
 
 
-def _rate(
-    pool: Sequence[SpanOutcome],
-    predicate: Callable[[SpanOutcome], bool],
+class Clustered(Protocol):
+    """Anything that knows which document it came from.
+
+    `_rate` is generic over this rather than tied to `SpanOutcome`, because the detector
+    evaluation resamples its own records over the same clusters and should share one
+    estimator rather than own a second copy of the arithmetic.
+
+    Declared as a read-only property rather than `doc_id: str`. A protocol member written
+    as a bare annotation is a *settable* attribute, which a frozen dataclass does not
+    satisfy, and every record on both sides of this is frozen.
+    """
+
+    @property
+    def doc_id(self) -> str: ...
+
+
+def _rate[C: Clustered](
+    pool: Sequence[C],
+    predicate: Callable[[C], bool],
     *,
     seed: int,
     resamples: int = BOOTSTRAP_RESAMPLES,

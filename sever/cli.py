@@ -215,6 +215,46 @@ def report(
         typer.echo(f"{readme}: {'updated' if changed else 'already current'}")
 
 
+@app.command("eval-detector")
+def eval_detector(
+    documents: Annotated[int, typer.Option(help="Corpus size.")] = 210,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    compare_boundary: Annotated[
+        bool, typer.Option("--compare/--no-compare", help="Also run project 04's engine.")
+    ] = True,
+) -> None:
+    """Detector recall per entity type, against labels known by construction.
+
+    Project 04 shipped `boundary.redact` without measured recall. This project's corpus
+    knows exactly what was inserted and where, so it can supply the number. Run with
+    --compare to put 04's engine beside this project's.
+    """
+    from sever.corpus.generate import build
+    from sever.detect.engine import SeverDetector
+    from sever.eval.detector import compare as compare_reports
+    from sever.eval.detector import evaluate
+
+    corpus = build(documents=documents, seed=seed)
+    reports = [evaluate(SeverDetector(), corpus)]
+    if compare_boundary:
+        try:
+            from sever.detect.boundary_adapter import BoundaryDetector
+
+            reports.append(evaluate(BoundaryDetector(), corpus))
+        except Exception as exc:
+            # The extra is optional; a missing model or package is not a failure here.
+            typer.echo(f"boundary.redact not available, skipping the comparison: {exc}")
+
+    for r in reports:
+        typer.echo("")
+        typer.echo(r.to_markdown())
+    if len(reports) > 1:
+        typer.echo("")
+        typer.echo("**Side by side, recall**")
+        typer.echo("")
+        typer.echo(compare_reports(reports))
+
+
 @app.command()
 def audit(
     path: Annotated[Path, typer.Argument(help="The audit database.")],
