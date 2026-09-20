@@ -50,29 +50,18 @@ ocr = [
   "pytesseract>=0.3,<1",
   "pillow>=11,<12",
 ]
-# Model decisions go through project 04's gateway library. It is a private repository, so
-# it is an extra rather than a hard dependency and the rules-only path runs without it.
-gateway = [
-  # >=0.5.4 rather than >=0.2, and the floor is three separate correctness fixes rather
-  # than a preference for the newest thing.
-  #
-  #   0.5.1  resolves an overlap by containment before score. Before it, Presidio's
-  #          LOCATION "Bannerman Street" beat this project's ADDRESS "14 Bannerman
-  #          Street" on score alone and the house number went into the released record.
-  #          It also types the grouped health-number form that 07 measured leaking on
-  #          57 of 210 pages.
-  #   0.5.3  refuses to rehydrate a document that already contains placeholder-shaped
-  #          text, which could otherwise turn the literal string in a record into
-  #          somebody's real name: a name in a released record that was never in the
-  #          source.
-  #   0.5.4  `Policy.outbound` refuses text carrying a placeholder it minted, so feeding
-  #          its own output back is an error rather than a silent double substitution.
-  #          `LayeredPolicy` in sever.detect.boundary_adapter is built not to do that and
-  #          a test pins it.
-  #
-  # Upper bound at <1 because the interface is pre-1.0 and 04 is still moving it.
-  "boundary>=0.5.4,<1",
-]
+# There is no `gateway` extra, and there cannot be one. Model decisions go through project
+# 04's library, `boundary`, which is a private repository and not on PyPI. The name
+# `boundary` on PyPI belongs to an unrelated package that stops at 0.3.4, so a dependency
+# line here does not fetch project 04: it fetches a stranger's package of the same name,
+# quietly, and CI resolving it is how that was found. The library is installed by path
+# instead:
+#
+#     uv pip install -e ../04-compliant-ai-gateway
+#
+# The version floor a dependency line would have bought is enforced at the point of use in
+# sever/gateway.py, which also records why the floor is 0.5.4. Nothing on the rules-only
+# path, which is what CI runs and what the published tables come from, imports it.
 
 [dependency-groups]
 dev = [

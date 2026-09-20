@@ -31,6 +31,7 @@ from typing import Any
 from sever.context.record import ContextRecord
 from sever.decide.placeholders import PlaceholderPolicy, redact_context
 from sever.decide.rules import RuleOutcome
+from sever.gateway import BoundaryUnavailable, require_boundary
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
 # The data class this project's calls carry. CLAUDE.md requires that every model call
@@ -272,11 +273,11 @@ class GatewayModelDecider:
             )
         gateway = self.gateway or _default_gateway()
         try:
+            require_boundary()
             from boundary import ChatRequest
-        except ImportError as exc:  # pragma: no cover
+        except (BoundaryUnavailable, ImportError) as exc:  # pragma: no cover
             raise ModelUnavailable(
-                "boundary is not installed. Install the gateway extra with "
-                "`uv pip install -e '.[gateway]'`, or run the rules-only pipeline."
+                f"{exc} Or run the rules-only pipeline, which needs nothing from 04."
             ) from exc
 
         request = ChatRequest(
@@ -377,11 +378,11 @@ def _text_of(response: Any) -> str:
 
 def _default_gateway() -> Any:  # pragma: no cover - needs a configured gateway
     try:
+        require_boundary()
         from boundary import Gateway
-    except ImportError as exc:
+    except (BoundaryUnavailable, ImportError) as exc:
         raise ModelUnavailable(
-            "boundary is not installed. Install the gateway extra with "
-            "`uv pip install -e '.[gateway]'`, or run the rules-only pipeline."
+            f"{exc} Or run the rules-only pipeline, which needs nothing from 04."
         ) from exc
     config = os.environ.get("BOUNDARY_CONFIG")
     if not config:

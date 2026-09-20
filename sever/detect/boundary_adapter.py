@@ -16,8 +16,9 @@ project's own are things a general engine has no reason to carry:
 
 Both go in as `extra=`, which is what that argument is for.
 
-`boundary` is an optional extra of this project, so nothing here is imported at module
-scope by anything on the rules-only path. The published rules-only baseline runs in CI with
+`boundary` is installed by path rather than resolved as a dependency, and the floor it
+has to meet lives in `sever.gateway`; nothing here is imported at module scope by anything
+on the rules-only path. The published rules-only baseline runs in CI with
 neither `boundary` nor Presidio installed, and `sever.detect.engine.SeverDetector` remains
 the implementation that runs there.
 """
@@ -30,16 +31,11 @@ from typing import TYPE_CHECKING, Any
 
 from sever.detect import recognisers as rec
 from sever.detect.types import Detection, EntityType
+from sever.gateway import BOUNDARY_MISSING, BoundaryUnavailable, require_boundary
 from sever.ingest.document import Document, Offsets
 
 if TYPE_CHECKING:  # pragma: no cover
     from boundary.redact import Span
-
-BOUNDARY_MISSING = (
-    "boundary is not installed, so detection through boundary.redact is unavailable. "
-    "Install the gateway extra with `uv pip install -e '.[gateway]'`, or use "
-    "sever.detect.engine.SeverDetector, which needs nothing from project 04."
-)
 
 # boundary's closed vocabulary onto this project's. Nearly one to one, which is what
 # happens when one of them was written from the other's brief.
@@ -74,10 +70,6 @@ _SEVER_TO_BOUNDARY: dict[EntityType, str] = {
     EntityType.ADDRESS: "LOCATION",
     EntityType.JOB_TITLE: "ORGANISATION",
 }
-
-
-class BoundaryUnavailable(RuntimeError):
-    """Raised only where boundary is required and missing."""
 
 
 @dataclass
@@ -141,6 +133,7 @@ class BoundaryDetector:
     _analyzer: Any = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
+        require_boundary()
         try:
             from boundary.redact import Analyzer
         except ImportError as exc:
@@ -184,9 +177,16 @@ class BoundaryDetector:
 
 
 def available() -> bool:
+    """True where a boundary new enough for detection through it is installed.
+
+    The version floor is part of this: a `boundary` older than the floor is not a usable
+    detector, because the overlap resolution that keeps a house number out of a released
+    record arrived inside the range it excludes.
+    """
     try:
+        require_boundary()
         import boundary.redact  # noqa: F401
-    except ImportError:
+    except (BoundaryUnavailable, ImportError):
         return False
     return True
 

@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 
 from sever import __version__
+from sever.gateway import BoundaryUnavailable, require_boundary
 
 if TYPE_CHECKING:
     from sever.decide.model import GatewayModelDecider
@@ -92,11 +93,10 @@ def _build_model(
             f"{CAPS_PROJECT!r}."
         )
     try:
+        require_boundary()
         from boundary import Gateway
-    except ImportError as exc:
-        raise typer.BadParameter(
-            "boundary is not installed. `uv pip install -e '.[gateway]'`, or drop --model."
-        ) from exc
+    except (BoundaryUnavailable, ImportError) as exc:
+        raise typer.BadParameter(f"{exc} Or drop --model.") from exc
 
     gateway = Gateway.from_config(config, project=CAPS_PROJECT)
     run = run_id or f"sever-{uuid.uuid4().hex[:8]}"

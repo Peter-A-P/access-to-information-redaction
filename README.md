@@ -221,7 +221,12 @@ sever eval-thresholds                 # the confidence threshold, swept, also fr
 
 The cache is publishable for the same reason the requests are: it holds what the model
 said about typed placeholders, and a test asserts that no persona value appears in it.
-Reproducing the paid run itself needs the gateway and costs about US$0.51.
+Reproducing the paid run itself needs the gateway and costs about US$0.51. The gateway is
+project 04's library, `boundary`, a private repository that is not on PyPI, so it is not a
+declared dependency here and cannot be: the `boundary` package on PyPI is an unrelated
+project. Where you have project 04, install it by path with
+`uv pip install -e ../04-compliant-ai-gateway`; the version this project needs, and why, is
+in `sever/gateway.py`.
 
 ## Repository
 
