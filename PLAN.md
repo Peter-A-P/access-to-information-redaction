@@ -545,6 +545,41 @@ detector does not use the same information. A document-wide sweep that, for ever
 detected anywhere in a record, finds the other occurrences of their name parts, recovers
 precisely the misses above, and needs no model and no gazetteer.
 
-It is not built here because it changes detections, and therefore contexts, and therefore
-every model request, which invalidates the committed answer cache and costs a paid re-run.
-That is a decision about spending, so it is recorded rather than taken.
+### 12.12 The sweep is built, and it cost almost nothing to run
+
+2026-09-20, authorised the same day. `sever.detect.sweep` runs after the per-page detectors
+and, for every person they found anywhere in the document, claims the other whole-word
+occurrences of that person's name parts across the whole record. Case-sensitive, whole-word,
+never over an existing detection, and vocabulary words are refused so that a heading typed
+as a PERSON does not put a box over the same word on every page. On by default, and
+switchable, because the point of the exercise was to measure it.
+
+Person recall, the same detector over the same corpora with the sweep off and on:
+
+| name profile | off | on |
+|---|---|---|
+| plain (the published corpus) | 96.2% | **98.8%** |
+| nl (all five shapes) | 93.4% | **98.0%** |
+| two-token surname | 89.8% | **96.6%** |
+| bare accented forename | 88.8% | **96.8%** |
+
+The prediction in 12.11 was that the loss is lexical and the document holds the evidence.
+It does: the two shapes that cost the most gain the most, 6.8 and 8.0 points, and **the
+penalty for using this province's names falls from 2.8 points to 0.8.**
+
+On the published corpus the effect is smaller and still real. Detector recall 97.4 to
+**98.6 percent**, detector misses 25 to 16, leak rate 5.4 to **4.7** with the rules alone
+and 7.9 to **7.2** with the model. Over-redaction rises 0.4 of a point, which is the
+expected direction: a recovered name with no title attached escalates, and an escalation
+withholds. Fewer leaks for slightly more reviewer time is the trade this project says it
+wants, and here it is bought rather than argued.
+
+The paid re-run cost **US$0.027**. The answer cache was expected to be invalidated wholesale
+and was not: 2,550 of 2,574 requests replayed unchanged, because the spans the sweep adds
+are name parts of people the rules already place, so they are decided without a model call
+and the sentences around them were already substituted. The estimate given before the work
+was US$0.5, which was wrong by a factor of twenty in the cheap direction.
+
+One limitation, stated because it bounds the claim: the sweep needs the person to be found
+**somewhere**. A record that never names Sean MacDonald in a position the model can read
+gets nothing from it. That is the residual case a gazetteer would cover and this does not.

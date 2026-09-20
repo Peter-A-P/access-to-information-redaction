@@ -187,12 +187,16 @@ class SeverDetector:
         require_presidio: bool = False,
         pattern_recognisers: Sequence[rec.PatternRecogniser] = rec.DEFAULT_RECOGNISERS,
         min_score: float = 0.3,
+        sweep_names: bool = True,
     ) -> None:
         self.model = model
         self.use_presidio = use_presidio
         self.require_presidio = require_presidio
         self.pattern_recognisers = tuple(pattern_recognisers)
         self.min_score = min_score
+        # On by default, and switchable so the ablation in results/names.md can measure
+        # what it is worth rather than assert it. See sever.detect.sweep.
+        self.sweep_names = sweep_names
         self._warned = False
 
     @property
@@ -209,7 +213,14 @@ class SeverDetector:
         out: list[Detection] = []
         for page in document:
             out.extend(self.detect_page(page))
-        return tuple(out)
+        if not self.sweep_names:
+            return tuple(out)
+        # Document-wide, and therefore here rather than in detect_page: a name found on
+        # page one licenses the bare surname on page three, which is exactly the position
+        # the per-page model misses. sever.detect.sweep has the measurement behind it.
+        from sever.detect.sweep import with_sweep
+
+        return with_sweep(document, out)
 
     def detect_page(self, page: Page) -> list[Detection]:
         if not page.text.strip():
