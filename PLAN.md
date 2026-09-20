@@ -503,3 +503,48 @@ restated as a measurement.
 Whether `nl` should become the default is not settled here. It should be argued on what a
 released record actually looks like, not on which number is more flattering, and the
 argument is easier to have now that both numbers exist.
+
+### 12.11 The name-shape loss is lexical, not orthographic, and the fix is already half built
+
+2026-09-20, following 04's question: which of apostrophes, Mac prefixes and accents
+dominates the drop, since the answer decides whether the next move is a recogniser or a
+better model. A mixed pool cannot answer it, so there is now one corpus per shape, varying
+the surname alone with the forenames held plain. Person recall, against the plain corpus:
+
+| shape | sever | boundary.redact |
+|---|---|---|
+| apostrophe (O'Brien) | -0.7 | **0.0** |
+| Mac and Mc | -0.4 | **0.0** |
+| hyphenated | +0.6 | +0.7 |
+| accented surname | -0.9 | -1.0 |
+| **two-token surname** (St. Croix, Le Drew) | **-6.4** | **-4.5** |
+| **bare accented forename** | **-7.4** | **-7.0** |
+
+**None of the three shapes in the question dominates.** Apostrophes and Mac prefixes cost
+04's engine nothing measurable. The two expensive shapes are a two-token surname and an
+accented forename, and the asymmetry between an accented forename at 7.4 points and an
+accented surname at 0.9 is the clue: the same character class costs eight times more in one
+position than the other.
+
+The probes in `tests/test_name_shapes_detected.py` say why. Every shape is found in
+ordinary prose with a forename beside it, in a signature block and in a distribution list.
+What is missed is an unfamiliar token **standing alone**: a bare surname in a "Present:"
+list or a signature block, a bare accented forename in prose. One preceding honorific
+rescues all of them.
+
+So this is lexical coverage, not character handling. The first-pass model has learned the
+common names and not the uncommon ones, and it fails exactly where there is no neighbouring
+evidence for any model to use. A second pass that fixes character classes cannot reach it,
+and neither can a larger model, because the information is not in the sentence. A gazetteer
+can, and so can a cheaper thing this project already has.
+
+**The fix is half built.** `PlaceholderPolicy.for_detections` already takes a detected
+"Bernadette Le Drew" and registers "bernadette" and "drew" as aliases, because the outbound
+boundary had this exact problem and solved it: a detected full name licenses its parts. The
+detector does not use the same information. A document-wide sweep that, for every person
+detected anywhere in a record, finds the other occurrences of their name parts, recovers
+precisely the misses above, and needs no model and no gazetteer.
+
+It is not built here because it changes detections, and therefore contexts, and therefore
+every model request, which invalidates the committed answer cache and costs a paid re-run.
+That is a decision about spending, so it is recorded rather than taken.

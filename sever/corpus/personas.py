@@ -175,6 +175,18 @@ PARTICLE_SURNAMES = (
 )
 
 
+# Accented forenames, with the surnames held plain. The mirror of ACCENTED_SURNAMES, and
+# it exists because the arithmetic demanded it: the five single-shape surname profiles
+# together account for only 0.9 of the 2.8-point person-recall drop the mixed `nl` pool
+# shows, and the forenames are the only other thing that differs. Leaving 1.9 points
+# unexplained would have meant reporting a cause without checking it.
+ACCENTED_FORENAMES = (
+    "Seán", "Sinéad", "Renée", "André", "Noël", "Chérie",
+    "Gaëlle", "Thérèse", "Miéke", "Aliénor", "Zoé",
+    "Estée",
+)
+
+
 class NameProfile(StrEnum):
     """Which name pool a corpus is built from.
 
@@ -193,6 +205,7 @@ class NameProfile(StrEnum):
     ACCENT = "accent"
     HYPHEN = "hyphen"
     PARTICLE = "particle"
+    FORENAME_ACCENT = "forename-accent"
 
     @property
     def pools(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -205,6 +218,8 @@ class NameProfile(StrEnum):
         }.get(self)
         if surnames is not None:
             return GIVEN_NAMES, surnames
+        if self is NameProfile.FORENAME_ACCENT:
+            return ACCENTED_FORENAMES, SURNAMES
         if self is NameProfile.NL:
             return NL_GIVEN_NAMES, NL_SURNAMES
         return GIVEN_NAMES, SURNAMES
