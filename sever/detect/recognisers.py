@@ -135,13 +135,16 @@ STREET_ADDRESS = PatternRecogniser(
         r"(?:street|st\.?|road|rd\.?|avenue|ave\.?|drive|dr\.?|place|pl\.?|lane|ln\.?|"
         r"crescent|cres\.?|boulevard|blvd\.?|court|ct\.?|way|terrace|highway|hwy\.?)\b"
     ),
-    # Scored above Presidio's LOCATION (0.85) deliberately. Project 04's analyzer resolves
-    # an overlap by score first, and Presidio calls "Bannerman Street" a LOCATION at 0.85
-    # while this pattern calls "14 Bannerman Street" an ADDRESS. At 0.75 the higher score
-    # won, the longer span lost, and the house number went into the released record. A
-    # number plus a street name in a Canadian government record is an address; a general
-    # model recognising the street name alone is a weaker claim about a smaller span.
-    score=0.9,
+    # 0.75 is the honest confidence for a loose pattern, and it can stay honest.
+    #
+    # It was briefly raised to 0.9 as a workaround: project 04's analyzer resolved an
+    # overlap by score first, so Presidio's LOCATION "Bannerman Street" at 0.85 beat this
+    # pattern's "14 Bannerman Street", and the house number went into the released record.
+    # boundary 0.5.1 resolves containment before score, so the longer span wins on being
+    # the longer span rather than on an inflated number, and the workaround is gone.
+    # sever's own resolver never had the problem: it orders by specificity, where ADDRESS
+    # outranks LOCATION regardless of score.
+    score=0.75,
 )
 
 DATE_OF_BIRTH = PatternRecogniser(
