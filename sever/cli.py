@@ -609,7 +609,7 @@ def eval_placeholders(
         "results/placeholders.md"
     ),
 ) -> None:
-    """What the privacy boundary costs in accuracy: the paired placeholders ablation.
+    """What the privacy boundary does to accuracy: the paired placeholders ablation.
 
     The same spans decided twice by the same model, once on typed placeholders and once on
     the raw record. The raw arm sends names, so it runs only against a model on this

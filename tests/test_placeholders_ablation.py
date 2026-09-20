@@ -169,3 +169,38 @@ def test_the_raw_payload_keeps_the_name_that_the_redacted_one_removes(detector) 
     masked = " ".join(str(redact_context(c, policy)["sentence"]) for c in contexts)
     assert "Tulk" in raws, "the control arm is not carrying the name it is supposed to"
     assert "Tulk" not in masked, masked
+
+
+# --- the cacheability column ----------------------------------------------------
+
+
+def test_the_table_reports_each_arm_s_cacheability_separately() -> None:
+    """A blended hit rate would average away the only effect this column exists to show.
+
+    04 made the same change to their cache measurement after seeing this number: the
+    finding is the gap between the arms, so a measurement that cannot show two arms cannot
+    show the finding.
+    """
+    from sever.corpus.labels import LabelSource
+    from sever.eval.confusion import Scored
+    from sever.eval.placeholders import Ablation, Arm
+
+    empty = Scored(outcomes=(), label_source=LabelSource.CONSTRUCTED)
+    table = Ablation(
+        arms=[
+            Arm(name="typed placeholders", note="", scored=empty, calls=244, distinct=171),
+            Arm(name="raw text", note="", scored=empty, calls=244, distinct=239),
+        ],
+        model="local/qwen2.5:7b",
+    ).to_markdown()
+    assert "171 of 244 asks (30% repeated)" in table
+    assert "239 of 244 asks (2% repeated)" in table
+
+
+def test_an_arm_that_asked_nothing_reports_no_repetition_rather_than_dividing_by_zero() -> None:
+    from sever.corpus.labels import LabelSource
+    from sever.eval.confusion import Scored
+    from sever.eval.placeholders import Arm
+
+    arm = Arm(name="x", note="", scored=Scored(outcomes=(), label_source=LabelSource.CONSTRUCTED))
+    assert arm.repetition == 0.0

@@ -250,3 +250,28 @@ def test_the_taxonomy_bounds_what_can_be_parsed() -> None:
     for code in (c.code for c in t.categories):
         parsed = parse_answer(f'{{"code": "{code}", "confidence": 0.8}}', t)
         assert parsed is not None and parsed.code == code
+
+
+# --- distinct requests, which is a property of the payloads ---------------------
+
+
+def test_distinct_requests_counts_payloads_and_not_asks() -> None:
+    """The ablation's cacheability column is only meaningful if it counts what it says.
+
+    `calls` and `cache_reads` count spans asked about. This counts the different requests
+    those asks needed, which is what differs between the masked and raw arms: masked
+    payloads repeat across documents once the names are gone, raw ones cannot. A counter
+    that read `len(self._cache)` instead would also count answers loaded from disk and
+    never asked for, and the number would drift upward on every re-run.
+    """
+    gateway = FakeGateway()
+    decider = GatewayModelDecider(gateway=gateway, enabled=True)
+    same = [a_context("Odette Tulk"), a_context("Odette Tulk")]
+    decider.decide(same, universe=same)
+    assert decider.calls + decider.cache_reads == 2, "both spans were asked about"
+    assert decider.distinct_requests == 1, "and they are the same request"
+
+    differing = [a_context("Odette Tulk"), a_context("Marie Chaulk")]
+    other = GatewayModelDecider(gateway=FakeGateway(), enabled=True)
+    other.decide(differing, universe=differing)
+    assert other.distinct_requests == 2

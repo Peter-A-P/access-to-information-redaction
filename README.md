@@ -292,7 +292,7 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [data](docs/data.md) · [what did not work](docs/rejected.md) ·
 [detector comparison](results/detectors.md) · [threshold sweep](results/thresholds.md) ·
 [name shapes](results/names.md) · [the name sweep, ablated](results/sweep.md) ·
-[what the privacy boundary costs](results/placeholders.md) · [plan](PLAN.md)
+[what the privacy boundary does to accuracy](results/placeholders.md) · [plan](PLAN.md)
 
 ## Engineering
 

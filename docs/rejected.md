@@ -103,6 +103,15 @@ structure does not settle it the model says so.
 Read on this corpus and this model, the privacy boundary is not a cost centre that needs
 justifying. It is the reason the model layer withholds when it should.
 
+**A second effect, which is not about accuracy at all.** Asked about the same 244 spans, the
+placeholder arm needed 171 distinct requests and the raw arm needed 239. Masked payloads
+repeat across documents because once the names are gone the structure is all that is left,
+and the structure recurs; raw payloads are unique precisely because the names are. A
+redacted corpus is more cacheable than an unredacted one, so the boundary makes the model
+layer cheaper as well as more accurate. `results/placeholders.md` reports the two arms
+separately rather than blending them, because a single hit rate would average the finding
+away.
+
 **What is and is not claimed.** Both arms run on a 7B model on this laptop, because the raw
 arm carries names and this repository's rule is that names do not leave the machine. Both
 arms therefore leak far more than the production pipeline does on Haiku, and these absolute

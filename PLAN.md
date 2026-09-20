@@ -671,8 +671,25 @@ good one: this is the only part of the model layer a stranger can reproduce with
 vendor account and no spend.
 
 One incidental observation, recorded because it is a privacy property rather than a
-performance one. The placeholder arm needed 171 distinct requests where the raw arm needed
-240 for the same spans. Placeholder payloads repeat across documents because the structure
+performance one. Asked about the same 244 spans, the placeholder arm needed 171 distinct
+requests and the raw arm needed 239: 30 percent of the masked payloads repeated, against 2
+percent of the raw ones. Placeholder payloads repeat across documents because the structure
 repeats once the names are gone; raw payloads are unique because the names are. A redacted
 corpus is more cacheable than an unredacted one, which is a small argument for the boundary
 that has nothing to do with privacy at all.
+
+It is a reported column rather than a remark, in `Ablation.to_markdown`, and it is per arm
+rather than blended, because a blended hit rate would average the effect away. 04 made the
+same change to their Part B cache measurement on the strength of this number, which is the
+right instinct: the finding is the gap between the arms, so a measurement that cannot show
+two arms cannot show the finding.
+
+**The heading was asserting the conclusion.** 04, amending their own plan after this result,
+noticed that their results table said "Quality cost of redaction" and that a column heading
+phrased that way decides the question before the run does. The same sentence was at the top
+of this file's output: `results/placeholders.md` was titled "What the privacy boundary costs
+in accuracy", which is a heading only the losing hypothesis can sit under. It reads "does to"
+now, in the generated file, the module, the command and the README's link. The numbers did
+not change and nothing about the measurement changed; what changed is that the table no
+longer tells the reader what to find in it. Worth watching for elsewhere: a metric named
+after its expected sign cannot report the other one without sounding like a mistake.

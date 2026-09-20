@@ -176,6 +176,13 @@ class GatewayModelDecider:
     cache_path: Path | None = None
     _cache: dict[str, str] = field(default_factory=dict, repr=False)
     cache_reads: int = 0
+    # The distinct requests this run asked for, as opposed to the number of spans it
+    # decided. The gap between them is how much the payloads repeat, which is a property of
+    # the payloads rather than of the run: see the ablation in `sever/eval/placeholders.py`,
+    # where masked payloads repeat across documents and raw ones cannot, because the names
+    # make each one unique. Counted from keys touched here, not from `len(self._cache)`,
+    # which would also count answers this run loaded from disk and never asked for.
+    _keys_seen: set[str] = field(default_factory=set, repr=False)
     # Replay the cache and refuse to send anything. This is what makes the model numbers
     # reproducible from a clone: the cache is committed, the gateway is a private
     # repository, and a stranger checking the published table has neither a key nor a
@@ -260,6 +267,7 @@ class GatewayModelDecider:
     def _decide_one(self, ctx: ContextRecord, policy: PlaceholderPolicy) -> RuleOutcome | None:
         message, payload = self.build_request(ctx, policy)
         key = self._cache_key(message)
+        self._keys_seen.add(key)
         hit = self._cache.get(key)
         if hit is not None:
             self.cache_reads += 1
@@ -303,6 +311,11 @@ class GatewayModelDecider:
         reply = _text_of(response)
         self._cache_put(key, reply)
         return self._outcome(parse_answer(reply, self.taxonomy))
+
+    @property
+    def distinct_requests(self) -> int:
+        """How many different requests this run needed, however many spans it decided."""
+        return len(self._keys_seen)
 
     def _outcome(self, answer: ModelAnswer | None) -> RuleOutcome | None:
         if answer is None:
