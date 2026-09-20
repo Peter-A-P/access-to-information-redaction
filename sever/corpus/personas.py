@@ -138,22 +138,81 @@ NL_GIVEN_NAMES = (
 )
 
 
+# One shape at a time, because `NL` mixes five of them and a mixed pool says only that
+# something got harder. Project 04 asked the sharper question: which of apostrophes, Mac
+# prefixes and accents dominates the drop, since the answer decides whether the next move
+# is another recogniser or a better model.
+#
+# Each pool below varies the surname only and holds the forenames at the plain pool, so
+# that one variable moves at a time. That understates each shape's effect a little, since
+# a real cast has shaped forenames too, and it is the right trade: an isolated cause is
+# worth more here than a maximal number.
+#
+# Eight of each, which is enough for the factory to fill a cast of six without repeating
+# inside a document.
+APOSTROPHE_SURNAMES = (
+    "O'Brien", "O'Keefe", "O'Reilly", "O'Dea", "O'Neill", "D'Arcy", "O'Leary", "O'Driscoll",
+)
+
+MAC_SURNAMES = (
+    "MacDonald", "MacKenzie", "McCarthy", "McGrath", "McNeil", "MacInnis", "McDonald",
+    "MacLeod",
+)
+
+ACCENTED_SURNAMES = (
+    "B\u00e9langer", "Beno\u00eet", "Th\u00e9riault", "Cr\u00e9peau", "Duh\u00e9",
+    "L\u00e9garr\u00e9", "Ga\u00e9tan", "Bouch\u00e9",
+)
+
+HYPHENATED_SURNAMES = (
+    "Coady-Vokey", "Snook-Hearn", "Pardy-Mercer", "Tulk-Rideout", "Byrne-Osmond",
+    "Ivany-Whelan", "Gushue-Bonnell", "Hearn-Delaney",
+)
+
+PARTICLE_SURNAMES = (
+    "St. Croix", "Le Drew", "St. George", "Le Blanc", "St. Pierre", "De Lacey",
+    "Van Zeeland", "Le Feuvre",
+)
+
+
 class NameProfile(StrEnum):
     """Which name pool a corpus is built from.
 
-    `PLAIN` is the published default and every committed result is measured on it.
-    `NL` swaps in the shapes above. Nothing else about the corpus changes, so the two are
-    comparable span for span.
+    `PLAIN` is the published default and every committed result is measured on it. `NL`
+    swaps in all five shapes at once and is the honest comparison. The five single-shape
+    profiles exist to attribute the difference rather than only report it.
+
+    Nothing else about the corpus changes between profiles, so every column is comparable
+    span for span: same templates, same seed, same roles, same cast sizes.
     """
 
     PLAIN = "plain"
     NL = "nl"
+    APOSTROPHE = "apostrophe"
+    MAC = "mac"
+    ACCENT = "accent"
+    HYPHEN = "hyphen"
+    PARTICLE = "particle"
 
     @property
     def pools(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        surnames = {
+            NameProfile.APOSTROPHE: APOSTROPHE_SURNAMES,
+            NameProfile.MAC: MAC_SURNAMES,
+            NameProfile.ACCENT: ACCENTED_SURNAMES,
+            NameProfile.HYPHEN: HYPHENATED_SURNAMES,
+            NameProfile.PARTICLE: PARTICLE_SURNAMES,
+        }.get(self)
+        if surnames is not None:
+            return GIVEN_NAMES, surnames
         if self is NameProfile.NL:
             return NL_GIVEN_NAMES, NL_SURNAMES
         return GIVEN_NAMES, SURNAMES
+
+    @property
+    def is_single_shape(self) -> bool:
+        return self not in (NameProfile.PLAIN, NameProfile.NL)
+
 
 STREETS = (
     "Bannerman Street", "Duckworth Street", "LeMarchant Road", "Empire Avenue",

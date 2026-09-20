@@ -11,7 +11,7 @@ So the library is installed by path:
     uv pip install -e ../04-compliant-ai-gateway
 
 and the version floor a dependency line would have bought is enforced here instead, at the
-point of use. The floor is 0.5.4, and each release between 0.2 and it is a correctness fix
+point of use. The floor is 0.5.5, and each release between 0.2 and it is a correctness fix
 this project depends on rather than a preference for the newest thing:
 
   * **0.5.1** resolves an overlap by containment before score. Before it, Presidio's
@@ -25,8 +25,18 @@ this project depends on rather than a preference for the newest thing:
     its own output back is an error rather than a silent double substitution.
     `LayeredPolicy` in sever.detect.boundary_adapter is built not to do that and a test
     pins it.
+  * **0.5.5** `Policy(spans, vault=...)` carries an earlier policy's placeholders into a
+    rebuilt one. This closes a gap that only shows up across a rebuild or a process
+    boundary, and it is narrower than it first looks: placeholders derived from the spans
+    are minted identically by any policy over the same spans, so a rebuilt policy already
+    refused and rehydrated those. What it could not carry is anything the *second pass*
+    found, which is discovered while redacting and is not recoverable from the spans. So
+    a rebuilt policy used to leave those placeholders in the text and resolve nothing,
+    quietly. Nothing in this project rebuilds a policy today, which is why the gap was
+    invisible here; the reviewer app will, because showing a reviewer what was sent means
+    rehydrating in a different request than the one that redacted.
 
-All three are the difference between a redaction that holds and one that leaks, so an
+All four are the difference between a redaction that holds and one that leaks, so an
 older `boundary` raises rather than running: an unmarked downgrade of the redaction is
 exactly the failure this project is about. There is no upper bound to enforce, because
 nothing pulls a newer one in by accident; a release of 04 that breaks this project breaks
@@ -37,7 +47,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-MINIMUM_BOUNDARY: Final = (0, 5, 4)
+MINIMUM_BOUNDARY: Final = (0, 5, 5)
 
 INSTALL: Final = "uv pip install -e ../04-compliant-ai-gateway"
 
@@ -89,7 +99,7 @@ def require_boundary() -> Any:
         wanted = ".".join(str(n) for n in MINIMUM_BOUNDARY)
         raise BoundaryUnavailable(
             f"boundary {version or 'of an unreported version'} is installed, and this "
-            f"project needs {wanted} or newer. Three correctness fixes in between decide "
+            f"project needs {wanted} or newer. Four correctness fixes in between decide "
             f"whether a house number, a health number or a rehydrated placeholder reaches "
             f"a released record; see sever/gateway.py for which. Update project 04 and "
             f"reinstall it: `{INSTALL}`."

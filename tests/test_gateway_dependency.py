@@ -52,16 +52,17 @@ def test_nothing_declares_a_dependency_named_boundary() -> None:
 def test_a_boundary_below_the_floor_raises_rather_than_running(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """0.5.3 is missing the fix that keeps a placeholder-shaped string out of a record."""
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.3"))
-    with pytest.raises(BoundaryUnavailable, match=r"0\.5\.4 or newer"):
+    """0.5.4 cannot carry a second-pass placeholder across a rebuilt policy, so a
+    rehydration in a later request silently resolves nothing."""
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.4"))
+    with pytest.raises(BoundaryUnavailable, match=r"0\.5\.5 or newer"):
         require_boundary()
     assert available() is False
 
 
 def test_the_floor_itself_is_enough(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.4"))
-    assert require_boundary().__version__ == "0.5.4"
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.5"))
+    assert require_boundary().__version__ == "0.5.5"
     assert available() is True
 
 
@@ -91,8 +92,8 @@ def test_boundary_missing_says_where_it_comes_from(monkeypatch: pytest.MonkeyPat
 @pytest.mark.parametrize(
     ("version", "expected"),
     [
-        ("0.5.4", (0, 5, 4)),
-        ("0.5.4.dev1", (0, 5, 4)),
+        ("0.5.5", (0, 5, 5)),
+        ("0.5.5.dev1", (0, 5, 5)),
         ("1.0.0rc1", (1, 0)),
         ("0.3.4", (0, 3, 4)),
     ],
