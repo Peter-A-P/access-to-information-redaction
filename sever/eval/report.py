@@ -145,6 +145,7 @@ class Report:
                         for c in s.scored.codes_present()
                         if c.startswith("K")
                     },
+                    "documents_resampled": len(self.corpus),
                     "per_code_leak": {
                         c: str(s.scored.leak_rate(c))
                         for c in s.scored.codes_present()
@@ -303,8 +304,12 @@ def to_markdown(report: Report) -> str:
             lines += ["", f"_{report.leak_report.ocr_note}._"]
     lines += [
         "",
-        "Intervals are 95 percent bootstrap percentile intervals resampled over documents,",
-        "not over spans, because spans within a document are not independent.",
+        f"Intervals are 95 percent bootstrap percentile intervals resampled over the "
+        f"{len(c)} documents,",
+        "not over the spans, because spans within a document are not independent: one",
+        "persona generates many of them, and resampling spans would report one fact as",
+        "many. Project 03 implemented the same estimator independently and the two agree",
+        "to within Monte Carlo noise; `tests/test_confusion.py` pins that.",
         "",
     ]
     return "\n".join(lines)

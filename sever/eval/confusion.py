@@ -26,6 +26,17 @@ Spans within a document are not independent (one persona generates many of them)
 resampling spans would produce intervals that are far too narrow. This is the kind of
 detail that quietly makes a results table wrong, so it is a parameter with one legal value
 and a comment rather than an implementation detail.
+
+Project 03 implemented the same estimator independently, as
+`drift.analysis.stats.bootstrap_mean_by_cluster`, after this project asked for it. The two
+were written from the same description and not from each other, and on this project's own
+scored corpus they agree: identical point estimates and interval bounds within 0.13
+percentage points, which is Monte Carlo noise between two different random number
+generators at 2,000 resamples. `tests/test_confusion.py` pins that agreement against
+recorded values from 03's implementation. `drift` is not a dependency here: it pulls
+`boundary`, and shortly `mselect` with numpy, scipy, polars, pyarrow and matplotlib, which
+is a great deal of machinery to import for forty lines of arithmetic. Two independent
+implementations that agree are worth more than one shared one anyway.
 """
 
 from __future__ import annotations
@@ -45,24 +56,47 @@ DEFAULT_SEED = 20270816
 
 @dataclass(frozen=True, slots=True)
 class Interval:
-    """A point estimate with a 95 percent bootstrap percentile interval."""
+    """A point estimate with a 95 percent bootstrap percentile interval.
+
+    `clusters` is how many documents the interval rests on, which is the number that
+    actually governs its width. It is carried because an interval over 5,000 spans from
+    three documents is a much weaker claim than the same interval over 5,000 spans from
+    two hundred, and a cell that prints only `n` hides the difference.
+    """
 
     point: float
     low: float
     high: float
     n: int
-
-    def __str__(self) -> str:
-        if self.n == 0:
-            return "n/a (0)"
-        return f"{self.point:.1%} ({self.low:.1%} to {self.high:.1%}), n={self.n}"
+    clusters: int = 0
 
     @property
     def is_defined(self) -> bool:
         return self.n > 0
 
+    @property
+    def interval_undefined(self) -> bool:
+        """True when there was nothing to resample: fewer than two documents.
 
-UNDEFINED = Interval(point=float("nan"), low=float("nan"), high=float("nan"), n=0)
+        Reported rather than papered over. An earlier version returned NaN bounds here and
+        printed them, so a single-document result read as `75.0% (nan% to nan%)`, which
+        looks like a broken interval rather than an absent one. Project 03 got this right
+        first in `drift.analysis.stats` and this follows it.
+        """
+        return self.n > 0 and self.clusters < 2
+
+    def __str__(self) -> str:
+        if self.n == 0:
+            return "n/a (0)"
+        if self.interval_undefined:
+            return (
+                f"{self.point:.1%} (interval undefined: {self.clusters} document, "
+                f"n={self.n})"
+            )
+        return f"{self.point:.1%} ({self.low:.1%} to {self.high:.1%}), n={self.n}"
+
+
+UNDEFINED = Interval(point=float("nan"), low=float("nan"), high=float("nan"), n=0, clusters=0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,7 +266,9 @@ def _rate(
     if len(docs) < 2:
         # One document gives no between-document variation to resample. Report the point
         # estimate with an undefined interval rather than a fabricated one.
-        return Interval(point=point, low=float("nan"), high=float("nan"), n=len(pool))
+        return Interval(
+            point=point, low=float("nan"), high=float("nan"), n=len(pool), clusters=len(docs)
+        )
 
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(docs), size=(resamples, len(docs)))
@@ -242,7 +278,9 @@ def _rate(
         picked = [v for i in idx[r] for v in values[i]]
         draws[r] = sum(picked) / len(picked) if picked else np.nan
     low, high = np.nanpercentile(draws, [2.5, 97.5])
-    return Interval(point=point, low=float(low), high=float(high), n=len(pool))
+    return Interval(
+        point=point, low=float(low), high=float(high), n=len(pool), clusters=len(docs)
+    )
 
 
 def score(

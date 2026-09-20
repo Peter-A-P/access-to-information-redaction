@@ -17,7 +17,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-13 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-19 by `sever report`.
 
 **Per category, this tool**
 
@@ -54,8 +54,11 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 _OCR channel disabled for this run._
 
-Intervals are 95 percent bootstrap percentile intervals resampled over documents,
-not over spans, because spans within a document are not independent.
+Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
+not over the spans, because spans within a document are not independent: one
+persona generates many of them, and resampling spans would report one fact as
+many. Project 03 implemented the same estimator independently and the two agree
+to within Monte Carlo noise; `tests/test_confusion.py` pins that.
 
 <!-- END RESULTS -->
 
