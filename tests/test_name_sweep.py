@@ -20,7 +20,14 @@ from itertools import pairwise
 
 import pytest
 
-from sever.detect.sweep import RECOGNISER, sweep, sweepable_parts, with_sweep
+from sever.detect.sweep import (
+    RECOGNISER,
+    RETYPED,
+    retype_known_people,
+    sweep,
+    sweepable_parts,
+    with_sweep,
+)
 from sever.detect.types import Detection, EntityType
 from sever.ingest.document import BlockKind, Offsets
 
@@ -197,3 +204,63 @@ def test_a_swept_span_still_has_to_be_decided(detector) -> None:  # type: ignore
     assert swept, "the sweep found nothing, so this test proved nothing"
     for p in swept:
         assert p.withholds, f"{p.detection.text!r} was released with code {p.code}"
+
+# --- re-typing a name the detector called a place ------------------------------
+
+
+def test_a_name_typed_as_a_location_is_re_typed_as_a_person() -> None:
+    """The more serious half of the sweep, and recall cannot see it.
+
+    Presidio types the bare Labrador surname "Tuglavina" as a LOCATION in a distribution
+    list, having typed "Bernadette Tuglavina" as a PERSON in the sentence above. The span
+    is found, so recall counts it. Then `not_personal_information` fires on a LOCATION,
+    returns K6, and K6 releases: a third party's surname in the released record, with
+    "not information about an identifiable individual" written beside it in the schedule.
+    """
+    doc = make_document([(BlockKind.BODY, "Bernadette Tuglavina wrote. Present: Tuglavina.")])
+    place = Detection(
+        page=1,
+        offsets=Offsets(36, 45),
+        text="Tuglavina",
+        entity_type=EntityType.LOCATION,
+        score=0.85,
+        recogniser="presidio:LOCATION",
+    )
+    corrected = retype_known_people(doc, [person("Bernadette Tuglavina"), place])
+    retyped = [d for d in corrected if d.recogniser == RETYPED]
+    assert [d.text for d in retyped] == ["Tuglavina"]
+    assert retyped[0].entity_type is EntityType.PERSON
+
+
+def test_a_name_token_inside_a_longer_place_span_is_left_alone() -> None:
+    """The guard on the rule above. "Hearn" is a surname here and "Hearn Building" is a
+    building, and re-typing the building would put a redaction box over a place that the
+    requester is entitled to see. Only an exact match is re-typed."""
+    doc = make_document([(BlockKind.BODY, "Bernadette Hearn wrote from the Hearn Building.")])
+    building = Detection(
+        page=1,
+        offsets=Offsets(31, 45),
+        text="Hearn Building",
+        entity_type=EntityType.LOCATION,
+        score=0.85,
+        recogniser="presidio:LOCATION",
+    )
+    corrected = retype_known_people(doc, [person("Bernadette Hearn"), building])
+    assert all(d.recogniser != RETYPED for d in corrected)
+    assert any(d.entity_type is EntityType.LOCATION for d in corrected)
+
+
+def test_an_ordinary_place_is_not_re_typed() -> None:
+    """Nothing is re-typed unless the document has already attributed those exact
+    characters to a person."""
+    doc = make_document([(BlockKind.BODY, "Bernadette Hearn wrote from Gander.")])
+    gander = Detection(
+        page=1,
+        offsets=Offsets(28, 34),
+        text="Gander",
+        entity_type=EntityType.LOCATION,
+        score=0.85,
+        recogniser="presidio:LOCATION",
+    )
+    corrected = retype_known_people(doc, [person("Bernadette Hearn"), gander])
+    assert all(d.recogniser != RETYPED for d in corrected)

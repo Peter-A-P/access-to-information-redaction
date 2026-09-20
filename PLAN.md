@@ -581,5 +581,56 @@ and the sentences around them were already substituted. The estimate given befor
 was US$0.5, which was wrong by a factor of twenty in the cheap direction.
 
 One limitation, stated because it bounds the claim: the sweep needs the person to be found
-**somewhere**. A record that never names Sean MacDonald in a position the model can read
-gets nothing from it. That is the residual case a gazetteer would cover and this does not.
+**somewhere**. A record that never names someone in a position the model can read gets
+nothing from it. That is the residual a gazetteer would cover and this does not, and it is
+now a number rather than a caveat: **23 of the 29 person spans still missed, 79 percent,
+belong to someone the detector never found as a person anywhere in that record.**
+`DetectorReport.unseen_people` computes it and `results/detectors.md` prints it.
+
+Getting that number right took two attempts and the first was wrong in the flattering
+direction. It counted a persona as seen when *any* span of theirs was found, including
+their email address, and reported that 0 percent of the remaining misses were out of
+reach, which would have meant the sweep could in principle recover all of them. An email
+address licenses nothing for a name sweep: it seeds from detected person spans and from
+nothing else. Restricting the test to person spans moved the figure from 0 to 79 percent
+and reversed the conclusion. It was caught because 0 percent looked too good and got a
+second reading, which is not a reliable way to catch anything.
+
+### 12.13 Labrador, and the leak the sweep found on its way past
+
+2026-09-20. Project 04 asked twice about caseless scripts, and the answer needed to stop
+being a reassurance. Labrador Inuttitut in these records is written in Latin script, not
+the syllabics used in Nunavut, so the alphabet is not this jurisdiction's problem. The
+problem is vocabulary, and `NameProfile.LABRADOR` is the profile that says so: Innu
+surnames from Sheshatshiu and Natuashish and Inuit surnames from the Nunatsiavut
+communities, every one of them plain ASCII with no accent, no apostrophe and no internal
+capital. Orthographically they are Doucette. To a model trained on English news they are
+nothing, and that is the whole of the effect the five shape profiles were measuring.
+
+Building it found something worse than a recall gap, and it is the more important half of
+this amendment.
+
+**A name the detector calls a place is released, and recall cannot see it.** Presidio types
+"Bernadette Tuglavina" as a PERSON in the sentence that introduces her and the bare
+"Tuglavina" in the distribution list below as a **LOCATION**. The span is found, so recall
+counts it and every number in `results/names.md` looks fine. What happens next is that
+`not_personal_information` fires on a LOCATION, returns K6, and K6 releases. A third
+party's surname goes into the released record with "not information about an identifiable
+individual" printed beside it in the schedule, which is a leak and a false statement about
+why.
+
+This is the same failure as the minister typed as a LOCATION in 12.x, and the guard added
+then does not reach it: that guard yields to a register match or a paired title, and a
+third party in a distribution list has neither.
+
+`sweep.retype_known_people` fixes it from the same evidence the sweep already uses. Where a
+span is **exactly** a name part the document has attributed to a person elsewhere, and its
+current type is one that releases, it is re-typed as a person. Exactly, and nothing looser:
+"Hearn" inside "Hearn Building" is a place doing honest work, and re-typing the building
+would black out somewhere the requester is entitled to see.
+
+The general lesson is the one this project keeps relearning from a different direction. A
+recall number cannot see a span that was found and mislabelled, and mislabelling toward a
+category that releases is worse than missing the span, because a miss at least leaves the
+blunt baseline's behaviour intact while a wrong label produces a confident, reasoned,
+wrong release.

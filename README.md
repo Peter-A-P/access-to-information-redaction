@@ -19,42 +19,42 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 24 model calls, US$0.0266, US$0.00111 per call, 18044 in / 1721 out tokens, 2550 replayed from the answer cache, free.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 8 model calls, US$0.0089, US$0.00111 per call, 6031 in / 564 out tokens, 2598 replayed from the answer cache, free.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
 | `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
-| `K2` | 2345 | n/a | 33.8% (31.7% to 35.9%), n=2345 | 24.1% (22.2% to 26.3%), n=2345 |
+| `K2` | 2345 | n/a | 34.0% (32.0% to 36.1%), n=2345 | 24.3% (22.3% to 26.5%), n=2345 |
 | `K3` | 280 | n/a | 7.1% (4.3% to 10.4%), n=280 | 7.1% (4.3% to 10.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
-| `R1` | 1400 | 7.2% (5.8% to 8.8%), n=1400 | n/a | 56.5% (53.8% to 59.4%), n=1400 |
+| `R1` | 1400 | 5.3% (4.1% to 6.5%), n=1400 | n/a | 57.6% (54.8% to 60.6%), n=1400 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 7.2% (5.8% to 8.8%), n=1400 | 23.1% (21.8% to 24.5%), n=3955 | 27.3% (26.1% to 28.7%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sever, rules only | 4.7% (3.4% to 6.2%), n=1400 | 30.1% (29.0% to 31.3%), n=3955 | 45.9% (44.8% to 46.9%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sever, rules then the model on the residual | 5.3% (4.1% to 6.5%), n=1400 | 23.3% (21.9% to 24.6%), n=3955 | 27.7% (26.4% to 29.1%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sever, rules only | 2.8% (1.8% to 4.0%), n=1400 | 30.3% (29.1% to 31.4%), n=3955 | 46.5% (45.4% to 47.5%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | blunt redact-all-PII | 1.1% (0.6% to 1.7%), n=1400 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sentence-only, no document context | 4.7% (3.4% to 6.2%), n=1400 | 57.5% (55.5% to 59.3%), n=3955 | 66.1% (64.5% to 67.5%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sentence-only, no document context | 2.8% (1.8% to 4.0%), n=1400 | 58.0% (56.0% to 59.9%), n=3955 | 66.9% (65.5% to 68.4%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 
 **Where the leaks come from**
 
 | System | Leaks | The detector never found the span | The decision was wrong |
 |---|---:|---:|---:|
-| sever, rules then the model on the residual | 101 | 16 | 85 |
-| sever, rules only | 66 | 16 | 50 |
+| sever, rules then the model on the residual | 74 | 16 | 58 |
+| sever, rules only | 39 | 16 | 23 |
 | blunt redact-all-PII | 16 | 16 | 0 |
-| sentence-only, no document context | 66 | 16 | 50 |
+| sentence-only, no document context | 39 | 16 | 23 |
 
 **PDF leak test**
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2255 | 0 | text layer only |
+| 2287 | 0 | text layer only |
 
 _OCR channel disabled for this run._
 
@@ -124,8 +124,20 @@ Three more limitations, none of them small:
   **So the remedy was lexical, and it is now built.** A record that names Bernadette Le
   Drew once has said that "Le Drew" is a person's name in this record, so every person the
   page detectors find licenses the other whole-word occurrences of their name parts across
-  the whole document. Person recall on the hard corpus goes **93.4 to 98.0 percent**, and
-  the penalty for using this province's names falls from 2.8 points to 0.8. The ablation
+  the whole document, and a span the detector typed as a *place* is re-typed where the
+  document has already called those exact characters a person. Person recall on the hard
+  corpus goes **93.4 to 98.0 percent**, the penalty for using this province's names falls
+  from 2.8 points to 0.8, and the leak rate falls from 4.7 to **2.8 percent** because a
+  surname typed as a LOCATION was being released as "not information about an identifiable
+  individual".
+
+  A Labrador profile is what says the mechanism is vocabulary and not spelling: Innu and
+  Inuit surnames from Sheshatshiu, Natuashish and the Nunatsiavut communities, every one
+  plain ASCII with no accent or apostrophe. Orthographically they are Doucette; to a model
+  trained on English news they are nothing, and the sweep recovers 3.1 points on them.
+  **23 of the 29 person spans still missed belong to someone the detector never found as a
+  person anywhere in that record**, which is the part no document-level inference can reach
+  and the case a gazetteer would have to cover. The ablation
   per shape is [`results/sweep.md`](results/sweep.md); the engines side by side are
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the

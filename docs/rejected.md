@@ -1,10 +1,11 @@
 # What did not work
 
 Rule C of the portfolio: name an approach that was tried and rejected, with the evidence.
-Three are recorded here. The first is the approach this project exists to replace, and the
+Four are recorded here. The first is the approach this project exists to replace, and the
 measurement is the argument for the project. The second is a design idea inside the project
 that was wrong, caught by a test, and replaced. The third is a number that was guessed and
-turned out to be the wrong guess.
+turned out to be the wrong guess. The fourth is a measurement that was healthy and was
+looking at the wrong thing.
 
 ## 1. Blunt redact-all-PII
 
@@ -127,8 +128,45 @@ measured the model's variance as much as the threshold.
 finding waiting to happen. The cheapest version of that measurement is usually to record
 the model's raw output once and score it many times, rather than to re-run the model.
 
+## 4. Measuring a detector by recall alone
+
+**The approach.** Report detector quality as recall per entity type: of the values the
+generator inserted, how many did the detector find. It is the standard number, this project
+published it for months, and `results/detectors.md` is full of it.
+
+**Why it was rejected as sufficient.** Recall asks whether a span was found. It does not
+ask what the span was called, and in this tool the label decides whether the text is
+released.
+
+Three separate defects hid behind a healthy recall figure, each found by something other
+than recall:
+
+| What happened | What recall said | What it cost |
+|---|---|---|
+| "Bannerman Street" found inside "14 Bannerman Street" | found | the house number released |
+| "CASE NOTES" matched by the case-number recogniser | not measured | a box over an ordinary heading |
+| "Tuglavina" found and typed as a LOCATION | found | the surname **released** as K6 |
+
+The third is the worst and the last to be found. A LOCATION is not personal information, so
+the rule releases it with a reason attached, and the redaction schedule tells the requester
+that a third party's surname is "not information about an identifiable individual". A miss
+would have been better: the span would have been unredacted but the tool would not have
+argued for it.
+
+**What replaced it.** Three columns rather than one, in every generated table: recall,
+**fully covered** (the detection spans the whole labelled value, not part of it), and
+**typed correctly**. Plus `sweep.retype_known_people`, which re-types a span the document
+has already attributed to a person, and `results/sweep.md`, which reports what share of the
+remaining misses are people the detector never found anywhere, because that is the part no
+amount of document-level inference can reach.
+
+**The general lesson.** For a tool whose output is a decision rather than a list, measure
+the decision. A detector metric that cannot distinguish "missed" from "found and labelled
+in the category that releases it" is measuring the wrong end of the pipeline.
+
 ---
 
-All three entries are reproducible: `sever report` produces the first table,
-`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second, and
-`sever eval-thresholds` produces the third from the committed answer cache.
+All four entries are reproducible: `sever report` produces the first table,
+`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second,
+`sever eval-thresholds` produces the third from the committed answer cache, and
+`sever eval-sweep --profiles all` produces the fourth.

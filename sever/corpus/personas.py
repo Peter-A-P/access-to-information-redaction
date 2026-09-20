@@ -187,6 +187,33 @@ ACCENTED_FORENAMES = (
 )
 
 
+# Labrador. The five profiles above are shapes: punctuation and diacritics chosen to probe
+# a tokeniser. This one is not a shape at all, it is a vocabulary, and it is the profile
+# closest to a real record from this province.
+#
+# Innu surnames from Sheshatshiu and Natuashish, and Inuit surnames from the Nunatsiavut
+# communities. All Latin script, no accents, no apostrophes, no internal capitals: every
+# orthographic feature the earlier profiles test is absent. What they are is **out of a
+# language model's vocabulary**, which is the actual mechanism behind the loss those
+# profiles measured.
+#
+# It is also the honest answer to a question project 04 asked twice. Labrador Inuttitut in
+# government records is written in Latin script, not the syllabics used in Nunavut, so a
+# caseless-script gap is not this jurisdiction's problem. The real problem is that a
+# detector trained on English news has seen Doucette and has not seen Igloliorte, and a
+# person whose name a tool cannot read is a person whose privacy it cannot protect.
+#
+# These are real surnames from small communities, used the same way every other pool here
+# is used: a common surname with an invented forename, matching no actual person. The
+# corpus note at the top of this file applies to them exactly as it does to Gushue.
+LABRADOR_SURNAMES = (
+    # Innu
+    "Penashue", "Pasteen", "Nuna", "Rich", "Gregoire", "Pone", "Michel", "Andrew",
+    # Inuit, Nunatsiavut
+    "Igloliorte", "Onalik", "Tuglavina", "Merkuratsuk", "Obed", "Lyall", "Pottle", "Dicker",
+)
+
+
 class NameProfile(StrEnum):
     """Which name pool a corpus is built from.
 
@@ -206,6 +233,7 @@ class NameProfile(StrEnum):
     HYPHEN = "hyphen"
     PARTICLE = "particle"
     FORENAME_ACCENT = "forename-accent"
+    LABRADOR = "labrador"
 
     @property
     def pools(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -215,6 +243,7 @@ class NameProfile(StrEnum):
             NameProfile.ACCENT: ACCENTED_SURNAMES,
             NameProfile.HYPHEN: HYPHENATED_SURNAMES,
             NameProfile.PARTICLE: PARTICLE_SURNAMES,
+            NameProfile.LABRADOR: LABRADOR_SURNAMES,
         }.get(self)
         if surnames is not None:
             return GIVEN_NAMES, surnames

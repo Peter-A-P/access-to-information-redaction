@@ -30,6 +30,19 @@ from sever.ingest.document import BlockKind
 from .conftest import make_document
 
 # Escapes rather than literals, so a re-encoding cannot turn these back into ASCII.
+# Labrador surnames, which are the point rather than a sixth shape. No accent, no
+# apostrophe, no internal capital: orthographically they are indistinguishable from
+# Doucette. What they are is outside a model trained on English news, which is the actual
+# mechanism behind every number in results/names.md.
+LABRADOR = [
+    pytest.param("Igloliorte", id="igloliorte"),
+    pytest.param("Onalik", id="onalik"),
+    pytest.param("Tuglavina", id="tuglavina"),
+    pytest.param("Merkuratsuk", id="merkuratsuk"),
+    pytest.param("Penashue", id="penashue"),
+    pytest.param("Nuna", id="nuna"),
+]
+
 SHAPES = [
     pytest.param("Doucette", id="plain"),
     pytest.param("O'Brien", id="apostrophe"),
@@ -88,6 +101,45 @@ def test_an_honorific_rescues_every_forename_shape(detector, forename) -> None: 
 def test_an_honorific_rescues_a_bare_surname(detector, surname) -> None:  # type: ignore[no-untyped-def]
     found = found_people(detector, f"Ms {surname} attended the meeting.")
     assert any(surname in f for f in found), f"{surname!r} after an honorific: {found}"
+
+
+@pytest.mark.parametrize("surname", LABRADOR)
+def test_a_forename_rescues_a_labrador_surname_too(detector, surname) -> None:  # type: ignore[no-untyped-def]
+    """The same property on names with no orthographic peculiarity at all.
+
+    This is what says the mechanism is vocabulary rather than spelling. Igloliorte and
+    Doucette are the same shape to a tokeniser; one is in the model's vocabulary and the
+    other is not, and only the second is lost when it stands alone.
+
+    It is also the answer to a question project 04 asked twice about caseless scripts.
+    Labrador Inuttitut in government records is written in Latin script, so the gap in
+    this jurisdiction is not the alphabet. It is that a detector trained on English news
+    has never seen these names, and a person whose name a tool cannot read is a person
+    whose privacy it cannot protect.
+    """
+    found = found_people(detector, f"The complainant Bernadette {surname} wrote in March.")
+    assert any(surname in f for f in found), f"{surname!r} beside a forename: {found}"
+
+
+@pytest.mark.parametrize("surname", LABRADOR)
+def test_the_sweep_recovers_a_bare_labrador_surname(detector, surname) -> None:  # type: ignore[no-untyped-def]
+    """And the document-wide sweep is what closes it, on the names that most need it.
+
+    The record names the person once in a position the model can read; the sweep carries
+    that to the distribution list where it cannot.
+    """
+    doc = make_document(
+        [
+            (BlockKind.BODY, f"The complainant Bernadette {surname} wrote in March."),
+            (BlockKind.BODY, f"Present: {surname}, Hugh Mercer, Fiona Tobin."),
+        ]
+    )
+    people = [d for d in detector.detect(doc) if d.entity_type.value == "person"]
+    on_the_list = [d for d in people if d.page == 1 and d.text == surname]
+    assert on_the_list, (
+        f"{surname!r} standing alone was not recovered even though the record names them "
+        f"in the sentence above: {[d.text for d in people]}"
+    )
 
 
 def test_the_name_parts_needed_for_the_fix_are_already_known_to_the_policy() -> None:

@@ -72,6 +72,10 @@ class SpanFound:
     # Set when found: which recogniser claimed it, and what type it called it.
     recogniser: str | None = None
     called: EntityType | None = None
+    # Which persona the value belongs to, so that a miss can be asked a second question:
+    # was this person found anywhere else in the same record? See
+    # `DetectorReport.unseen_people`.
+    persona_id: str | None = None
     # True when the detection covers the whole labelled value, not merely part of it.
     #
     # Worth its own column, because overlap grading is lenient in a way that matters here.
@@ -116,6 +120,37 @@ class DetectorReport:
     def misses(self, kind: EntityType) -> list[SpanFound]:
         return [s for s in self.spans if s.kind is kind and not s.found]
 
+    def unseen_people(self) -> tuple[int, int]:
+        """Of the missed person spans, how many belong to someone the detector never found
+        *as a person* anywhere in that record.
+
+        This is the bound on what a document-wide sweep can ever do, and it is worth a
+        number rather than a sentence. The sweep recovers a person's other mentions once
+        something has found them once; where nothing has, there is nothing to sweep from
+        and only a gazetteer or a better first pass would help.
+
+        "Found" here means found **as a person**, and the qualifier is the whole
+        measurement. An earlier version counted a persona as seen when any span of theirs
+        was found, including their email address or their telephone number, and reported
+        that 0 percent of misses were unreachable. That was wrong in the flattering
+        direction: an email address licenses nothing for a name sweep, which seeds itself
+        from detected person spans and from nothing else.
+
+        Returns (unseen, missed). A miss whose persona is unknown, which is a value the
+        generator did not attribute to anyone, counts as seen: it cannot be evidence for
+        the pessimistic reading.
+        """
+        seen: set[tuple[str, str]] = {
+            (s.doc_id, s.persona_id)
+            for s in self.spans
+            if s.found and s.kind is EntityType.PERSON and s.persona_id is not None
+        }
+        missed = [s for s in self.spans if s.kind is EntityType.PERSON and not s.found]
+        unseen = sum(
+            1 for s in missed if s.persona_id is not None and (s.doc_id, s.persona_id) not in seen
+        )
+        return unseen, len(missed)
+
     def to_markdown(self) -> str:
         lines = [
             f"**Detector:** `{self.detector}`, over {self.documents} documents and "
@@ -134,12 +169,28 @@ class DetectorReport:
             f"| **all** | **{len(self.spans)}** | **{self.recall()}** | "
             f"**{self.coverage()}** | **{self.type_accuracy()}** |",
             "",
+            _residual_sentence(*self.unseen_people()),
+            "",
             f"Unlabelled detections: {sum(self.unlabelled.values())}. These are mostly "
             "correct detections of literal template text (real organisations, places and "
             "dates) that carries no label, not false positives; precision is not claimed.",
             "",
         ]
         return "\n".join(lines)
+
+
+def _residual_sentence(unseen: int, missed: int) -> str:
+    if not missed:
+        return "No person span was missed, so there is no residual to attribute."
+    share = unseen / missed
+    return (
+        f"Of the {missed} person spans missed, **{unseen} belong to someone this detector "
+        f"never found as a person anywhere in that record** ({share:.0%}). That is the "
+        f"part a document-wide name sweep cannot reach: it seeds itself from detected "
+        f"person spans, so finding someone's email address licenses nothing. The other "
+        f"{missed - unseen} are people the record does name successfully elsewhere, and "
+        f"are the sweep's own remaining misses."
+    )
 
 
 class _Outcome:
@@ -187,6 +238,7 @@ def evaluate(detector: Detector, corpus: Corpus) -> DetectorReport:
                     doc_id=doc.doc_id,
                     kind=kind,
                     text=label.text,
+                    persona_id=label.persona_id,
                     found=best is not None,
                     recogniser=best.recogniser if best else None,
                     called=best.entity_type if best else None,

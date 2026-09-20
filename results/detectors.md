@@ -16,10 +16,12 @@
 | `job_title` | 840 | 100.0% (100.0% to 100.0%), n=840 | 64.0% (59.8% to 68.1%), n=840 | 76.9% (73.1% to 80.5%), n=840 |
 | `location` | 105 | 62.9% (54.3% to 71.4%), n=105 | 50.5% (41.0% to 60.0%), n=105 | 80.3% (69.7% to 89.4%), n=66 |
 | `organisation` | 210 | 96.2% (93.5% to 98.6%), n=210 | 40.0% (32.7% to 46.8%), n=210 | 100.0% (100.0% to 100.0%), n=202 |
-| `person` | 2380 | 98.8% (98.0% to 99.5%), n=2380 | 97.9% (97.0% to 98.7%), n=2380 | 96.2% (95.3% to 97.1%), n=2351 |
+| `person` | 2380 | 98.8% (98.0% to 99.5%), n=2380 | 97.9% (97.0% to 98.7%), n=2380 | 98.4% (97.7% to 99.1%), n=2351 |
 | `phone` | 560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 |
-| **all** | **5355** | **98.6% (98.1% to 99.0%), n=5355** | **88.8% (87.8% to 89.7%), n=5355** | **93.1% (92.2% to 93.9%), n=5279** |
+| **all** | **5355** | **98.6% (98.1% to 99.0%), n=5355** | **88.8% (87.8% to 89.7%), n=5355** | **94.1% (93.2% to 94.9%), n=5279** |
+
+Of the 29 person spans missed, **23 belong to someone this detector never found as a person anywhere in that record** (79%). That is the part a document-wide name sweep cannot reach: it seeds itself from detected person spans, so finding someone's email address licenses nothing. The other 6 are people the record does name successfully elsewhere, and are the sweep's own remaining misses.
 
 Unlabelled detections: 2396. These are mostly correct detections of literal template text (real organisations, places and dates) that carries no label, not false positives; precision is not claimed.
 
@@ -42,6 +44,8 @@ Unlabelled detections: 2396. These are mostly correct detections of literal temp
 | `phone` | 560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 | 95.7% (90.0% to 100.0%), n=70 |
 | **all** | **5355** | **96.3% (95.7% to 96.9%), n=5355** | **87.9% (86.7% to 89.0%), n=5355** | **92.3% (91.3% to 93.2%), n=5156** |
+
+Of the 84 person spans missed, **28 belong to someone this detector never found as a person anywhere in that record** (33%). That is the part a document-wide name sweep cannot reach: it seeds itself from detected person spans, so finding someone's email address licenses nothing. The other 56 are people the record does name successfully elsewhere, and are the sweep's own remaining misses.
 
 Unlabelled detections: 1245. These are mostly correct detections of literal template text (real organisations, places and dates) that carries no label, not false positives; precision is not claimed.
 

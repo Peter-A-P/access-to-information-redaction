@@ -156,7 +156,63 @@ def sweep(document: Document, detections: Sequence[Detection]) -> tuple[Detectio
     return tuple(added)
 
 
+RETYPED = "name_sweep:retyped"
+
+# The types that mean "this is not information about an identifiable individual", and
+# therefore the types whose rule releases the span. A name mistyped as one of these is not
+# a missed detection, which recall would show, but a released one, which it would not.
+_RELEASING_TYPES = frozenset({EntityType.LOCATION, EntityType.ORGANISATION})
+
+
+def retype_known_people(
+    document: Document, detections: Sequence[Detection]
+) -> tuple[Detection, ...]:
+    """Re-type a span the document has already told us is a person's name.
+
+    Found while testing the sweep on Labrador surnames, and it is the more serious half of
+    what the sweep is for. "Bernadette Tuglavina" is detected as a PERSON in the sentence
+    that introduces her; the bare "Tuglavina" in the distribution list below is detected
+    too, as a **LOCATION**.
+
+    Recall cannot see this. The span is found, so it counts. What happens next is that
+    `not_personal_information` fires on a LOCATION, returns K6, and K6 releases. A third
+    party's surname goes into the released record wearing the reason "not information about
+    an identifiable individual", which is both a leak and a false statement in the
+    redaction schedule.
+
+    The rule here is deliberately narrow: only where the existing span is **exactly** the
+    same characters as a name part the document has already attributed to a person, and
+    only where its current type is one that releases. Equal offsets and nothing else,
+    because a name token inside a longer ADDRESS or ORGANISATION span is usually doing
+    honest work there: "Hearn" inside "Hearn Building" is a place.
+    """
+    parts = set(sweepable_parts(detections))
+    if not parts:
+        return tuple(detections)
+    out: list[Detection] = []
+    for d in detections:
+        if d.entity_type in _RELEASING_TYPES and d.text in parts:
+            out.append(
+                Detection(
+                    page=d.page,
+                    offsets=d.offsets,
+                    text=d.text,
+                    entity_type=EntityType.PERSON,
+                    score=max(d.score, SWEPT_SCORE),
+                    recogniser=RETYPED,
+                )
+            )
+        else:
+            out.append(d)
+    return tuple(out)
+
+
 def with_sweep(document: Document, detections: Sequence[Detection]) -> tuple[Detection, ...]:
-    """`detections` plus whatever the sweep adds, in reading order."""
-    merged = [*detections, *sweep(document, detections)]
+    """`detections`, re-typed where the document contradicts them, plus what the sweep adds.
+
+    Re-typing runs first so that the sweep does not then skip the span it would have added,
+    and so that the added spans are decided by the same rule as the re-typed ones.
+    """
+    corrected = retype_known_people(document, detections)
+    merged = [*corrected, *sweep(document, corrected)]
     return tuple(sorted(merged, key=lambda d: (d.page, d.offsets.start)))
