@@ -1,6 +1,6 @@
 **Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2550 answers replayed from the cache, nothing spent.
 
 **Per category, this tool**
 

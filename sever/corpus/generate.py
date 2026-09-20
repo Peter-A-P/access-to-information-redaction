@@ -25,7 +25,7 @@ from pathlib import Path
 
 from sever.corpus import render as rnd
 from sever.corpus.labels import LabelSet
-from sever.corpus.personas import Persona, PersonaFactory, PersonaRole
+from sever.corpus.personas import NameProfile, Persona, PersonaFactory, PersonaRole
 
 DEFAULT_SEED = 20270802
 
@@ -96,6 +96,7 @@ def build(
     seed: int = DEFAULT_SEED,
     template_dir: Path = rnd.TEMPLATE_DIR,
     splits: Sequence[tuple[str, float]] = (("train", 0.3), ("validation", 0.2), ("test", 0.5)),
+    names: NameProfile = NameProfile.PLAIN,
 ) -> Corpus:
     """Render `documents` documents, cycling the templates so each is equally represented.
 
@@ -106,7 +107,7 @@ def build(
     templates = rnd.load_all(template_dir)
     if not templates:
         raise ValueError(f"no templates found in {template_dir}")
-    factory = PersonaFactory(seed=seed)
+    factory = PersonaFactory(seed=seed, profile=names)
     rng = random.Random(seed)
 
     items: list[CorpusItem] = []

@@ -13,15 +13,15 @@
 | `employee_id` | 70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 |
 | `file_number` | 210 | 100.0% (100.0% to 100.0%), n=210 | 100.0% (100.0% to 100.0%), n=210 | 100.0% (100.0% to 100.0%), n=210 |
 | `health_number` | 105 | 100.0% (100.0% to 100.0%), n=105 | 66.7% (55.7% to 76.1%), n=105 | 66.7% (55.7% to 76.1%), n=105 |
-| `job_title` | 840 | 100.0% (100.0% to 100.0%), n=840 | 56.9% (52.7% to 61.1%), n=840 | 69.8% (65.5% to 73.8%), n=840 |
+| `job_title` | 840 | 100.0% (100.0% to 100.0%), n=840 | 64.0% (59.8% to 68.1%), n=840 | 76.9% (73.1% to 80.5%), n=840 |
 | `location` | 105 | 62.9% (54.3% to 71.4%), n=105 | 50.5% (41.0% to 60.0%), n=105 | 80.3% (69.7% to 89.4%), n=66 |
 | `organisation` | 210 | 96.2% (93.5% to 98.6%), n=210 | 40.0% (32.7% to 46.8%), n=210 | 100.0% (100.0% to 100.0%), n=202 |
 | `person` | 2380 | 96.2% (95.1% to 97.2%), n=2380 | 95.6% (94.5% to 96.6%), n=2380 | 96.1% (95.1% to 97.0%), n=2290 |
 | `phone` | 560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 | 100.0% (100.0% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 | 100.0% (100.0% to 100.0%), n=70 |
-| **all** | **5355** | **97.4% (96.9% to 97.9%), n=5355** | **86.7% (85.5% to 87.7%), n=5355** | **91.8% (90.8% to 92.8%), n=5218** |
+| **all** | **5355** | **97.4% (96.9% to 97.9%), n=5355** | **87.8% (86.6% to 88.9%), n=5355** | **93.0% (92.1% to 93.9%), n=5218** |
 
-Unlabelled detections: 2457. These are mostly correct detections of literal template text (real organisations, places and dates) that carries no label, not false positives; precision is not claimed.
+Unlabelled detections: 2387. These are mostly correct detections of literal template text (real organisations, places and dates) that carries no label, not false positives; precision is not claimed.
 
 
 **Detector:** `boundary.redact`, over 210 documents and 5355 inserted values whose type the generator recorded.

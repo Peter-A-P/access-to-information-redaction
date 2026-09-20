@@ -214,6 +214,30 @@ class PlaceholderPolicy:
             out = out.replace(placeholder, value)
         return out
 
+    @staticmethod
+    def _contains_word(haystack: str, needle: str) -> bool:
+        """Whether `needle` occurs in `haystack` as a whole word.
+
+        A plain `in` test was what this used to do, and it stopped the pipeline on
+        ordinary English. A document-wide policy licenses the parts of a name as well as
+        the whole, so the surname Le Drew puts "drew" on the guarded list, and "drew" is
+        inside "withdrew". A minute recording that a delegation withdrew therefore refused
+        to send, over a word that is nobody's name.
+
+        Fail-closed means a false positive costs a run rather than a person, so this was
+        never a leak. It is still a defect: a guard that refuses ordinary words trains
+        whoever maintains it to route around it.
+
+        Narrowing to a whole-word match loses nothing real. Every occurrence that is
+        actually the name is still a whole word, and an occurrence that is a fragment
+        inside a longer word is not the name. The boundaries are Unicode-aware, so an
+        accented name is bounded correctly.
+        """
+        if not needle:
+            return False
+        pattern = rf"(?<![^\W\d_]){re.escape(needle)}(?![^\W\d_])"
+        return re.search(pattern, haystack) is not None
+
     def guard(self, payload: str, *, where: str = "outbound request") -> None:
         """Refuse to let a raw entity leave.
 
@@ -242,11 +266,11 @@ class PlaceholderPolicy:
             # leaves; only the assertion is relaxed, and only for one-word values.
             if " " not in value.strip() and value.strip().casefold() in SAFE_CAPITALISED:
                 continue
-            if value in haystack:
+            if self._contains_word(haystack, value):
                 offenders.append(value)
                 continue
             n = normalise(value)
-            if n and n in normalised_haystack:
+            if n and self._contains_word(normalised_haystack, n):
                 offenders.append(value)
                 continue
             if any(ch.isdigit() for ch in value):
@@ -285,9 +309,73 @@ class PlaceholderPolicy:
 # a trade shows up in a results table and the other side shows up in a breach, the choice
 # makes itself.
 
-_PROPER_NOUN = re.compile(r"\b[A-Z][a-z]{2,}(?:['\u2019-][A-Z]?[a-z]+)*\b")
+# A name-shaped token, and the shapes here are the whole point.
+#
+# This pattern used to be `\b[A-Z][a-z]{2,}(?:['\u2019-][A-Z]?[a-z]+)*\b`, which is ASCII
+# and assumes a name is one capital followed by lowercase letters. Three name shapes that
+# are ordinary in Newfoundland and Labrador walked straight through it, and "walked through
+# it" means a real person's name was handed to a model vendor:
+#
+#   Renee with an acute accent   no match at all. `[a-z]` does not contain the accented
+#                                letter, so the match stopped after three characters and
+#                                then failed its own trailing \b, because the next
+#                                character is still a word character under Unicode.
+#   MacDonald, McCarthy          no match at all, for the same reason in reverse: there is
+#                                no word boundary between "Mac" and "Donald".
+#   O'Brien                      matched "Brien" only. "O" has no lowercase run after it,
+#                                so the match began after the apostrophe.
+#
+# None of this was theoretical and none of it was found by the corpus: the corpus had no
+# accented name, no apostrophe and no Mac or Mc surname in 5,355 spans, which is why every
+# test passed. Project 04 reported the same three shapes getting past their own second pass
+# and said that re-running this project's evaluation would not show the difference. It did
+# not, and that is what sent this pattern for a reading.
+#
+# The replacement matches a token of Unicode letters that may be joined by an apostrophe,
+# a hyphen or a period, and leaves the decision about whether it is a name to `_is_name`,
+# where it can be written in Python rather than smuggled into a character class.
+_TOKEN = re.compile(r"[^\W\d_]+(?:['\u2019.\-][^\W\d_]+)*")
+_SEPARATORS = re.compile(r"['\u2019.\-]")
 _DIGIT_RUN = re.compile(r"\b\d[\d\s.,/-]{2,}\d\b")
 _YEAR = re.compile(r"^(?:1[89]|20)\d{2}$")
+
+
+def _is_name_shaped(token: str) -> bool:
+    """Whether a token should be masked as a possible name.
+
+    Three conditions, and each one is load-bearing:
+
+      * It starts with an uppercase letter. Lowercase prose is not a name.
+      * It is not entirely uppercase. An all-capitals token is a heading or an acronym
+        ("NOTES", "ATIPPA", "MCP"), and masking those would leave the model reading a page
+        of boxes. This is also what the old pattern did, by requiring a lowercase run, and
+        it is kept deliberately rather than by accident.
+      * It has at least three letters. Initials and "St" identify nobody on their own.
+
+    Unicode-aware throughout: `str.isupper` and `str.islower` know about accented letters
+    and the character classes do not.
+    """
+    letters = [c for c in token if c.isalpha()]
+    if len(letters) < 3:
+        return False
+    if not letters[0].isupper():
+        return False
+    return any(c.islower() for c in letters)
+
+
+def _is_safe(token: str) -> bool:
+    """Whether a name-shaped token is on the list of words that identify nobody.
+
+    Checked part by part as well as whole, so that a hyphenated or apostrophised
+    compound of safe words stays readable ("Newfoundland-Labrador") while a compound with
+    any unknown part is masked entirely ("Anne-Marie", "Coady-Vokey"). Masking the whole
+    compound rather than the unknown part is the safe direction: half a hyphenated surname
+    is still a surname.
+    """
+    if token.casefold() in SAFE_CAPITALISED:
+        return True
+    parts = [p for p in _SEPARATORS.split(token) if p]
+    return len(parts) > 1 and all(p.casefold() in SAFE_CAPITALISED for p in parts)
 
 UNKNOWN_NAME = "[NAME?]"
 UNKNOWN_NUMBER = "[NUMBER?]"
@@ -342,9 +430,11 @@ def scrub_unrecognised(text: str) -> str:
 
     def mask_word(m: re.Match[str]) -> str:
         word = m.group(0)
-        return word if word.casefold() in SAFE_CAPITALISED else UNKNOWN_NAME
+        if not _is_name_shaped(word):
+            return word
+        return word if _is_safe(word) else UNKNOWN_NAME
 
-    out = _PROPER_NOUN.sub(mask_word, text)
+    out = _TOKEN.sub(mask_word, text)
 
     def mask_number(m: re.Match[str]) -> str:
         raw = m.group(0)

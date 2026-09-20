@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import datetime as dt
 import random
+import re
+import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -90,6 +92,68 @@ SURNAMES = (
     "Gushue", "Lundrigan", "Penashue", "Quirke", "Bonnell", "Halleran", "Skinner", "Vokey",
     "Marchand", "Delaney", "Osmond", "Pomeroy", "Rowsell", "Tobin", "Wiseman", "Yetman",
 )
+
+# The surnames above are Newfoundland and Labrador surnames and every one of them is
+# plain ASCII, single-token, no apostrophe, no Mac or Mc, no accent. That was not a
+# decision, it was an oversight, and it made the corpus easier than the province.
+#
+# It was found from the outside. Project 04 shipped a second pass that had been blind to
+# accented names, to Mac and Mc surnames, and to the part of O'Brien after the apostrophe,
+# fixed it, and told 07 that re-running the evaluation would not show the difference
+# because the corpus is ASCII. It did not: `boundary.redact` 0.5.4 measures identically to
+# 0.5.1 here, to the decimal, on 5,355 values.
+#
+# A benchmark that cannot see a real bug being fixed cannot see it being introduced
+# either. So the shapes below exist as a second, harder profile rather than a replacement:
+# the published numbers stay on `PLAIN` and `results/names.md` reports what the same
+# detector does on `NL`, which is the honest way to state the cost of the assumption.
+#
+# Why these shapes, for this province specifically:
+#
+#   * The apostrophe names are not decoration. O'Brien, O'Keefe, O'Reilly and O'Dea are
+#     among the commonest surnames on the Avalon, and an apostrophe is a token boundary to
+#     most tokenisers, so "O'Brien" is where a name detector splits and a redaction box
+#     covers "O'" and releases "Brien".
+#   * Mac and Mc prefixes carry an internal capital, which is the other place a
+#     capitalisation heuristic breaks.
+#   * The accented names are the French shore and Labrador: Bélanger, Benoît, Gaudet.
+#     Accents also test the normalisation path in the requester matcher.
+#   * Hyphenated surnames are ordinary and span a token boundary the other way.
+#   * Two-token surnames (St. Croix, Le Drew) are real here and look like two names.
+NL_SURNAMES = (
+    "O'Brien", "O'Keefe", "O'Reilly", "O'Dea", "O'Neill", "D'Arcy",
+    "MacDonald", "MacKenzie", "McCarthy", "McGrath", "McNeil", "MacInnis",
+    "B\u00e9langer", "Beno\u00eet", "Gaudet", "Th\u00e9riault", "Cr\u00e9peau", "Duh\u00e9",
+    "Coady-Vokey", "Snook-Hearn", "Pardy-Mercer",
+    "St. Croix", "Le Drew", "St. George",
+    "Doucette", "Byrne", "Gushue", "Penashue", "Noseworthy", "Ivany", "Tulk", "Rideout",
+)
+
+NL_GIVEN_NAMES = (
+    "Se\u00e1n", "Sin\u00e9ad", "Ren\u00e9e", "Andr\u00e9", "No\u00ebl", "Ch\u00e9rie",
+    "Mary-Kate", "Anne-Marie", "Jean-Guy",
+    "Marie", "Aaron", "Siobhan", "Terrence", "Gerald", "Bernadette", "Colm",
+    "Wallace", "Odette", "Hugh", "Desmond", "Fiona", "Loretta", "Malcolm",
+    "Barry", "Nathaniel", "Perpetua", "Roland", "Emmett", "Josephine", "Maeve", "Ronan",
+)
+
+
+class NameProfile(StrEnum):
+    """Which name pool a corpus is built from.
+
+    `PLAIN` is the published default and every committed result is measured on it.
+    `NL` swaps in the shapes above. Nothing else about the corpus changes, so the two are
+    comparable span for span.
+    """
+
+    PLAIN = "plain"
+    NL = "nl"
+
+    @property
+    def pools(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        if self is NameProfile.NL:
+            return NL_GIVEN_NAMES, NL_SURNAMES
+        return GIVEN_NAMES, SURNAMES
 
 STREETS = (
     "Bannerman Street", "Duckworth Street", "LeMarchant Road", "Empire Avenue",
@@ -229,7 +293,31 @@ def _sin(rng: random.Random) -> str:
 
 
 def _slug(name: str) -> str:
-    return name.lower().replace(" ", ".").replace("'", "")
+    """A name as a government mail system would write it in an address.
+
+    Transliterated to ASCII, because that is what directories do: Duhe with an acute
+    accent gets an address reading `duhe`, not one carrying the accent. Getting this
+    wrong in the generator would have been a corpus bug dressed up as a detector result,
+    since an address with an accent in its local part is not a thing this tool will meet.
+
+    It also makes the harder question askable. When the name on the page is accented and
+    the address is not, a placeholder policy that substitutes only the exact surface form
+    replaces the name and ships the surname inside the address. That is the same class of
+    gap as a full name not licensing its parts, and it is why the persona ground-truth test
+    normalises accents before it looks.
+
+    Separators collapse rather than accumulate, so the two-token surname St. Croix gives
+    `st.croix` and not the invalid `st..croix`.
+    """
+    decomposed = unicodedata.normalize("NFKD", name)
+    ascii_only = "".join(c for c in decomposed if not unicodedata.combining(c))
+    # Both apostrophes, the typewriter one and the typographic one, named by codepoint so
+    # that the file stays plain ASCII and a re-encoding cannot quietly change what it means.
+    lowered = ascii_only.lower()
+    for apostrophe in ("'", chr(0x2019)):
+        lowered = lowered.replace(apostrophe, "")
+    collapsed = re.sub(r"[^a-z0-9]+", ".", lowered)
+    return collapsed.strip(".")
 
 
 @dataclass
@@ -237,6 +325,7 @@ class PersonaFactory:
     """Draws personas without repeating a name inside one corpus."""
 
     seed: int = 20270802
+    profile: NameProfile = NameProfile.PLAIN
     _rng: random.Random = field(init=False)
     _used: set[tuple[str, str]] = field(default_factory=set, init=False)
     _n: int = field(default=0, init=False)
@@ -257,12 +346,13 @@ class PersonaFactory:
         self._used.clear()
 
     def _name(self) -> tuple[str, str]:
+        given_pool, surname_pool = self.profile.pools
         for _ in range(500):
-            pair = (self._rng.choice(GIVEN_NAMES), self._rng.choice(SURNAMES))
+            pair = (self._rng.choice(given_pool), self._rng.choice(surname_pool))
             if pair not in self._used:
                 self._used.add(pair)
                 return pair
-        raise RuntimeError("exhausted the name pool; widen GIVEN_NAMES or SURNAMES")
+        raise RuntimeError("exhausted the name pool; widen the pools for this profile")
 
     def make(self, role: PersonaRole, *, organisation: str | None = None) -> Persona:
         rng = self._rng

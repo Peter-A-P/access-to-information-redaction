@@ -15,7 +15,7 @@
  },
  "detector": "sever-detector",
  "model": "anthropic/claude-haiku-4-5-20251001",
- "model_run": "466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free",
+ "model_run": "2550 answers replayed from the cache, nothing spent",
  "systems": [
   {
    "name": "sever, rules then the model on the residual",

@@ -446,3 +446,60 @@ Still outstanding from the definition of done in section 10: the placeholders ab
 the cost per page; the model-only baseline (rules-only, sentence-only and blunt are
 measured); the scanned track and its character error rate; the published-federal-releases
 track; the reviewer web app and the reviewer time study; the hosted demo.
+
+### 12.10 The corpus was easier than the province, and an outside report is what showed it
+
+2026-09-20. Section 3 specifies personas whose names are "plausible for Newfoundland and
+Labrador". They were, and they were also, every one of them, plain ASCII: no apostrophe, no
+Mac or Mc prefix, no accented letter, no hyphen, no two-token surname. In 5,355 labelled
+spans there was not one O'Brien and not one MacDonald, in a province where both are
+ordinary. That was not a decision anyone took; it was the shape of a hand-written list
+nobody re-read.
+
+It could not be found from inside. Every test passed, on a corpus that could not fail them.
+
+It was found because project 04 fixed the same blindness in their own second pass and said
+so, adding that re-running this project's evaluation would not show the difference because
+the corpus is ASCII. It did not: `boundary.redact` 0.5.4 measures identically to 0.5.1
+here, to the decimal, across every entity type. A benchmark that cannot see a real bug
+being fixed cannot see one being introduced.
+
+Three things came out of following it up, and two of them were defects in this project
+rather than in the corpus.
+
+**The detector-independent scrub had exactly the bug 04 had just fixed.** `docs/rejected.md`
+entry 2 argues that a privacy boundary whose strength equals a detector's recall is not a
+boundary, and `scrub_unrecognised` is what that argument rests on. Its pattern was
+`[A-Z][a-z]{2,}...`, which is ASCII: an accented forename and a Mac surname passed
+through it completely untouched, and O'Brien came out as "O'" plus a mask. The backstop
+was not a backstop for anyone whose name has an accent or an apostrophe. Rewritten with
+Unicode-aware token matching and a `_is_name_shaped` predicate in Python rather than a
+character class; `tests/test_scrub_shapes.py` holds the shapes.
+
+**The outbound guard refused ordinary English.** A document-wide policy licenses the parts
+of a name, so the surname Le Drew put "drew" on the guarded list, and the guard's substring
+test found it inside "withdrew". A minute recording that a delegation withdrew would not
+send. Fail-closed, so it cost a run rather than a person, and it is still a defect: a guard
+that refuses ordinary words trains whoever maintains it to route around it. Now a
+whole-word match, which loses nothing, because an occurrence that is the name is a whole
+word and one that is a fragment is not.
+
+**One thing was a corpus bug rather than a result.** Addresses were built by lowercasing
+the name, so an accented surname produced an address carrying the accent and a two-token
+surname produced an invalid double dot. Real directories transliterate. Fixed, which also
+makes the harder question askable: when the page says an accented name and the address says
+the transliteration, a policy keyed on the exact surface form ships the surname inside the
+address. The persona ground-truth test normalises accents before it looks, and it now runs
+on the hard profile too.
+
+`NameProfile` is the deliberate form of the amendment: `plain` is the published corpus and
+every committed number stays measured on it, `nl` is the harder one, and `sever eval-names`
+prints both. On `nl`, person recall falls from 96.2 to 93.4 percent for this project's
+detector and from 96.5 to 94.2 for 04's. The published tables did not move, and neither did
+a single model request: the full 210-document replay hit the answer cache with no misses,
+because the plain corpus contains none of the shapes the fix addresses. That is the finding
+restated as a measurement.
+
+Whether `nl` should become the default is not settled here. It should be argued on what a
+released record actually looks like, not on which number is more flattering, and the
+argument is easier to have now that both numbers exist.

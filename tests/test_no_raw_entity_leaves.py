@@ -104,6 +104,96 @@ def test_no_persona_value_appears_in_any_outbound_request(corpus, detector) -> N
     )
 
 
+def test_no_persona_value_leaves_when_the_names_are_this_province_s(detector) -> None:  # type: ignore[no-untyped-def]
+    """The same property, on the name shapes the published corpus does not contain.
+
+    This is the test that would have caught the bug `tests/test_scrub_shapes.py` documents.
+    The corpus above is plain ASCII, so the second pass could be blind to accented names,
+    to Mac and Mc surnames and to half of O'Brien while every assertion in this file
+    passed. It was, and the report came from project 04 rather than from here.
+
+    A second consideration this profile is the only way to reach: the personas' email
+    addresses are transliterated, as a real directory writes them, so the page says
+    "Duhe" with an acute accent and the address says `duhe`. A boundary that substitutes
+    only the exact surface form replaces the name and ships the surname inside the
+    address. The normalised comparison below is what catches that.
+    """
+    from sever.corpus.generate import build
+    from sever.corpus.personas import NameProfile
+
+    decider = GatewayModelDecider(enabled=True)
+    offenders: list[str] = []
+    requests_built = 0
+
+    for item in build(documents=12, names=NameProfile.NL):
+        doc = item.rendered.document
+        detections = tuple(detector.detect(doc))
+        contexts = ContextBuilder(
+            config=RequestConfig(request_id=doc.doc_id, requester_name="")
+        ).build(doc, detections)
+        residual = [c for c in contexts if not apply_rules(c).decided_by_rule]
+        if not residual:
+            continue
+        policy = GatewayModelDecider.policy_for(residual, contexts)
+        secrets = _persona_secrets(item.rendered.cast)
+
+        for ctx in residual:
+            message, payload = decider.build_request(ctx, policy)
+            requests_built += 1
+            body = "\n".join([SYSTEM_PROMPT, message, json.dumps(payload, sort_keys=True)])
+            lowered = body.casefold()
+            normalised = normalise(body)
+            for secret in secrets:
+                if secret.casefold() in lowered:
+                    offenders.append(f"{doc.doc_id}: {secret!r} in the request body")
+                    continue
+                n = normalise(secret)
+                if n and n in normalised:
+                    offenders.append(f"{doc.doc_id}: {secret!r} (normalised) in the request")
+
+    assert requests_built > 0, "no residual spans, so this test proved nothing"
+    assert not offenders, (
+        f"{len(offenders)} raw values would have left the boundary in {requests_built} "
+        f"requests built from names with apostrophes, accents and Mac or Mc prefixes:\n  "
+        + "\n  ".join(sorted(set(offenders))[:10])
+    )
+
+
+def test_the_guard_does_not_fire_on_a_name_part_inside_an_ordinary_word() -> None:
+    """A whole-word match, not a substring one.
+
+    Found by the Newfoundland name profile. A document-wide policy licenses the parts of a
+    name, so the surname Le Drew puts "drew" on the guarded list, and "drew" is inside
+    "withdrew". A meeting minute recording that a delegation withdrew refused to send.
+
+    Fail-closed means that cost a run rather than a person, so it was never a leak. It is
+    still worth a test: a guard that refuses ordinary English teaches whoever maintains it
+    to route around it, and that is how a real guard gets disabled.
+    """
+    from sever.detect.types import Detection, EntityType
+    from sever.ingest.document import Offsets
+
+    policy = PlaceholderPolicy.for_detections(
+        [
+            Detection(
+                page=1,
+                offsets=Offsets(0, 18),
+                text="Bernadette Le Drew",
+                entity_type=EntityType.PERSON,
+                score=0.9,
+                recogniser="test",
+            )
+        ]
+    )
+    # The ordinary word is fine.
+    policy.guard("The delegation withdrew and the meeting resumed.")
+    # The name itself is still refused, in whole or in part.
+    with pytest.raises(RawEntityLeak):
+        policy.guard("Bernadette Le Drew attended.")
+    with pytest.raises(RawEntityLeak):
+        policy.guard("Ms Drew attended.")
+
+
 def test_the_guard_refuses_rather_than_warning() -> None:
     """The property is enforced in the code path, not only in this file."""
     from sever.detect.types import Detection, EntityType

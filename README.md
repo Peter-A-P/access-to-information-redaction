@@ -19,7 +19,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 466 model calls, US$0.5108, US$0.00110 per call, 351409 in / 31884 out tokens, 2084 replayed from the answer cache, free.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2550 answers replayed from the cache, nothing spent.
 
 **Per category, this tool**
 
@@ -107,6 +107,14 @@ Three more limitations, none of them small:
   also means the documents are template-shaped. The real-record test that would check this
   (published federal releases, where everything visible was judged releasable by a human)
   is designed and not built.
+- **The published corpus is easier than the province.** Every one of its 5,355 spans is
+  plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
+  and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
+  other respect but drawn from those shapes, **person recall falls from 96.2 to 93.4
+  percent**, and project 04's engine falls from 96.5 to 94.2. The comparison is
+  [`results/names.md`](results/names.md) and `sever eval-names` regenerates it. The
+  published tables stay on the plain corpus so they remain comparable with what came
+  before; the harder number is published beside them rather than instead of them.
 - **33.3 percent over-redaction on officials acting in an official capacity** is the
   weakest number in the table, and 23.8 of those 33.3 points are escalation rather than a
   wrong answer: names the rules could not pair with a title anywhere in the record, which
