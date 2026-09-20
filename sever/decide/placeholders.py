@@ -147,7 +147,16 @@ class PlaceholderPolicy:
             cleaned = part.strip(".'\"()").casefold()
             if len(cleaned) < MIN_ALIAS_LENGTH or cleaned in HONORIFICS:
                 continue
-            if cleaned in NOT_NAME_PARTS or not cleaned.isalpha():
+            # SAFE_CAPITALISED is the decision vocabulary the second pass refuses to
+            # mask: months, job titles, the words of the legislation, the furniture of a
+            # memorandum. A word on that list is not a name part either, and deriving the
+            # two from one list keeps them from drifting. A better language model made
+            # this matter: it typed the heading word "Minutes" as a person, "minutes"
+            # became an alias, and the guard then refused every request containing the
+            # ordinary word.
+            if cleaned in NOT_NAME_PARTS or cleaned in SAFE_CAPITALISED:
+                continue
+            if not cleaned.isalpha():
                 continue
             existing = self._by_value.get(cleaned)
             if existing is not None and existing != placeholder:
@@ -218,6 +227,20 @@ class PlaceholderPolicy:
         offenders: list[str] = []
         for value in {*self._by_placeholder.values(), *self._by_value}:
             if len(value.strip()) < _MIN_GUARDED_LENGTH:
+                continue
+            # A single ordinary word that the detector claimed as a person is still
+            # substituted, but it is not something the guard will refuse a request over.
+            #
+            # The detector typed the heading word "Minutes" as a PERSON. Substitution
+            # duly replaced it, and then the guard failed the request anyway, because the
+            # payload's own `document_type` field says "meeting_minutes". That is this
+            # module's constant, not document content, and refusing to send because of it
+            # would stop the pipeline over a false positive rather than over a leak.
+            #
+            # The residual risk is a real person whose name is exactly a vocabulary word,
+            # a Ms March or a Mr Page. They are still substituted, so nothing of theirs
+            # leaves; only the assertion is relaxed, and only for one-word values.
+            if " " not in value.strip() and value.strip().casefold() in SAFE_CAPITALISED:
                 continue
             if value in haystack:
                 offenders.append(value)

@@ -71,12 +71,36 @@ def context_for(
     return ContextBuilder(config=config).build(document, detections)
 
 
+def code_covering(document: Document, proposals: object, needle: str) -> str | None:
+    """The code of the proposal covering `needle` in the document, by offset overlap.
+
+    Matching on the detection's own text instead looks simpler and is brittle in a way
+    that matters: a language model may return "Tulk" for "Odette Tulk", and a test asking
+    whether any detection *contains* "Odette Tulk" then reports nothing at all rather than
+    reporting the partial box that actually exists. Overlap is what the scorer uses, so
+    the tests use it too. How often a box covers only part of a value is measured
+    separately, by the coverage column in `sever eval-detector`.
+    """
+    from sever.ingest.document import Offsets
+
+    for page in document:
+        start = page.text.find(needle)
+        if start < 0:
+            continue
+        want = Offsets(start, start + len(needle))
+        for proposal in proposals:  # type: ignore[attr-defined]
+            if proposal.page == page.number and proposal.detection.offsets.overlaps(want):
+                return str(proposal.code)
+    return None
+
+
 def requester_config(name: str, **kwargs: object) -> RequestConfig:
     return RequestConfig(request_id="r1", requester_name=name, **kwargs)  # type: ignore[arg-type]
 
 
 __all__ = [
     "PersonaRole",
+    "code_covering",
     "context_for",
     "make_document",
     "requester_config",

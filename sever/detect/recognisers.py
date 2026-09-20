@@ -92,7 +92,14 @@ FILE_NUMBER = PatternRecogniser(
 CASE_NUMBER = PatternRecogniser(
     name="case_number",
     entity_type=EntityType.CASE_NUMBER,
-    pattern=_ci(r"\b(?:case|file|reference|ref\.?|request)\s*(?:no\.?|number|#)?\s*[:#]?\s*([A-Z0-9][A-Z0-9\-/]{4,20})\b"),
+    # The label word needs a boundary after it as well as before. Without the trailing
+    # \b, "ref" matched inside "referred" and the group then captured "erred" as a case
+    # number, which drew a redaction box over the middle of an ordinary word. The bug was
+    # invisible until a better language model stopped claiming the surrounding span.
+    pattern=_ci(
+        r"\b(?:case|file|reference|ref\.?|request)\b\s*(?:no\.?|number|#)?\s*[:#]?\s*"
+        r"([A-Z0-9][A-Z0-9\-/]{4,20})\b"
+    ),
     score=0.8,
     group=1,
 )

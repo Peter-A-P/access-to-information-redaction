@@ -49,7 +49,7 @@ from sever.detect.types import Detection, EntityType
 from sever.ingest.document import BlockKind, DocumentType, Offsets
 from sever.taxonomy.loader import Decision, default_taxonomy
 
-from .conftest import make_document, requester_config
+from .conftest import code_covering, make_document, requester_config
 
 
 @dataclass
@@ -190,10 +190,10 @@ def test_a_low_confidence_answer_is_escalated_not_used(detector) -> None:  # typ
         model=GatewayModelDecider(gateway=gateway, enabled=True),
         model_confidence_threshold=0.7,
     )
-    proposals = [p for p in engine.propose(doc) if "Odette" in p.detection.text]
-    assert proposals, "the third party was not detected"
-    p = proposals[0]
-    assert p.code == "E1"
+    result = engine.propose(doc)
+    code = code_covering(doc, result, "Odette Tulk")
+    assert code == "E1", f"the third party was placed as {code}"
+    p = next(p for p in result if p.code == "E1")
     assert p.decision.withholds
     assert "below the 0.70 threshold" in p.reason
 
@@ -206,11 +206,11 @@ def test_a_confident_keep_on_the_residual_is_taken(detector) -> None:  # type: i
         detector=detector,
         model=GatewayModelDecider(gateway=gateway, enabled=True),
     )
-    proposals = [p for p in engine.propose(doc) if "Odette" in p.detection.text]
-    assert proposals
-    assert proposals[0].code == "K2"
-    assert proposals[0].source is Source.MODEL
-    assert proposals[0].decision is Decision.KEEP
+    result = engine.propose(doc)
+    assert code_covering(doc, result, "Odette Tulk") == "K2"
+    p = next(p for p in result if p.code == "K2")
+    assert p.source is Source.MODEL
+    assert p.decision is Decision.KEEP
 
 
 def test_the_model_never_overrides_a_rule_into_release(detector) -> None:  # type: ignore[no-untyped-def]
@@ -225,10 +225,9 @@ def test_the_model_never_overrides_a_rule_into_release(detector) -> None:  # typ
         model=GatewayModelDecider(gateway=gateway, enabled=True),
     )
     # The requester rule fires, so this span is decided and never reaches the model at all.
-    proposals = [p for p in engine.propose(doc) if "Aaron Byrne" in p.detection.text]
-    assert proposals
-    assert proposals[0].code == "K1"
-    assert proposals[0].source is Source.RULE
+    result = engine.propose(doc)
+    assert code_covering(doc, result, "Aaron Byrne") == "K1"
+    assert next(p for p in result if p.code == "K1").source is Source.RULE
 
 
 def test_the_taxonomy_bounds_what_can_be_parsed() -> None:

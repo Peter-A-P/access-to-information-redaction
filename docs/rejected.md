@@ -14,7 +14,7 @@ and it takes about twenty lines of code. It is implemented in
 same detections, as the tool itself.
 
 **Why it is tempting.** It is safe in the direction people worry about. On the corpus it
-leaks 8.1 percent against this tool's 14.6 percent, and every one of its leaks is a span
+leaks 1.8 percent against this tool's 5.4 percent, and every one of its leaks is a span
 the detector never found rather than a decision it got wrong. If leak rate were the only
 number, the blunt baseline would win and this project would not need to exist.
 
@@ -22,19 +22,19 @@ number, the blunt baseline would win and this project would not need to exist.
 
 | System | Leak rate | Over-redaction rate |
 |---|---|---|
-| Blunt redact-all-PII | 8.1% (6.6 to 9.6) | **91.6% (90.7 to 92.5)** |
-| This tool, rules over document context | 14.6% (12.3 to 16.8) | **27.3% (26.2 to 28.4)** |
+| Blunt redact-all-PII | 1.8% (1.1 to 2.5) | **97.2% (96.5 to 97.9)** |
+| This tool, rules over document context | 5.4% (3.9 to 7.0) | **30.6% (29.4 to 31.8)** |
 
-It withholds **91.6 percent of everything that must be released**. On the corpus that means
+It withholds **97.2 percent of everything that must be released**. On the corpus that means
 the signing officer's name and title, the minister on the letterhead, the department, the
 requester's own address in their own file. What it produces is not a redacted record, it is
 a page of black boxes with the prepositions left in, and a requester who receives one has
 been answered in form and refused in substance.
 
-The 6.5-point leak gap is the honest cost, and it is a cost this tool is designed to buy
+The 3.6-point leak gap is the honest cost, and it is a cost this tool is designed to buy
 back with the model layer rather than by redacting everything. It is also smaller than it
-looks: 113 of this tool's 205 leaks are the same detector misses the blunt baseline has, so
-the decision layer contributes 92 of them.
+looks: 25 of this tool's 75 leaks are the same detector misses the blunt baseline has, so
+the decision layer contributes 50 of them.
 
 **What that means for anyone choosing a tool.** Ask a vendor for the must-keep column. It
 is the number nobody publishes, and it is the one that decides whether the output is

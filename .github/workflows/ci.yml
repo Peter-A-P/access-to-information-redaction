@@ -28,11 +28,12 @@ jobs:
       - name: Install
         run: uv sync --extra detect --group dev
 
-      # en_core_web_sm rather than en_core_web_lg: 12 MB against 382 MB, and the detector
-      # evaluation reports both so the choice is made against a measured number rather
-      # than against a default. SEVER_SPACY_MODEL overrides it.
+      # en_core_web_lg, chosen against the measurement rather than the download size: 97.4
+      # percent recall against the small model's 92.6 on 5,355 labelled values, which closes
+      # a fifth of the remaining detector misses. 382 MB, cached by setup-uv, about two
+      # seconds slower over the whole corpus. SEVER_SPACY_MODEL overrides it.
       - name: Download the spaCy model
-        run: uv run python -m spacy download en_core_web_sm
+        run: uv run python -m spacy download en_core_web_lg
 
       - name: ruff
         run: uv run ruff check .

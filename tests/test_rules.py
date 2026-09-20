@@ -21,7 +21,7 @@ from sever.detect.types import EntityType
 from sever.ingest.document import BlockKind, Document
 from sever.taxonomy.loader import Decision, default_taxonomy
 
-from .conftest import make_document, requester_config
+from .conftest import code_covering, make_document, requester_config
 
 
 def decide(
@@ -37,10 +37,8 @@ def decide(
 
 
 def code_for(proposals: DocumentProposals, needle: str) -> str | None:
-    for p in proposals:
-        if needle in p.detection.text:
-            return p.code
-    return None
+    """By offset overlap; see conftest.code_covering for why not by detection text."""
+    return code_covering(proposals.document, proposals, needle)
 
 
 # --- the straightforward cases ------------------------------------------------

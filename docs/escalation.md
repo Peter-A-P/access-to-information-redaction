@@ -94,10 +94,17 @@ These are not escalations. The tool does not attempt them at all, and says so.
 
 ## The number this page is about
 
-At the last full run, 41.2 percent of spans were escalated, and the escalation rate on the
-must-redact category was 80.4 percent. That second figure is not a defect, it is the
+At the last full run, 46.1 percent of spans were escalated, and the escalation rate on the
+must-redact category was 89.6 percent. That second figure is not a defect, it is the
 current configuration: the model layer is off, so almost every third party the rules cannot
 place lands here rather than being decided. Turning the model on is what moves it, and what
 it costs in accuracy is the paired ablation that has not been run yet.
+
+Both numbers rose when detection improved, and the reason is worth stating because it looks
+like a regression. A better detector finds more of the people in a record; the ones it newly
+finds are, by definition, the ones the weaker detector missed, and they arrive with no title
+and no register entry attached. So they escalate. The leak rate fell from 14.1 percent to
+5.4 at the same time, which is the trade this tool is designed to make: withhold and ask
+rather than release and hope.
 
 Regenerate both with `sever report`.

@@ -101,8 +101,19 @@ def inherently_sensitive(ctx: ContextRecord) -> RuleOutcome | None:
 
 
 def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
-    """K6. An organisation, a place, a bare date or a job title with no person attached."""
+    """K6. An organisation, a place, a bare date or a job title with no person attached.
+
+    Yields to positive evidence that the span is a person, because the entity type is the
+    detector's *guess* while a register match or a paired title is an observation about
+    this record. Language models mistype names routinely and the mistake is not random:
+    "Perpetua Quirke" came back as a LOCATION, and without this guard K6 fired before the
+    public-register rule could and a minister's name was released as "not personal
+    information" for the wrong reason. Right answer, wrong reasoning, and the reasoning is
+    what goes in the schedule.
+    """
     if ctx.entity_type.is_about_a_person:
+        return None
+    if ctx.register_match is not None or ctx.title is not None:
         return None
     if ctx.entity_type is EntityType.JOB_TITLE and ctx.co_mentions_in_sentence:
         # A title beside a name may be identifying in a small unit. Let the later rules

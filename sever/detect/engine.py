@@ -32,15 +32,31 @@ from sever.ingest.document import Document, Offsets, Page
 if TYPE_CHECKING:  # pragma: no cover
     from presidio_analyzer import AnalyzerEngine
 
-# The spaCy model Presidio runs on. Small by default so a fresh clone and CI do not pull
-# 382 MB; `en_core_web_lg` is materially better at PERSON and the detector evaluation
-# reports both, so the choice is made against a measured number and not a default.
-SPACY_MODEL = os.environ.get("SEVER_SPACY_MODEL", "en_core_web_sm")
+# The spaCy model Presidio runs on.
+#
+# `en_core_web_lg` by default, decided against the measurement rather than against the
+# download size. On the 210-page corpus, over 5,355 values whose type the generator
+# recorded:
+#
+#                      small    large
+#   overall recall     92.6%    97.4%
+#   person             87.2%    96.2%
+#   organisation       86.7%    96.2%
+#   location           38.1%    62.9%
+#
+# Every other entity type is identical, because the rest are patterns. The cost is 382 MB
+# once and about two seconds over the whole corpus, against a fifth of the remaining
+# detector misses. A missed person is a leak, so the trade is not close.
+#
+# `SEVER_SPACY_MODEL=en_core_web_sm` still works and `sever eval-detector` still reports
+# whichever is installed, so the choice stays a measured one rather than a default nobody
+# revisits.
+SPACY_MODEL = os.environ.get("SEVER_SPACY_MODEL", "en_core_web_lg")
 
 PRESIDIO_MISSING = (
     "Presidio is not installed, so only the pattern recognisers ran. Install the "
     "detection extra with `uv pip install -e '.[detect]'` and download the spaCy model "
-    "with `python -m spacy download en_core_web_sm`. The rules-only and blunt baselines "
+    "with `python -m spacy download en_core_web_lg`. The rules-only and blunt baselines "
     "still run without it, but every published detection number needs it."
 )
 

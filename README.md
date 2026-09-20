@@ -23,34 +23,34 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
-| `K1` | 980 | n/a | 8.8% (7.7% to 10.0%), n=980 | 8.8% (7.7% to 10.0%), n=980 |
-| `K2` | 2345 | n/a | 37.8% (36.1% to 39.6%), n=2345 | 37.8% (36.1% to 39.6%), n=2345 |
-| `K3` | 280 | n/a | 12.9% (8.6% to 17.5%), n=280 | 12.9% (8.6% to 17.5%), n=280 |
-| `K4` | 70 | n/a | 42.9% (35.7% to 48.6%), n=70 | 42.9% (35.7% to 48.6%), n=70 |
+| `K1` | 980 | n/a | 8.5% (7.3% to 9.6%), n=980 | 8.5% (7.3% to 9.6%), n=980 |
+| `K2` | 2345 | n/a | 42.0% (40.3% to 43.7%), n=2345 | 42.0% (40.3% to 43.7%), n=2345 |
+| `K3` | 280 | n/a | 14.3% (9.6% to 18.9%), n=280 | 14.3% (9.6% to 18.9%), n=280 |
+| `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 25.0% (21.3% to 28.6%), n=280 | 25.0% (21.3% to 28.6%), n=280 |
-| `R1` | 1400 | 14.1% (11.8% to 16.5%), n=1400 | n/a | 80.9% (78.3% to 83.6%), n=1400 |
+| `R1` | 1400 | 5.4% (3.9% to 7.0%), n=1400 | n/a | 89.6% (87.6% to 91.6%), n=1400 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules over the full document context | 14.1% (11.8% to 16.5%), n=1400 | 28.0% (26.9% to 29.1%), n=3955 | 41.9% (40.7% to 42.9%), n=5355 | 92.6% (91.8% to 93.3%), n=5355 |
-| blunt redact-all-PII | 6.9% (5.6% to 8.4%), n=1400 | 92.4% (91.4% to 93.4%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 92.6% (91.8% to 93.3%), n=5355 |
-| sentence-only, no document context | 14.1% (11.8% to 16.5%), n=1400 | 52.2% (50.3% to 54.1%), n=3955 | 59.7% (58.1% to 61.2%), n=5355 | 92.6% (91.8% to 93.3%), n=5355 |
+| sever, rules over the full document context | 5.4% (3.9% to 7.0%), n=1400 | 30.6% (29.4% to 31.8%), n=3955 | 46.1% (44.9% to 47.1%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| blunt redact-all-PII | 1.8% (1.1% to 2.5%), n=1400 | 97.2% (96.5% to 97.9%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
+| sentence-only, no document context | 5.4% (3.9% to 7.0%), n=1400 | 57.0% (55.0% to 58.9%), n=3955 | 65.5% (64.0% to 67.0%), n=5355 | 97.4% (96.9% to 97.9%), n=5355 |
 
 **Where the leaks come from**
 
 | System | Leaks | The detector never found the span | The decision was wrong |
 |---|---:|---:|---:|
-| sever, rules over the full document context | 197 | 97 | 100 |
-| blunt redact-all-PII | 97 | 97 | 0 |
-| sentence-only, no document context | 197 | 97 | 100 |
+| sever, rules over the full document context | 75 | 25 | 50 |
+| blunt redact-all-PII | 25 | 25 | 0 |
+| sentence-only, no document context | 75 | 25 | 50 |
 
 **PDF leak test**
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2615 | 0 | text layer only |
+| 2756 | 0 | text layer only |
 
 _OCR channel disabled for this run._
 
@@ -64,22 +64,22 @@ to within Monte Carlo noise; `tests/test_confusion.py` pins that.
 
 **The number that matters is the second column.** Any tool can get the leak rate down by
 redacting everything, and the blunt baseline in the table does exactly that: it withholds
-91.6 percent of the information that must be released. A record that comes back with the
+97.2 percent of the information that must be released. A record that comes back with the
 signing officer's name, the minister on the letterhead, the department and the requester's
 own address blacked out has been answered in form and refused in substance. That column is
 what nobody publishes.
 
 ## The honest limitation
 
-**This tool currently leaks more than the blunt baseline it replaces, and the model layer
+**This tool still leaks more than the blunt baseline it replaces, and the model layer
 that is meant to close the gap has not been run.**
 
 The rules decide the clear cases and escalate the rest, and an escalated span is withheld,
-so nothing is released on a guess. But 92 spans that must be withheld are released by a
-wrong decision rather than by a detector miss, and the decision layer that is designed to
-catch them (a frontier model, on placeholders, through the gateway) is built and tested but
-switched off, because turning it on spends money and no spend cap has been set for this
-project yet. What is published here is the rules-only configuration, labelled as such.
+so nothing is released on a guess. But 50 spans that must be withheld are released by a
+wrong decision rather than by a detector miss, and the decision layer designed to catch
+them (a frontier model, on placeholders, through the gateway) is built and tested but has
+never been run against a live model. What is published here is the rules-only
+configuration, labelled as such.
 
 **There is no reviewer app yet.** The audit log, the true-redaction export and the
 generated schedule are built and tested; the page-by-page web interface that a reviewer
@@ -94,9 +94,10 @@ Three more limitations, none of them small:
   also means the documents are template-shaped. The real-record test that would check this
   (published federal releases, where everything visible was judged releasable by a human)
   is designed and not built.
-- **36.6 percent over-redaction on officials acting in an official capacity** is the
+- **42.0 percent over-redaction on officials acting in an official capacity** is the
   weakest number in the table and it is mostly escalation, not error: names the rules could
-  not pair with a title anywhere in the record.
+  not pair with a title anywhere in the record. It rose when detection improved, because
+  finding more of a record's people means more of them reaching the escalation path.
 - **18 of 33 statutory provisions are verified** against the consolidated texts. The rest
   are marked unverified with the reason, in the YAML and on the generated page. Nothing
   defaults to verified.
@@ -127,7 +128,7 @@ whether they appear in a public register or on the letterhead, which other menti
 record are the same person, and whether they match the configured requester. That record is
 the whole argument of the project, and the sentence-only row in the results table is what
 it is worth: judging a name from its sentence alone nearly doubles over-redaction, from
-27.3 percent to 50.9 percent, because a person's capacity is almost never in the sentence
+30.6 percent to 57.0 percent, because a person's capacity is almost never in the sentence
 that names them. It is three inches lower, in the signature block.
 
 **Deterministic rules** decide the clear cases in a fixed order that is itself the design:
@@ -162,7 +163,7 @@ it. A leak test that has never caught a leak is not evidence of anything.
 
 ```bash
 uv venv && uv pip install -e ".[detect]" --group dev
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_lg
 
 sever taxonomy check                  # the codes, and how many provisions are verified
 sever corpus build --documents 210    # the labelled corpus, from a seed, offline and free
@@ -216,16 +217,24 @@ boundary, from three separate causes, none of which was visible any other way.
 
 ## Which detector the published numbers use, and why
 
-Detection runs behind a protocol with two implementations. The one in this repository uses
-Presidio and spaCy directly. The other is the portfolio's `boundary.redact`, which is
-measurably better: 96.3 percent recall against 92.6 on the same 5,355 labelled values,
-mostly on people and organisations. `results/detectors.md` has the full comparison per
-entity type, regenerated by `sever eval-detector`.
+Detection runs behind a protocol with two implementations: the one in this repository,
+using Presidio and spaCy directly, and the portfolio's `boundary.redact`. They are close,
+at 97.4 and 96.3 percent recall over the same 5,355 labelled values.
+`results/detectors.md` has the comparison per entity type, regenerated by
+`sever eval-detector`.
 
-**The headline tables above still use the in-repo detector, deliberately.** The gateway is
-a private repository, so a number produced with it is a number a stranger cannot check,
-and the whole point of this repository is that they can. When the gateway is public the
-default changes and this paragraph goes with it.
+**The headline tables use the in-repo detector.** The gateway is a private repository, so
+a number produced with it is a number a stranger cannot check, and that is the one property
+this repository exists for. It costs nothing to insist on: the in-repo detector is
+currently the better of the two.
+
+Both improved by being compared. `boundary.redact` was ahead until the comparison found
+three defects in it, the worst returning a Medical Care Plan number unredacted on 57 of 210
+pages without refusing; all three are fixed. The comparison also found two here, the worse
+being personas generating social insurance numbers that failed the Luhn checksum, so no
+correct detector would ever have flagged them and the corpus had never exercised that path.
+And it settled the spaCy model: `en_core_web_lg` over `en_core_web_sm` is 97.4 percent
+recall against 92.6, which cut the leak rate from 14.1 percent to 5.4.
 
 The comparison was worth running in both directions. It found three defects in the
 gateway's engine, all since fixed, the worst of which returned a Medical Care Plan number
