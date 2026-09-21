@@ -219,6 +219,7 @@ def run(
     model_confidence_threshold: float = DEFAULT_THRESHOLD,
     cost_path: Path | None = DEFAULT_COST_PATH,
     jurisdiction: str = "federal",
+    with_model_only: bool = True,
 ) -> Report:
     """Every system over the corpus.
 
@@ -236,6 +237,7 @@ def run(
     blunt: dict[str, tuple[object, object]] = {}
     sentence: dict[str, tuple[object, object]] = {}
     modelled: dict[str, tuple[object, object]] = {}
+    model_only: dict[str, tuple[object, object]] = {}
     leak = LeakChecker(use_ocr=False) if with_pdf_leak else None
 
     for item in c:
@@ -262,6 +264,23 @@ def run(
                 model_confidence_threshold=model_confidence_threshold,
             ).propose(doc)
             modelled[doc.doc_id] = (released, labels)
+            if with_model_only:
+                # The same model, the same context record, the same threshold, and no
+                # rules at all: `rules=()` leaves every span undecided, so every span is
+                # sent. The only difference from the row above is the deterministic layer,
+                # which is what makes the pair a measurement of the rules rather than of
+                # the model.
+                model_only[doc.doc_id] = (
+                    DecisionEngine(
+                        config=config,
+                        detector=det,
+                        taxonomy=taxonomy,
+                        model=model,
+                        model_confidence_threshold=model_confidence_threshold,
+                        rules=(),
+                    ).propose(doc),
+                    labels,
+                )
 
         if leak is not None and tmp_dir is not None:
             src = render_pdf(doc, tmp_dir / f"{doc.doc_id}.pdf")
@@ -293,6 +312,19 @@ def run(
                     "used."
                 ),
                 scored=score(modelled, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
+            )
+        )
+    if model_only:
+        report.systems.append(
+            SystemResult(
+                name="model-only, no rules",
+                note=(
+                    "The same model, the same context record and the same confidence "
+                    "threshold, with the deterministic layer removed: every span is sent "
+                    "rather than only the residual. The difference between this row and "
+                    "the one above is what the deterministic rules are worth."
+                ),
+                scored=score(model_only, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
             )
         )
     report.systems += [

@@ -263,6 +263,24 @@ class Scored:
         pool = list(self.filtered(code))
         return _rate(pool, lambda o: o.detected, seed=seed)
 
+    @property
+    def spurious_withholding(self) -> int:
+        """Detections outside the labelled set that nonetheless put a box on the page.
+
+        Project 04 publishes detector precision and this project cannot, honestly, publish
+        the same number: their corpus plants values in prose written to contain none, so a
+        span outside a label is a false positive by construction. This corpus is not built
+        that way. Its templates carry real dates, real department names and real job
+        titles, all of them genuine entities and none of them persona values, so most
+        detections outside the labelled set are correct detections of things that are not
+        personal information. `unlabelled_detections` counts those and means very little.
+
+        This is the part of it that means something. A detection outside the labelled set
+        only costs the requester if the decision layer went on to withhold it, and that is
+        what this counts: a box over text that no persona ever owned.
+        """
+        return sum(1 for p in self.unlabelled_proposals if p.withholds)
+
     def decomposition(self) -> dict[str, int]:
         """Where the leaks came from. The plan's error decomposition table, in three
         buckets rather than two: see `SpanOutcome.failed_because_mislabelled` for why the
@@ -301,7 +319,8 @@ class Scored:
             "unweighed_release_rate": str(self.unweighed_release_rate()),
             "escalation_rate": str(self.escalation_rate()),
             "detector_recall": str(self.detector_recall()),
-            "false_positive_spans": len(self.unlabelled_proposals),
+            "unlabelled_detections": len(self.unlabelled_proposals),
+            "unlabelled_detections_withheld": self.spurious_withholding,
             **{f"decomposition_{k}": v for k, v in d.items()},
         }
         if self.label_source.is_complete:

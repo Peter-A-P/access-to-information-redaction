@@ -109,3 +109,64 @@ def test_initials_and_short_particles_are_left_alone() -> None:
     place name in the province."""
     out = scrub_unrecognised("St. John's and Mt. Pearl")
     assert out.startswith("St.")
+
+
+# --- the shapes the second pass could not see --------------------------------------
+
+
+def test_an_email_address_is_masked_even_though_nothing_detected_it() -> None:
+    """Project 04, 2026-09-20, on finding this hole in their own second pass:
+    therese.gagne@example.gov.nl.ca "matched neither layer... an address carrying no digit
+    is not identifier-shaped and a lowercase word is not name-shaped. It left in clear with
+    no refusal."
+
+    It was here too. This project's EMAIL recogniser happens to find these, so the
+    corpus-wide test passed and this layer was never asked the question. Presidio has
+    already missed an address here once, and on that occasion nothing would have caught it.
+    """
+    assert scrub_unrecognised("therese.gagne@example.gov.nl.ca") == "[EMAIL?]"
+    assert scrub_unrecognised("a.penashue@gov.nl.ca") == "[EMAIL?]"
+
+
+def test_an_accented_address_is_masked_too() -> None:
+    """The corpus cannot produce one of these: `_slug` transliterates before it builds an
+    address, so every generated email is ASCII. An internationalised address is ordinary in
+    a province with French, Innu and Mi'kmaq names, and a test is the only thing standing
+    between this layer and a shape the corpus will never show it."""
+    accented = "th\u00e9r\u00e8se.gagn\u00e9@example.gov.nl.ca"
+    assert scrub_unrecognised(accented) == "[EMAIL?]"
+
+
+def test_the_whole_address_goes_and_not_just_its_name_shaped_parts() -> None:
+    """The word pass would otherwise chew an address into masked fragments and leave the
+    domain standing, which reads as scrubbed and is not. The order of the passes is what
+    makes this true, so it is asserted rather than assumed."""
+    out = scrub_unrecognised("Write to Marie.Chaulk@gov.nl.ca before Friday.")
+    assert "gov.nl.ca" not in out
+    assert "Chaulk" not in out
+    assert "[EMAIL?]" in out
+
+
+def test_a_postal_code_is_masked() -> None:
+    """Six characters that identify a household in a rural community, and caught by neither
+    existing pass: all caps so not name-shaped, starts with a letter so the digit run does
+    not reach it."""
+    assert scrub_unrecognised("A1B 2C3") == "[POSTCODE?]"
+    assert scrub_unrecognised("A1B2C3") == "[POSTCODE?]"
+    assert "[POSTCODE?]" in scrub_unrecognised("The address is 14 Bannerman Street, A1C 5H6.")
+
+
+def test_a_year_still_survives_both_new_passes() -> None:
+    """K4 turns on how long ago someone died, so the year is the evidence. Neither new
+    pattern may eat one."""
+    assert scrub_unrecognised("The death was recorded in 2024.") == (
+        "The death was recorded in 2024."
+    )
+
+
+def test_ordinary_prose_is_not_mistaken_for_an_address() -> None:
+    """The cost of a shape-based mask is what it fires on by accident, so the cases that
+    look like an address and are not belong here."""
+    assert "[EMAIL?]" not in scrub_unrecognised("Discussed the matter at 3 p.m. on Tuesday.")
+    assert "[EMAIL?]" not in scrub_unrecognised("See section 40(2)(f) of the Act.")
+    assert "[POSTCODE?]" not in scrub_unrecognised("Case HCS-2021-7489 was opened.")

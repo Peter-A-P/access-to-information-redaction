@@ -398,10 +398,22 @@ def _sin(rng: random.Random) -> str:
 def _slug(name: str) -> str:
     """A name as a government mail system would write it in an address.
 
-    Transliterated to ASCII, because that is what directories do: Duhe with an acute
-    accent gets an address reading `duhe`, not one carrying the accent. Getting this
-    wrong in the generator would have been a corpus bug dressed up as a detector result,
-    since an address with an accent in its local part is not a thing this tool will meet.
+    Transliterated to ASCII, because that is what directories usually do: Duhe with an
+    acute accent gets an address reading `duhe`, not one carrying the accent.
+
+    That "usually" was written as "not a thing this tool will meet", and on 2026-09-20
+    project 04 showed it was too strong: their harness found a real leak on
+    `therese.gagne@example.gov.nl.ca` spelled with its accents, through both their
+    recogniser and their second pass. Internationalised addresses are not common in a
+    government directory but they are not impossible, and the consequence of the choice
+    here is that **this corpus can never produce one**, so no run of this evaluation can
+    ever exercise that shape.
+
+    The default stays transliterated, because the common case is the one a corpus should
+    be made of. The defence is a test instead: `tests/test_scrub_shapes.py` holds the
+    accented address against the second pass directly, and says there that it is standing
+    in for a corpus that cannot ask the question. A shape the generator cannot emit needs
+    a fixture or it has no coverage at all.
 
     It also makes the harder question askable. When the name on the page is accented and
     the address is not, a placeholder policy that substitutes only the exact surface form

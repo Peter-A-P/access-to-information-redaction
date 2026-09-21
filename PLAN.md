@@ -919,3 +919,70 @@ configuration change away from being a rate about a subset, silently.
 configuration and none of them moved. The NL run is in `results/nl/` and is labelled with
 its jurisdiction in its own first line. Nothing here says the tool is worse than it was; it
 says there was a question nobody was asking.
+
+### 12.20 04's email leak was here too, and the corpus could not have found it
+
+2026-09-20. Project 04's redaction harness found a leak on its first run:
+`therese.gagne@example.gov.nl.ca`, spelled with its accents, matched neither their
+recogniser nor their second pass, because an address carrying no digit is not
+identifier-shaped and a lowercase word is not name-shaped. It went out in clear.
+
+The same hole was here, and worse, because it did not need the accents.
+`scrub_unrecognised` passed **any** email address through untouched, plain ASCII included,
+and a Canadian postal code with it: `A1B 2C3` is all caps so it is not name-shaped, and it
+starts with a letter so the digit run does not reach it.
+
+Every test passed. The EMAIL recogniser finds these, so the corpus-wide leak test never put
+the question to the second pass, and the second pass was never asked whether it could hold
+alone. That is precisely the arrangement `docs/rejected.md` entry 2 calls not a boundary: a
+backstop that holds only while the thing it is backing works is not a backstop. And it has
+already failed once here for real. Entry 2 records Presidio missing
+`aaronpenashue@gov.nl.ca.example` outright; on that occasion nothing whatsoever would have
+caught it.
+
+Fixed in `scrub_unrecognised`: address-shaped and postcode-shaped text is masked whether or
+not any recogniser claimed it, in any script. `tests/test_scrub_shapes.py` holds both
+against the function directly, with no detector in the picture, which is the only way to
+test a backstop.
+
+**The corpus cannot find this class of defect and the generator says so now.** `_slug`
+transliterates, deliberately and for good reasons that are written down, so every address
+this corpus produces is ASCII. Its docstring used to say an accented address "is not a
+thing this tool will meet". It is now qualified, because 04 has evidence to the contrary,
+and it names the test that stands in for the corpus. A shape the generator cannot emit has
+no coverage unless a fixture gives it some.
+
+This is the fourth defect in this project found by an outside report rather than by a test,
+and all four arrived the same way: someone else measured something, published what it found,
+and the shape of their finding turned out to name a hole here. It is a better yield than any
+tool in this repository has managed.
+
+### 12.21 Precision, and a number that was misnamed rather than missing
+
+Same day, same exchange. 04 published detector precision and called it "the number this
+repository has never had". It is not one this project can honestly publish in the same form,
+and the reason is a difference in how the two corpora are built.
+
+04's corpus plants values in prose written to contain none, so a span outside a label is a
+false positive by construction. This corpus is not built that way. Its templates carry real
+dates, real department names and real job titles, all genuine entities and none of them
+persona values. Of 229 detections outside the labelled set in twenty documents, the
+breakdown is 107 dates, 77 organisations, 36 job titles and 9 places, and almost all of them
+are the detector correctly finding something that is correctly not personal information.
+
+So `false_positive_spans` was a misleading name for a number that mostly counted correct
+behaviour, and it has been publishing since the first results table. It is now
+`unlabelled_detections`, with `unlabelled_detections_withheld` beside it, which is the part
+that means something: a detection outside the labelled set only costs the requester if the
+decision layer went on to put a box over it.
+
+**That number is 16 of 229, and every single one is a bare job title.** "Minister",
+"Deputy Minister", "Manager", "officer": the detector claims the title, no person is
+attached to it, the rules cannot place it, so it escalates, and escalation withholds. The
+tool puts a box over the word "Minister" about once per document, and a reviewer has to
+clear each one. That is a small version of exactly what this project criticises the blunt
+baseline for.
+
+Recorded here rather than fixed in the same commit, deliberately. The fix is a rules change
+that moves published numbers, and it should be measured against a run that is not also
+changing for other reasons.

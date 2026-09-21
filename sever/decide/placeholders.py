@@ -338,6 +338,28 @@ _TOKEN = re.compile(r"[^\W\d_]+(?:['\u2019.\-][^\W\d_]+)*")
 _SEPARATORS = re.compile(r"['\u2019.\-]")
 _DIGIT_RUN = re.compile(r"\b\d[\d\s.,/-]{2,}\d\b")
 _YEAR = re.compile(r"^(?:1[89]|20)\d{2}$")
+# Anything shaped like an email address, in any script, digits or no digits.
+#
+# Added 2026-09-20 after project 04 found this hole in their own second pass:
+# therese.gagne@example.gov.nl.ca matched neither their recogniser nor their scrub, because
+# an address carrying no digit is not identifier-shaped and a lowercase word is not
+# name-shaped. It went out in clear.
+#
+# The same hole was here. This project's EMAIL recogniser happens to find these, so the
+# corpus-wide test passed and the second pass was never asked the question. That is exactly
+# the arrangement `docs/rejected.md` entry 2 calls not a boundary: a backstop that only
+# holds while the thing it is backing works is not a backstop. Presidio has already missed
+# an address here once, `aaronpenashue@gov.nl.ca.example`, and on that occasion nothing
+# would have caught it.
+#
+# `[^\W_]` rather than `[A-Za-z]`, for the same reason as `_TOKEN`: an address with
+# accented letters is ordinary in a province with French, Innu and Mi'kmaq names, and an
+# ASCII class silently declines to match one.
+_EMAILISH = re.compile(r"[^\W_][\w.+\-']*@[^\W_][\w\-]*(?:\.[^\W_][\w\-]*)+")
+# A Canadian postal code, with or without its space. Six characters that identify a
+# household in a rural community, and caught by neither existing pass: it is all caps so it
+# is not name-shaped, and it starts with a letter so the digit run does not reach it.
+_POSTAL = re.compile(r"\b[A-Za-z]\d[A-Za-z][ \u00a0]?\d[A-Za-z]\d\b")
 
 
 def _is_name_shaped(token: str) -> bool:
@@ -379,6 +401,8 @@ def _is_safe(token: str) -> bool:
 
 UNKNOWN_NAME = "[NAME?]"
 UNKNOWN_NUMBER = "[NUMBER?]"
+UNKNOWN_EMAIL = "[EMAIL?]"
+UNKNOWN_POSTAL = "[POSTCODE?]"
 
 # Grouped rather than one blob so that a reader can see what each group is for, and
 # split from variables rather than from a literal so the intent is a vocabulary list
@@ -427,6 +451,12 @@ def scrub_unrecognised(text: str) -> str:
     replace. Detector-independent by design; see the note above."""
     if not text:
         return text
+
+    # Addresses and postal codes first, and before the word pass. The word pass would
+    # otherwise chew an address into masked fragments and leave the domain standing, which
+    # reads as scrubbed and is not.
+    text = _EMAILISH.sub(UNKNOWN_EMAIL, text)
+    text = _POSTAL.sub(UNKNOWN_POSTAL, text)
 
     def mask_word(m: re.Match[str]) -> str:
         word = m.group(0)

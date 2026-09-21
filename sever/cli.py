@@ -349,6 +349,13 @@ def report(
         str,
         typer.Option(help="Which statute to decide under: 'federal' or 'nl'."),
     ] = "federal",
+    model_only: Annotated[
+        bool,
+        typer.Option(
+            "--model-only/--no-model-only",
+            help="Add the no-rules baseline. Roughly triples the spans sent.",
+        ),
+    ] = True,
     model: Annotated[
         bool,
         typer.Option(
@@ -405,6 +412,7 @@ def report(
             tmp_dir=tmp,
             model=decider,
             jurisdiction=jurisdiction,
+            with_model_only=model_only,
             model_confidence_threshold=(
                 DEFAULT_THRESHOLD if threshold < 0 else threshold
             ),
@@ -841,6 +849,45 @@ def cost(
     typer.echo(result.to_markdown())
     if out is not None:
         typer.echo(f"wrote {cost_mod.write(result, out)}")
+
+
+@app.command("eval-scanned")
+def eval_scanned(
+    documents: Annotated[int, typer.Option(help="Documents to scan. This track is slow.")] = 50,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    profiles: Annotated[
+        str, typer.Option(help="Comma-separated: clean, scanner, photocopy, fax.")
+    ] = "",
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/scanned.md"
+    ),
+) -> None:
+    """The scanned track: character error rate, and what it costs the decisions.
+
+    Renders each document, degrades it the way a scanner does, reads it back with
+    Tesseract, re-projects the labels through a character alignment and scores the
+    pipeline on what the OCR produced. Needs Tesseract, which is a system binary rather
+    than a Python package. Spends nothing.
+    """
+    from sever.eval import scanned as scan_mod
+    from sever.ingest.ocr import PROFILES, TesseractMissing
+
+    chosen = tuple(p.strip() for p in profiles.split(",") if p.strip()) or tuple(PROFILES)
+    unknown = [p for p in chosen if p not in PROFILES]
+    if unknown:
+        raise typer.BadParameter(f"unknown profile(s) {unknown}; choose from {sorted(PROFILES)}")
+    typer.echo(
+        f"{documents} documents over {len(chosen)} profiles: {', '.join(chosen)}. "
+        f"Every page is rasterised and read by a separate process, so this is slow."
+    )
+    try:
+        result = scan_mod.run(documents=documents, seed=seed, profiles=chosen)
+    except TesseractMissing as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo("")
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"wrote {scan_mod.write(result, out)}")
 
 
 @app.command("eval-reviewer")

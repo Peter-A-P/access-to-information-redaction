@@ -29,6 +29,7 @@ is worth exactly as much as the test behind it.
 
 from __future__ import annotations
 
+import os
 import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -96,8 +97,31 @@ class LeakReport:
         return f"{self.recoverable} recoverable out of {self.boxes_tested}"
 
 
+# Where the Windows installer puts it. Tesseract is a system binary rather than a wheel, so
+# it is routinely installed without landing on PATH, and a leak test that quietly skips its
+# second channel because of that is the worst possible failure mode: it reports "text layer
+# only" and the reader has to notice.
+_KNOWN_LOCATIONS = (
+    Path.home() / "AppData/Local/Programs/Tesseract-OCR/tesseract.exe",
+    Path("C:/Program Files/Tesseract-OCR/tesseract.exe"),
+    Path("C:/Program Files (x86)/Tesseract-OCR/tesseract.exe"),
+)
+
+
+def tesseract_path() -> Path | None:
+    """The binary, from SEVER_TESSERACT, then PATH, then the usual installer locations."""
+    override = os.environ.get("SEVER_TESSERACT", "").strip()
+    if override:
+        candidate = Path(override)
+        return candidate if candidate.is_file() else None
+    found = shutil.which("tesseract")
+    if found:
+        return Path(found)
+    return next((p for p in _KNOWN_LOCATIONS if p.is_file()), None)
+
+
 def tesseract_available() -> bool:
-    return shutil.which("tesseract") is not None
+    return tesseract_path() is not None
 
 
 def _clip(bbox: tuple[float, float, float, float]) -> pymupdf.Rect:
@@ -139,6 +163,12 @@ def check_rendering(
 ) -> list[LeakFinding]:
     """OCR the pixels inside each box. Catches a box that covers rather than removes."""
     import pytesseract
+
+    # pytesseract shells out to the binary and looks only at PATH. Point it at whatever
+    # `tesseract_path` found, so an installation that is not on PATH still runs.
+    binary = tesseract_path()
+    if binary is not None:
+        pytesseract.pytesseract.tesseract_cmd = str(binary)
     from PIL import Image
 
     findings: list[LeakFinding] = []
