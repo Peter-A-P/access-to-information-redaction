@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}audit log{% endblock %}
+{% block content %}
+<h2>Audit log</h2>
+<div class="{{ 'ok' if ok else 'error' }}">{{ 'Chain intact' if ok else 'CHAIN BROKEN' }}: {{ message }}</div>
+<p class="note">
+  Rows are appended and never edited. A reviewer who changes their mind adds a row that
+  supersedes an earlier one and the earlier one stays, which is what makes this evidence
+  rather than a status field. Each row's hash covers the row before it, so a change,
+  a deletion or a reordering breaks the chain and this page says which row.
+</p>
+<table>
+  <thead><tr><th>#</th><th>At (UTC)</th><th>Actor</th><th>Document</th><th>Page</th><th>Action</th><th>Proposed</th><th>Final</th><th>Hash</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.seq }}</td>
+      <td>{{ r.at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ r.actor }}</td>
+      <td>{{ r.doc_id }}</td>
+      <td>{{ r.page }}</td>
+      <td>{{ r.action.value }}</td>
+      <td>{{ r.proposed_code or '' }}</td>
+      <td>{{ r.final_code or '' }}</td>
+      <td class="note" style="font-family:monospace">{{ r.row_hash[:12] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9" class="note">Nothing recorded yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

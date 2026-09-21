@@ -258,7 +258,7 @@ def run(
         if leak is not None and tmp_dir is not None:
             src = render_pdf(doc, tmp_dir / f"{doc.doc_id}.pdf")
             out = apply_redactions(
-                src, tmp_dir / f"{doc.doc_id}-released.pdf", doc, released
+                src, tmp_dir / f"{doc.doc_id}-redacted.pdf", doc, released
             )
             leak.check(out.path, out.regions, document=doc.doc_id)
 

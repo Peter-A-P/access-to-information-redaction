@@ -11,7 +11,7 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -258,11 +258,26 @@ def export(
     seed: Annotated[int, typer.Option()] = 20270802,
     out: Annotated[Path, typer.Option(help="Where to write the PDFs.")] = Path("review/exports"),
     rasterise: Annotated[bool, typer.Option(help="Re-render pages as images.")] = False,
+    audit: Annotated[
+        Path | None,
+        typer.Option(help="A reviewed audit log. Without one, nothing is called released."),
+    ] = None,
+    request_id: Annotated[str, typer.Option(help="The request the log was reviewed under.")] = (
+        "A-2027-001"
+    ),
 ) -> None:
-    """Produce truly redacted PDFs and their schedules, then run the leak test on them.
+    """Apply the redactions and run the leak test on the result.
 
     This command exists to be run and the output opened. The claim "the text under the box
     is gone" is worth what the check behind it is worth.
+
+    **What it will and will not call a release.** With `--audit` pointing at a log in which a
+    person has completed every page of a document, the gate passes and the file is written as
+    `-released.pdf`. Without one, the same redactions are applied and the same leak test runs,
+    but the file is written as `-proposed.pdf`, because nobody has decided anything and a
+    document nobody has reviewed is not a release however good the redactions are. That is
+    the rule in CLAUDE.md, and until the reviewer application existed this command was
+    quietly breaking it by writing "released" on files no person had seen.
     """
     from sever.corpus.generate import build
     from sever.decide.pipeline import DecisionEngine
@@ -274,17 +289,44 @@ def export(
     out.mkdir(parents=True, exist_ok=True)
     detector = SeverDetector()
     checker = LeakChecker()
+    reviewed: frozenset[tuple[str, int]] = frozenset()
+    if audit is not None:
+        if not audit.is_file():
+            raise typer.BadParameter(f"no audit log at {audit}")
+        from sever.review.audit import AuditLog
+
+        with AuditLog(audit) as log:
+            ok, message = log.verify_chain()
+            if not ok:
+                raise typer.BadParameter(f"the audit log is not intact: {message}")
+            reviewed = log.pages_reviewed(request_id)
+        typer.echo(f"audit log {audit}: {len(reviewed)} pages completed under {request_id}")
+    else:
+        typer.echo(
+            "no --audit given, so nothing here is a release: the files are written as "
+            "-proposed.pdf. The tool proposes; a person decides."
+        )
     for item in build(documents=documents, seed=seed):
         doc = item.rendered.document
         proposals = DecisionEngine(config=config_for(item), detector=detector).propose(doc)
+        outstanding = [p.number for p in doc if (doc.doc_id, p.number) not in reviewed]
+        released = audit is not None and not outstanding
+        if audit is not None and outstanding:
+            typer.echo(
+                f"{doc.doc_id}: pages {outstanding} have no reviewer action, so this is "
+                f"written as proposed rather than released"
+            )
+        suffix = "released" if released else "proposed"
         source = render_pdf(doc, out / f"{doc.doc_id}.pdf")
         result = apply_redactions(
-            source, out / f"{doc.doc_id}-released.pdf", doc, proposals, rasterise=rasterise
+            source, out / f"{doc.doc_id}-{suffix}.pdf", doc, proposals, rasterise=rasterise
         )
         schedule = build_schedule(doc.doc_id, doc, tuple(proposals))
         (out / f"{doc.doc_id}-schedule.md").write_text(schedule.to_markdown(), encoding="utf-8")
         checker.check(result.path, result.regions, document=doc.doc_id)
-        typer.echo(f"{doc.doc_id}: {result.boxes} boxes, schedule {len(schedule.rows)} rows")
+        typer.echo(
+            f"{doc.doc_id}: {result.boxes} boxes, schedule {len(schedule.rows)} rows, {suffix}"
+        )
     report = checker.report()
     typer.echo("")
     typer.echo(report.summary())
@@ -794,6 +836,128 @@ def cost(
     typer.echo(result.to_markdown())
     if out is not None:
         typer.echo(f"wrote {cost_mod.write(result, out)}")
+
+
+@app.command("eval-reviewer")
+def eval_reviewer(
+    timings: Annotated[
+        list[Path] | None,
+        typer.Option("--timings", help="Timing files to read. Repeatable."),
+    ] = None,
+    audit: Annotated[
+        Path | None,
+        typer.Option(help="The audit log, to count completed pages that went untimed."),
+    ] = None,
+    request_id: Annotated[str | None, typer.Option()] = None,
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/reviewer.md"
+    ),
+) -> None:
+    """Reviewer minutes per page, with and without proposals.
+
+    Reads what `sever review` recorded. This is the one number in the definition of done
+    that cannot be computed: somebody has to review the records. The command reports what
+    has been collected and says plainly when that is not yet a result.
+    """
+    from sever.eval import reviewer
+
+    study = reviewer.run(
+        timings or [reviewer.DEFAULT_TIMINGS], audit=audit, request_id=request_id
+    )
+    typer.echo(study.to_markdown())
+    if out is not None:
+        typer.echo(f"wrote {reviewer.write(study, out)}")
+
+
+def _session_for(
+    *,
+    request_id: str,
+    documents: int,
+    seed: int,
+    mode: str,
+    log_path: Path,
+    timings: Path | None,
+    actor: str | None,
+) -> Any:
+    """Build a review session over freshly generated corpus documents."""
+    from sever.corpus.generate import build
+    from sever.decide.pipeline import DecisionEngine
+    from sever.detect.engine import SeverDetector
+    from sever.eval.report import config_for
+    from sever.review.session import Item, Mode, build_session
+
+    detector = SeverDetector()
+    items = []
+    for corpus_item in build(documents=documents, seed=seed):
+        doc = corpus_item.rendered.document
+        proposals = DecisionEngine(config=config_for(corpus_item), detector=detector).propose(doc)
+        items.append(Item(document=doc, proposals=tuple(proposals)))
+    return build_session(
+        request_id=request_id,
+        items=items,
+        log_path=log_path,
+        mode=Mode(mode),
+        timings_path=timings,
+        actor=actor,
+    )
+
+
+@app.command()
+def review(
+    documents: Annotated[int, typer.Option(help="Corpus documents to put under review.")] = 3,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    request_id: Annotated[str, typer.Option(help="The access request these belong to.")] = (
+        "A-2027-001"
+    ),
+    mode: Annotated[
+        str,
+        typer.Option(help="'proposals' or 'unaided'. The two arms of the time study."),
+    ] = "proposals",
+    log: Annotated[Path, typer.Option(help="The append-only audit log.")] = Path(
+        "review/audit.duckdb"
+    ),
+    timings: Annotated[Path, typer.Option(help="Per-page timings, one JSON object a line.")] = (
+        Path("review/timings.jsonl")
+    ),
+    actor: Annotated[str | None, typer.Option(help="Who is reviewing. Defaults to the login.")] = (
+        None
+    ),
+    host: Annotated[str, typer.Option()] = "127.0.0.1",
+    port: Annotated[int, typer.Option()] = 8000,
+) -> None:
+    """Open the reviewer's screen: one page at a time, an action on every span.
+
+    Binds to loopback by default and has no authentication, because it is one reviewer on
+    one machine. Do not put it on a network without putting something in front of it.
+
+    The two modes are the arms of the reviewer time study. `proposals` shows what the tool
+    proposed and why; `unaided` serves the same records with the proposals dropped before
+    they reach the session, so the control cannot be undone by editing a template.
+    """
+    import uvicorn
+
+    from sever.review.app import create_app
+    from sever.review.session import Mode
+
+    if mode not in {m.value for m in Mode}:
+        raise typer.BadParameter(f"mode is 'proposals' or 'unaided', not {mode!r}")
+    session = _session_for(
+        request_id=request_id,
+        documents=documents,
+        seed=seed,
+        mode=mode,
+        log_path=log,
+        timings=timings,
+        actor=actor,
+    )
+    total_pages = sum(len(i.document) for i in session)
+    typer.echo(
+        f"request {request_id}: {len(session.items)} documents, {total_pages} pages, "
+        f"mode {mode}"
+    )
+    typer.echo(f"audit log {log}; timings {timings}")
+    typer.echo(f"http://{host}:{port}")
+    uvicorn.run(create_app(session), host=host, port=port, log_level="warning")
 
 
 def main() -> None:

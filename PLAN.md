@@ -277,10 +277,10 @@ published, not when the code for it exists.
       (blunt, rules-only and sentence-only measured; model-only is the one still missing)
 - [ ] Over-redaction measured on published federal releases
 - [x] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
-- [ ] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
-      (the audit log, the export and the schedule are built and tested; nothing drives them but the CLI)
+- [x] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
 - [x] PDF leak test published, out of N
 - [ ] Reviewer minutes per page with and without proposals, with CI
+      (both arms are built and timed by `sever review`; nobody has sat down and run them yet)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -735,3 +735,50 @@ templates. Real records do not repeat like that. So the line also prints what th
 would cost with no deduplication, about US$0.0136 each, and says that is the figure to read
 if your documents are not generated from templates. It is the less flattering number and it
 is the one a public body would actually budget against.
+
+### 12.16 The reviewer application, and the rule it turned out nobody was keeping
+
+2026-09-20. `sever review` exists. One page at a time, the record rendered as the characters
+the redaction is computed from, every proposal with its category, its provision and its
+reason, and an action required on every span before the page can be completed.
+
+**The rule the build found broken.** CLAUDE.md says no code path produces a released
+document without a reviewer action on every page. That was true only because nothing
+released anything, and it stopped being true the moment it was examined: `sever export` had
+been writing files named `{doc_id}-released.pdf` since the export module landed, from
+proposals no person had seen. The redactions in them were real and the leak test passed on
+them, which is exactly why the name mattered. It now writes `-proposed.pdf` unless
+`--audit` points at a log in which a person completed every page of that document, and the
+gate that decides is `Session.release_gate`, which raises rather than returning a boolean:
+a caller who forgets to check a boolean releases the document.
+
+**The control arm is a design decision, not a flag.** Section 10 wants reviewer minutes per
+page with and without proposals, so `sever review --mode unaided` serves the same records
+with the proposals dropped *before the session is constructed*. Hiding them in the template
+would have been one edit away from not being a control, and an arm that highlighted the
+spans while hiding only the suggested category would have measured how long it takes to
+agree with a highlight. Finding the span is most of the work.
+
+**The clock is not the audit log.** The log has timestamps, but the first action on a page
+is not the moment the page appeared, and a page that took four minutes of reading and one
+click would be recorded as instantaneous. The session stamps a page when it is served and
+measures to the completion action, into `review/timings.jsonl`, separately: the audit log is
+evidence of decisions and is not the place for interface telemetry. A page completed after a
+restart has no stamp and is recorded as untimed rather than estimated, and
+`sever eval-reviewer --audit` prints how many completed pages the study could not see,
+because a study that cannot say how much it missed is not reporting, it is selecting.
+
+**A deviation from section 7.** The plan said htmx over Jinja. There is no htmx and no
+script from anywhere: server-rendered HTML, form posts, and about thirty lines in
+`base.html` doing the swap htmx would have done. The reason is the subject matter. A tool
+for reading access-to-information records asks a public body to trust a third party it did
+not choose every time a page loads a script from a CDN, and the answer to "can we run this
+with the network cable out" should be yes. The cost is thirty lines that will never be
+anyone's favourite code. The benefit is a dependency list with nothing in it that phones
+anywhere.
+
+**What is still missing, and it is a person.** The application records the study; nobody has
+run it. `results/reviewer.md` says so in those words rather than reporting an empty table,
+and `sever eval-reviewer` refuses to print a ratio until both arms have reached three
+documents, because two sessions on one record produce a computable number that means
+nothing and would be read as measured.

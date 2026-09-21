@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}sever review{% endblock %}</title>
+{#
+  No script tag pointing anywhere. PLAN.md said htmx over Jinja and the swap below is what
+  htmx would have done, in about thirty lines, because a tool for reading government records
+  that fetches a script from a CDN on every page is asking a public body to trust a third
+  party it did not choose. This way the application runs with the network cable out, which
+  is where records like these are usually read. See PLAN 12.16.
+#}
+<style>
+  :root {
+    --ink: #16181d;
+    --paper: #fbfaf7;
+    --rule: #d8d4cb;
+    --withhold: #b3261e;
+    --release: #1f6f43;
+    --escalate: #9a6700;
+    --pending: #3b5bdb;
+    --muted: #63666c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  header {
+    display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    padding: .7rem 1.2rem; border-bottom: 1px solid var(--rule); background: #fff;
+    position: sticky; top: 0; z-index: 5;
+  }
+  header h1 { font-size: 1rem; margin: 0; font-weight: 650; letter-spacing: .01em; }
+  header .proposes { color: var(--muted); font-size: .85rem; }
+  header nav { margin-left: auto; display: flex; gap: .9rem; align-items: baseline; }
+  a { color: #1a4f9c; }
+  main { max-width: 68rem; margin: 0 auto; padding: 1.2rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+  .record {
+    background: #fff; border: 1px solid var(--rule); padding: 1.4rem 1.6rem;
+    white-space: pre-wrap; font: 13.5px/1.7 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+  mark {
+    background: none; padding: .05em .1em; border-radius: 2px;
+    border-bottom: 2px solid; cursor: pointer;
+  }
+  mark.pending  { color: var(--pending);  border-color: var(--pending);  background: #eaefff; }
+  mark.approve, mark.add, mark.change_category {
+    color: #fff; border-color: var(--withhold); background: #24262b;
+  }
+  mark.escalate { color: var(--escalate); border-color: var(--escalate); background: #fff4d6; }
+  mark.reject   { color: var(--release);  border-color: var(--release);  background: #e8f5ed; }
+  mark.focus    { outline: 2px solid var(--pending); outline-offset: 2px; }
+  .spans { margin-top: 1.2rem; }
+  .span-row { border: 1px solid var(--rule); background: #fff; padding: .7rem .9rem; margin-bottom: .5rem; }
+  .span-row.done { opacity: .62; }
+  .span-head { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .quote { font-family: "SFMono-Regular", Consolas, monospace; font-weight: 600; }
+  .code { font-family: "SFMono-Regular", Consolas, monospace; background: #eee; padding: 0 .3em; border-radius: 3px; }
+  .why { color: var(--muted); font-size: .86rem; margin: .35rem 0 .5rem; }
+  .actions { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+  button, select, input[type=text] {
+    font: inherit; padding: .25rem .6rem; border: 1px solid var(--rule);
+    background: #fff; border-radius: 3px;
+  }
+  button { cursor: pointer; }
+  button:hover { background: #f0efe9; }
+  button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  button.primary:hover { background: #333; }
+  button[disabled] { opacity: .45; cursor: not-allowed; }
+  .note { color: var(--muted); font-size: .85rem; }
+  .error { border-left: 3px solid var(--withhold); background: #fdecea; padding: .6rem .8rem; margin: .8rem 0; }
+  .ok { border-left: 3px solid var(--release); background: #e8f5ed; padding: .6rem .8rem; margin: .8rem 0; }
+  .pager { display: flex; gap: .8rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  .pill { font-size: .78rem; padding: .1rem .5rem; border: 1px solid var(--rule); border-radius: 10px; color: var(--muted); }
+  .pill.done { border-color: var(--release); color: var(--release); }
+  #addbar { margin: .8rem 0; padding: .6rem .8rem; border: 1px dashed var(--rule); background: #fff; }
+  #addbar[hidden] { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1><a href="/" style="text-decoration:none;color:inherit">sever</a></h1>
+  <span class="proposes">The tool proposes; a person decides.</span>
+  <nav>
+    <span class="pill">{{ session.mode.value }}</span>
+    <a href="/log">audit log</a>
+  </nav>
+</header>
+<main id="main">
+{% block content %}{% endblock %}
+</main>
+<script>
+// Post a form and replace the part of the page the server re-rendered. Every action a
+// reviewer takes is one request and one audit row, so there is no client-side state to
+// keep in step with the server: the server's answer is the state.
+document.addEventListener('submit', async (ev) => {
+  const form = ev.target;
+  if (!form.matches('form[data-swap]')) return;
+  ev.preventDefault();
+  const target = document.querySelector(form.dataset.swap);
+  const res = await fetch(form.action, {method: 'POST', body: new FormData(form)});
+  if (!res.ok) {
+    target.insertAdjacentHTML('afterbegin',
+      '<div class="error">' + (await res.text()).slice(0, 500) + '</div>');
+    return;
+  }
+  target.outerHTML = await res.text();
+});
+
+// Clicking a highlighted span scrolls to its controls, and selecting unmarked text offers
+// to add a severance the tool did not propose. Detector recall is 98.6 percent, so a
+// reviewer who can only answer the tool's list inherits its misses.
+document.addEventListener('click', (ev) => {
+  const m = ev.target.closest('mark[data-span]');
+  if (!m) return;
+  const row = document.getElementById('row-' + m.dataset.span);
+  if (row) { row.scrollIntoView({block: 'center'}); row.querySelector('button')?.focus(); }
+});
+
+document.addEventListener('mouseup', () => {
+  const bar = document.getElementById('addbar');
+  if (!bar) return;
+  const sel = window.getSelection();
+  const record = document.getElementById('record');
+  if (!sel || sel.isCollapsed || !record || !record.contains(sel.anchorNode)) {
+    bar.hidden = true;
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  const before = document.createRange();
+  before.setStart(record, 0);
+  before.setEnd(range.startContainer, range.startOffset);
+  const start = before.toString().length;
+  const text = sel.toString();
+  if (!text.trim()) { bar.hidden = true; return; }
+  bar.querySelector('[name=start]').value = start;
+  bar.querySelector('[name=end]').value = start + text.length;
+  bar.querySelector('#addquote').textContent = text.length > 60 ? text.slice(0, 60) + '...' : text;
+  bar.hidden = false;
+});
+</script>
+</body>
+</html>

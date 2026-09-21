@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ item.doc_id }} released{% endblock %}
+{% block content %}
+<h2>{{ item.doc_id }}: cleared for release</h2>
+<div class="ok">
+  Every page of this record has a completion action in the audit log. {{ count }} severance{{ '' if count == 1 else 's' }}
+  were approved by a person, and the schedule below is generated from those rows and nothing else.
+</div>
+<p class="note">
+  This screen authorises the export; it does not perform it. `sever export` applies the
+  redactions and removes the text under every box, and the leak test runs on the result.
+</p>
+<h3>Schedule of severances</h3>
+<table>
+  <thead><tr><th>Page</th><th>Extent</th><th>Category</th><th>Decided</th><th>Reason</th></tr></thead>
+  <tbody>
+  {% for r in approvals %}
+    <tr>
+      <td>{{ r.page }}</td>
+      <td>{{ (r.span_end - r.span_start) if r.span_start is not none else '' }} characters</td>
+      <td><span class="code">{{ r.final_code or r.proposed_code or '' }}</span></td>
+      <td>{{ r.action.value }} by {{ r.actor }}</td>
+      <td>{{ r.reason or '' }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="note">Nothing was severed in this record.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="note">
+  The span text itself is not shown here and is not stored in the log: the log keeps a
+  sha256 of it, because an audit trail of what was withheld should not be a second copy of
+  the withheld information.
+</p>
+{% endblock %}

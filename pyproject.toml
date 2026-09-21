@@ -26,8 +26,12 @@ dependencies = [
   # so the range is narrow.
   "fastapi>=0.115,<1",
   "uvicorn>=0.34,<1",
-  # Server-rendered reviewer pages; the app is htmx over Jinja, not a SPA.
+  # Server-rendered reviewer pages. The app is Jinja and about thirty lines of hand-written
+  # JavaScript rather than htmx from a CDN: see PLAN 12.16.
   "jinja2>=3,<4",
+  # Every reviewer action is a form post, and FastAPI parses multipart form bodies only
+  # when this is installed. Not optional: without it the app refuses to start.
+  "python-multipart>=0.0.20,<1",
   # The CLI. Typer 0.x again, narrow range, same reason as FastAPI.
   "typer>=0.15,<1",
   # Bootstrap intervals and the confusion matrices. 2.x is the current line.

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Request {{ session.request_id }}</h2>
+<p class="note">
+  {{ rows|length }} document{{ '' if rows|length == 1 else 's' }}.
+  {% if session.mode.shows_proposals %}
+    Each page shows what the tool proposes and why. Nothing is severed until you say so, and
+    nothing is released until every page has been through you.
+  {% else %}
+    This is the unaided arm: the record, the categories, and no proposals. Select the text
+    that must be withheld and give it a category.
+  {% endif %}
+</p>
+<table>
+  <thead>
+    <tr><th>Document</th><th>Type</th><th>Pages</th><th>Proposals</th><th>Left to review</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="/doc/{{ r.doc_id }}/page/1">{{ r.doc_id }}</a></td>
+      <td>{{ r.doc_type }}</td>
+      <td>{{ r.pages }}</td>
+      <td>{{ r.proposals }}</td>
+      <td>
+        {% if r.remaining %}
+          {{ r.remaining|length }} page{{ '' if r.remaining|length == 1 else 's' }}
+        {% else %}
+          <span class="pill done">reviewed</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if not r.remaining %}
+          <a href="/doc/{{ r.doc_id }}/released">release</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

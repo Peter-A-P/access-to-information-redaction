@@ -242,6 +242,35 @@ word "Minister" appearing, correctly, in an unredacted heading. The test also bu
 deliberately broken export, a box drawn over live text, and asserts that the checker catches
 it. A leak test that has never caught a leak is not evidence of anything.
 
+## The reviewer decides, and here is where they do it
+
+`sever review` opens the reviewer's screen on loopback: one page at a time, the record
+rendered as the characters the redaction will actually be applied to, every proposed
+severance highlighted with its category, its provision and the reason the tool gives for it.
+
+Two rules are enforced in code rather than promised in prose, and
+[`tests/test_review_app.py`](tests/test_review_app.py) holds both:
+
+- **A page cannot be completed while a span on it is undecided.** The button refuses and
+  names the spans.
+- **A record cannot be released while a page is incomplete.** `Session.release_gate` raises
+  rather than returning false, because a caller who forgets to check a boolean releases the
+  document and a caller who forgets to catch an exception does not.
+
+Nothing is ever edited. A reviewer who changes their mind posts a second action and the log
+keeps both rows; the screen shows the latest and the log shows the history. And because
+detector recall is 98.6 percent rather than 100, a reviewer can select text the tool never
+proposed and sever it themselves: a reviewer who can only answer the tool's list inherits
+the tool's misses.
+
+The application fetches nothing from anywhere. No CDN, no bundler, no client framework:
+server-rendered HTML, form posts, and about thirty lines of hand-written JavaScript. A tool
+for reading government records should run with the network cable out.
+
+`sever export --audit review/audit.duckdb` applies the redactions. Without that flag the
+same PDFs are written, the same leak test runs, and the files are named `-proposed.pdf`,
+because a document nobody has reviewed is not a release however good the redactions are.
+
 ## Try it
 
 ```bash
@@ -251,7 +280,8 @@ python -m spacy download en_core_web_lg
 sever taxonomy check                  # the codes, and how many provisions are verified
 sever corpus build --documents 210    # the labelled corpus, from a seed, offline and free
 sever propose --documents 3           # proposals with the reason for each one
-sever export --documents 3            # truly redacted PDFs, schedules, and the leak test
+sever export --documents 3            # redacted PDFs, schedules, and the leak test
+sever review --documents 3            # the reviewer's screen, on 127.0.0.1:8000
 sever report --readme README.md       # every number above
 ```
 
@@ -286,7 +316,7 @@ in `sever/gateway.py`.
 | `sever/detect/` | Presidio plus the access-to-information recognisers, and within-document coreference |
 | `sever/context/` | Signature blocks, letterheads, public registers, requester matching, the context record |
 | `sever/decide/` | The rules in precedence order, the placeholder policy, the model layer |
-| `sever/review/` | True-redaction export, the generated schedule, the append-only audit log |
+| `sever/review/` | The reviewer application, true-redaction export, the generated schedule, the append-only audit log |
 | `sever/eval/` | Confusion matrices with bootstrap intervals, the baselines, the PDF leak test, the threshold sweep |
 | `results/` | The generated tables, and `model-answers.jsonl`: every answer the model gave, so the model row replays without a gateway |
 
@@ -294,7 +324,8 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [data](docs/data.md) · [what did not work](docs/rejected.md) ·
 [detector comparison](results/detectors.md) · [threshold sweep](results/thresholds.md) ·
 [name shapes](results/names.md) · [the name sweep, ablated](results/sweep.md) ·
-[what the privacy boundary does to accuracy](results/placeholders.md) · [plan](PLAN.md)
+[what the privacy boundary does to accuracy](results/placeholders.md) ·
+[reviewer time study](results/reviewer.md) · [plan](PLAN.md)
 
 ## Engineering
 
@@ -351,14 +382,15 @@ detector would ever have flagged them and the corpus had never exercised that pa
 
 | Built and measured | Not built |
 |---|---|
-| Taxonomy, two jurisdictions, generated docs | Reviewer web app |
-| 210-page labelled corpus, labels by construction | Reviewer time study |
-| Detection, context record, rules, escalation | Scanned track and OCR error rate |
-| The model layer, through the gateway on placeholders | Published-federal-releases track |
-| Blunt, rules-only and sentence-only baselines, with intervals | Model-only baseline |
-| The placeholders ablation, and the threshold sweep | Hosted demo |
+| Taxonomy, two jurisdictions, generated docs | Reviewer time study (the app records it; nobody has sat down yet) |
+| 210-page labelled corpus, labels by construction | Scanned track and OCR error rate |
+| Detection, context record, rules, escalation | Published-federal-releases track |
+| The model layer, through the gateway on placeholders | Model-only baseline |
+| Blunt, rules-only and sentence-only baselines, with intervals | Hosted demo |
+| The placeholders ablation, and the threshold sweep | |
 | True-redaction export, schedule, PDF leak test | |
 | Append-only hash-chained audit log | |
+| The reviewer application, with the release gate | |
 | Cost per page, from the gateway ledger | |
 
 ## Part of a portfolio

@@ -1,0 +1,127 @@
+{# The part of the page that changes when a reviewer acts. Re-rendered from the audit log
+   on every action, so what is on screen is what has been recorded, not what the browser
+   believes it recorded. #}
+<div id="body">
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+{% if complete %}
+  <div class="ok">
+    Page {{ page.number }} is complete. That is a row in the audit log, not a checkbox.
+  </div>
+{% endif %}
+
+<div class="pager">
+  <strong>{{ item.doc_id }}</strong>
+  <span class="note">page {{ page.number }} of {{ pages }}</span>
+  {% for n in range(1, pages + 1) %}
+    {% if n == page.number %}
+      <span class="pill">{{ n }}</span>
+    {% else %}
+      <a href="/doc/{{ item.doc_id }}/page/{{ n }}">{{ n }}</a>
+    {% endif %}
+  {% endfor %}
+  <span style="margin-left:auto"></span>
+  {% if proposals %}
+    <span class="note">{{ acted|length }} of {{ proposals|length }} spans decided</span>
+  {% else %}
+    <span class="note">no proposals on this page</span>
+  {% endif %}
+</div>
+
+<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="{{ f.proposal.code }}: {{ f.proposal.reason }}">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
+
+<form id="addbar" hidden method="post"
+      action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
+      data-swap="#body">
+  <input type="hidden" name="start" value="">
+  <input type="hidden" name="end" value="">
+  <input type="hidden" name="action" value="add">
+  <strong>Withhold this text the tool did not propose:</strong>
+  <span class="quote" id="addquote"></span>
+  <select name="code">
+    {% for c in codes %}
+      <option value="{{ c }}">{{ c }} - {{ taxonomy[c].name }}</option>
+    {% endfor %}
+  </select>
+  <input type="text" name="reason" placeholder="why (optional)" size="28">
+  <button class="primary" type="submit">Add severance</button>
+</form>
+
+<div class="spans">
+{% for p in proposals %}
+  {% set key = (p.detection.offsets.start, p.detection.offsets.end) %}
+  {% set done = acted.get(key) %}
+  <div class="span-row {{ 'done' if done else '' }}" id="row-s{{ p.detection.offsets.start }}-{{ p.detection.offsets.end }}">
+    <div class="span-head">
+      <span class="quote">{{ p.detection.text }}</span>
+      <span class="code">{{ p.code }}</span>
+      <span class="note">{{ taxonomy[p.code].name }}</span>
+      {% if p.citation %}<span class="note">{{ p.citation }}</span>{% endif %}
+      <span class="note">{{ p.source.value }}, confidence {{ '%.2f'|format(p.confidence) }}</span>
+      {% if done %}<span class="pill done">{{ done.value }}</span>{% endif %}
+    </div>
+    <div class="why">
+      {{ p.reason }}
+      {% if p.disagreement %}<br><strong>The rules and the model disagreed:</strong> {{ p.disagreement }}{% endif %}
+    </div>
+    {% if taxonomy[p.code].reviewer_question %}
+      <div class="why"><em>{{ taxonomy[p.code].reviewer_question }}</em></div>
+    {% endif %}
+    <div class="actions">
+      {% for action, label, tip in span_actions %}
+        <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
+              data-swap="#body" style="display:inline">
+          <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
+          <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
+          <input type="hidden" name="action" value="{{ action.value }}">
+          <button type="submit" title="{{ tip }}"
+                  class="{{ 'primary' if action.value == 'approve' and not done else '' }}">{{ label }}</button>
+        </form>
+      {% endfor %}
+      <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
+            data-swap="#body" style="display:inline">
+        <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
+        <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
+        <input type="hidden" name="action" value="change_category">
+        <select name="code">
+          {% for c in codes %}
+            <option value="{{ c }}" {{ 'selected' if c == p.code else '' }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" title="Withhold or release it, but under a different category">Change category</button>
+      </form>
+    </div>
+  </div>
+{% else %}
+  <p class="note">
+    {% if session.mode.shows_proposals %}
+      The tool proposes nothing on this page. Read it, add anything it missed, and complete
+      the page.
+    {% else %}
+      Select any text above that must be withheld.
+    {% endif %}
+  </p>
+{% endfor %}
+</div>
+
+<div class="pager">
+  <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/complete"
+        data-swap="#body">
+    <button class="primary" type="submit" {{ 'disabled' if complete else '' }}>
+      {{ 'Page complete' if complete else 'Mark page ' ~ page.number ~ ' complete' }}
+    </button>
+  </form>
+  {% if outstanding %}
+    <span class="note">{{ outstanding|length }} span(s) still undecided on this page.</span>
+  {% endif %}
+  {% if page.number < pages %}
+    <a href="/doc/{{ item.doc_id }}/page/{{ page.number + 1 }}">next page</a>
+  {% elif session.releasable(item.doc_id) %}
+    <a href="/doc/{{ item.doc_id }}/released">release this record</a>
+  {% else %}
+    <span class="note">{{ session.pages_remaining(item.doc_id)|length }} page(s) of this
+      document have not been reviewed, so it cannot be released.</span>
+  {% endif %}
+</div>
+
+</div>
