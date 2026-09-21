@@ -127,11 +127,36 @@ class ScanTrack:
             ]
         lines += [
             "",
+            "**The column that moves is over-redaction, and it moves before the character "
+            "error rate does.** A near-perfect scan costs about a fifth of a point of "
+            "recall and twenty points of over-redaction. The characters are almost all "
+            "there; the structure is not. `paragraph_blocks` can recover where the "
+            "paragraphs are and nothing more, so every block is BODY, nothing is "
+            "role-bearing, and the rules lose the signature block and the letterhead, "
+            "which is the evidence they lean on hardest to tell an official acting in an "
+            "official capacity from a third party. Unable to place the person, the rules "
+            "escalate, and escalation withholds. So the scanned pages are not read less "
+            "accurately in any way a character error rate can show: they are read without "
+            "the layout, and the layout is where half the decision lives.",
+            "",
+            "That is worth stating plainly because the obvious worry about OCR is the "
+            "opposite one. The fear is that a misread name gets released. On these numbers "
+            "that barely happens until the page falls apart entirely; what happens first is "
+            "that the requester gets a blacker page.",
+            "",
             "**Labels that survived** is the share of labelled values still present in the "
             "OCR output at all. A value the scan destroyed cannot be found by any detector, "
             "so it caps recall for reasons that have nothing to do with detection. Reading "
             "the recall column without this one would blame the detector for text that is "
             "no longer on the page.",
+            "",
+            "It also moves the denominators, which is what makes the worst row readable. "
+            "A label none of whose characters survived is not in the leak pool either: "
+            "there is nothing on the page to release. So the `fax` row's leak rate is over "
+            "the labels that were still there to leak, which is why its n is smaller than "
+            "the rows above it. Reading 69 percent as though it were measured on the same "
+            "denominator as the 3 percent above would overstate it; reading it as a page "
+            "that has been destroyed rather than redacted is closer.",
             "",
             "The corpus renders in Courier at 9.5 point: monospaced, high contrast, one "
             "generation from the original. That is close to the easiest input an OCR engine "

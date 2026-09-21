@@ -15,20 +15,23 @@
  },
  "detector": "sever-detector",
  "model": "anthropic/claude-haiku-4-5-20251001",
- "model_run": "2606 answers replayed from the cache, nothing spent",
+ "model_run": "10251 answers replayed from the cache, nothing spent",
  "model_asks": 2606,
+ "model_only_asks": 7645,
  "jurisdiction": "federal",
  "cost": {
   "run_ids": [
    "sever-full-001",
    "sever-full-210",
+   "sever-modelonly-210",
+   "sever-modelonly-smoke",
    "sever-retype-210",
    "sever-sweep-210"
   ],
-  "usd_per_page": 0.00455755238095238,
-  "undeduplicated_usd_per_page": 0.013636029282160622,
-  "cost_usd": 0.9570859999999998,
-  "paid_calls": 871,
+  "usd_per_page": 0.004557552380952381,
+  "undeduplicated_usd_per_page": 0.013636029282160626,
+  "cost_usd": 2.418711000000001,
+  "paid_calls": 2228,
   "asks": 2606
  },
  "systems": [
@@ -41,7 +44,8 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "27.7% (26.4% to 29.1%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
-   "false_positive_spans": 2396,
+   "unlabelled_detections": 2396,
+   "unlabelled_detections_withheld": 43,
    "decomposition_leaks": 74,
    "decomposition_detector_missed": 16,
    "decomposition_detector_mislabelled": 23,
@@ -64,6 +68,38 @@
    }
   },
   {
+   "name": "model-only, no rules",
+   "note": "The same model, the same context record and the same confidence threshold, with the deterministic layer removed: every span is sent rather than only the residual. The difference between this row and the one above is what the deterministic rules are worth.",
+   "spans": 5355,
+   "documents": 210,
+   "over_redaction_rate": "41.9% (39.4% to 44.4%), n=3955",
+   "unweighed_release_rate": "n/a (0)",
+   "escalation_rate": "42.3% (41.2% to 43.3%), n=5355",
+   "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
+   "unlabelled_detections": 2396,
+   "unlabelled_detections_withheld": 48,
+   "decomposition_leaks": 67,
+   "decomposition_detector_missed": 16,
+   "decomposition_detector_mislabelled": 16,
+   "decomposition_decision_wrong": 35,
+   "decomposition_must_redact_spans": 1400,
+   "decomposition_must_be_weighed_spans": 0,
+   "decomposition_unweighed_releases": 0,
+   "leak_rate": "4.8% (3.8% to 5.8%), n=1400",
+   "category_accuracy": "36.4% (33.9% to 38.6%), n=1333",
+   "per_code_over_redaction": {
+    "K1": "7.1% (5.8% to 8.4%), n=980",
+    "K2": "63.8% (60.6% to 67.0%), n=2345",
+    "K3": "20.4% (15.7% to 25.0%), n=280",
+    "K4": "50.0% (50.0% to 50.0%), n=70",
+    "K6": "0.0% (0.0% to 0.0%), n=280"
+   },
+   "documents_resampled": 210,
+   "per_code_leak": {
+    "R1": "4.8% (3.8% to 5.8%), n=1400"
+   }
+  },
+  {
    "name": "sever, rules only",
    "note": "The model layer is off, so the residual the rules could not decide stays escalated rather than being decided. Escalations withhold, so they are counted in over-redaction. This row costs nothing to reproduce.",
    "spans": 5355,
@@ -72,7 +108,8 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "46.5% (45.4% to 47.5%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
-   "false_positive_spans": 2396,
+   "unlabelled_detections": 2396,
+   "unlabelled_detections_withheld": 157,
    "decomposition_leaks": 39,
    "decomposition_detector_missed": 16,
    "decomposition_detector_mislabelled": 23,
@@ -103,7 +140,8 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "0.0% (0.0% to 0.0%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
-   "false_positive_spans": 2396,
+   "unlabelled_detections": 2396,
+   "unlabelled_detections_withheld": 2396,
    "decomposition_leaks": 16,
    "decomposition_detector_missed": 16,
    "decomposition_detector_mislabelled": 0,
@@ -134,7 +172,8 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "66.9% (65.5% to 68.4%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
-   "false_positive_spans": 2396,
+   "unlabelled_detections": 2396,
+   "unlabelled_detections_withheld": 161,
    "decomposition_leaks": 39,
    "decomposition_detector_missed": 16,
    "decomposition_detector_mislabelled": 23,
@@ -161,7 +200,7 @@
   "boxes_tested": 2287,
   "recoverable": 0,
   "documents": 210,
-  "ocr_channel_ran": false,
-  "note": "OCR channel disabled for this run"
+  "ocr_channel_ran": true,
+  "note": ""
  }
 }

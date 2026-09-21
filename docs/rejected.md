@@ -1,11 +1,12 @@
 # What did not work
 
 Rule C of the portfolio: name an approach that was tried and rejected, with the evidence.
-Four are recorded here. The first is the approach this project exists to replace, and the
+Five are recorded here. The first is the approach this project exists to replace, and the
 measurement is the argument for the project. The second is a design idea inside the project
 that was wrong, caught by a test, and replaced. The third is a number that was guessed and
 turned out to be the wrong guess. The fourth is a measurement that was healthy and was
-looking at the wrong thing.
+looking at the wrong thing. The fifth is a test that passed for a reason that had nothing to
+do with what it was testing.
 
 ## 1. Blunt redact-all-PII
 
@@ -202,9 +203,53 @@ amount of document-level inference can reach.
 the decision. A detector metric that cannot distinguish "missed" from "found and labelled
 in the category that releases it" is measuring the wrong end of the pipeline.
 
+## 5. Trusting a backstop that had never been asked a question
+
+**The approach.** Entry 2 above ends with a general lesson: "a privacy boundary whose
+strength equals a model's recall is not a boundary. Test it against ground truth, not
+against the component you are testing." The second pass, `scrub_unrecognised`, is what that
+sentence produced. It masks anything name-shaped or identifier-shaped whether or not the
+detector found it, and the corpus-wide test asserts that no persona value reaches a request.
+
+Every assertion passed. The boundary was considered tested.
+
+**Why it was rejected.** The test could not fail for the reason it was written. The detector
+finds email addresses and phone numbers, so the policy substituted them before the second
+pass ever saw them, and the second pass was never asked whether it could hold them alone.
+It could not. It let **every** email address through untouched, plain ASCII included, and
+every Canadian postal code: an address carrying no digit is not identifier-shaped, a
+lowercase word is not name-shaped, and `A1B 2C3` is all caps so it is not name-shaped while
+starting with a letter so the digit run cannot reach it.
+
+The report came from project 04, who found the identical hole in their own second pass on
+the identical day, and whose framing is the one worth keeping: *a masking column where a
+recogniser is doing the work says nothing about the layer that exists for when a recogniser
+is wrong.*
+
+**What replaced it.** The corpus-wide test runs a second time with the detector removed
+entirely. Nothing is substituted; only the second pass stands between a persona value and
+the request. It now masks all of them, and a stronger piece of evidence arrived by accident:
+after three changes to the second pass, the committed answer cache still replayed with no
+misses. A cache key is a hash of the outbound message, so unchanged keys mean the second
+pass had not been altering a single request in the whole corpus. It was inert, and no test
+that kept the detector switched on could ever have said so.
+
+Two more holes fell out of the same idea, both from 04's harness first. `(709) 555-0199`
+was masked as `(709) [NUMBER?]`, leaving the area code in clear beside its own placeholder,
+which is worse than leaving the number alone because it advertises what was removed. And a
+date written in words has no backstop at all, which is now a stated limit with a test rather
+than an undiscovered gap: masking every written date would black out the dates a decision
+turns on.
+
+**The general lesson,** which is entry 2's lesson at one more remove. Testing a layered
+defence with every layer switched on measures the top layer. If a backstop has never been
+observed doing anything, it has not been tested; it has been carried. Turn off the layer
+above it and see what it catches.
+
 ---
 
-All four entries are reproducible: `sever report` produces the first table,
+All five entries are reproducible: `sever report` produces the first table,
 `pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second,
 `sever eval-thresholds` produces the third from the committed answer cache, and
-`sever eval-sweep --profiles all` produces the fourth.
+`sever eval-sweep --profiles all` produces the fourth, and
+`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the fifth.

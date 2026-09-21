@@ -31,6 +31,14 @@ Development spend is deliberately outside that set. The smoke runs are not what 
 costs, they are what building the thing cost, and they are reported in PLAN.md where that
 belongs.
 
+## The order these two commands run in
+
+`sever cost` reads `model_asks` out of `results/results.json`, and `sever report` reads
+`results/cost.json` to splice its line. That is a cycle, and it bit once: running report
+and then cost in a single chain spliced the previous cost line into the README and only
+then recomputed it. Run `sever cost` first when the corpus or the arms have changed, then
+`sever report`. Both are free and replayable, so running report twice costs nothing.
+
 ## Why this reads a file instead of the ledger
 
 The ledger lives in project 04's working copy, which nobody cloning this repository has.
@@ -56,15 +64,28 @@ CAD_PER_USD = 1.35
 
 DEFAULT_COST_PATH = Path("results/cost.json")
 
-# The runs that between them paid for every answer in `results/model-answers.jsonl`. The
-# count check in `from_ledger` is what keeps this list honest: add a paid run against this
-# corpus and leave it out here, and the next `sever cost` refuses rather than under-reports.
-PUBLISHED_RUNS: tuple[str, ...] = (
+# The runs behind the tool's own rows, and the only ones whose spend is a cost of running
+# the pipeline over a page.
+PIPELINE_RUNS: tuple[str, ...] = (
     "sever-full-001",
     "sever-full-210",
     "sever-sweep-210",
     "sever-retype-210",
 )
+
+# The model-only baseline. It asks about every span rather than the residual the rules
+# could not settle, so it paid for 1,357 answers the pipeline never needs. Its spend is a
+# cost of measuring the tool, not a cost of running it, and folding the two together would
+# have doubled the published cost per page for a configuration nobody would deploy.
+BASELINE_RUNS: tuple[str, ...] = (
+    "sever-modelonly-smoke",
+    "sever-modelonly-210",
+)
+
+# Everything that paid for a line in the committed answer cache. The integrity check is
+# against this, because the cache does not record which run bought which answer, and a
+# check over a subset would pass while a whole run was missing.
+PUBLISHED_RUNS: tuple[str, ...] = PIPELINE_RUNS + BASELINE_RUNS
 
 
 class LedgerMismatch(RuntimeError):
@@ -76,6 +97,9 @@ class RunCost:
     """What the published answers cost, as the ledger recorded it."""
 
     run_ids: tuple[str, ...]
+    # The subset of `run_ids` whose spend is a cost of running the pipeline rather than a
+    # cost of measuring it. The headline figure is over these.
+    pipeline_runs: tuple[str, ...]
     recorded_on: str
     model: str
     calls: int
@@ -92,14 +116,28 @@ class RunCost:
     # without a call. This is the denominator the deduplication is measured against.
     asks: int
     per_run: dict[str, float] = field(default_factory=dict)
+    calls_per_run: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def pipeline_cost_usd(self) -> float:
+        """What the tool's own rows cost, leaving out the baselines built to measure it."""
+        return sum(v for k, v in self.per_run.items() if k in self.pipeline_runs)
+
+    @property
+    def baseline_cost_usd(self) -> float:
+        return self.cost_usd - self.pipeline_cost_usd
 
     @property
     def usd_per_page(self) -> float:
-        return self.cost_usd / self.pages if self.pages else 0.0
+        return self.pipeline_cost_usd / self.pages if self.pages else 0.0
+
+    @property
+    def pipeline_calls(self) -> int:
+        return sum(v for k, v in self.calls_per_run.items() if k in self.pipeline_runs)
 
     @property
     def usd_per_call(self) -> float:
-        return self.cost_usd / self.calls if self.calls else 0.0
+        return self.pipeline_cost_usd / self.pipeline_calls if self.pipeline_calls else 0.0
 
     @property
     def undeduplicated_usd_per_page(self) -> float:
@@ -117,23 +155,37 @@ class RunCost:
 
     @property
     def deduplication(self) -> float:
-        return 1.0 - (self.calls / self.asks) if self.asks else 0.0
+        if not self.asks:
+            return 0.0
+        return 1.0 - (self.pipeline_calls / self.asks)
 
     @property
     def cad_per_page(self) -> float:
         return self.usd_per_page * CAD_PER_USD
 
     def to_markdown(self) -> str:
-        return (
+        line = (
             f"**Cost:** US${self.usd_per_page:.5f} per page "
             f"(CA${self.cad_per_page:.5f} at {CAD_PER_USD} CAD/USD), from project 04's "
-            f"gateway ledger: US${self.cost_usd:.4f} over {self.calls} paid calls and "
-            f"{self.pages} pages. The pipeline asked {self.asks} times and paid "
-            f"{self.calls} of them, because {self.deduplication:.0%} of its requests were "
-            f"byte-identical to one already made. Without that deduplication the same "
-            f"pages would cost about US${self.undeduplicated_usd_per_page:.5f} each, which "
-            f"is the figure to read if your documents are not generated from templates."
+            f"gateway ledger: US${self.pipeline_cost_usd:.4f} over "
+            f"{self.pipeline_calls} paid calls and {self.pages} pages. The pipeline asked "
+            f"{self.asks} times and paid {self.pipeline_calls} of them, because "
+            f"{self.deduplication:.0%} of its requests were byte-identical to one already "
+            f"made. Without that deduplication the same pages would cost about "
+            f"US${self.undeduplicated_usd_per_page:.5f} each, which is the figure to read "
+            f"if your documents are not generated from templates."
         )
+        # Rounded before the test: summing floats then subtracting leaves a residue of
+        # about 1e-18 when the two sets are the same, which is truthy and would append a
+        # sentence about a baseline that does not exist.
+        if round(self.baseline_cost_usd, 4) > 0:
+            line += (
+                f" A further US${self.baseline_cost_usd:.4f} bought the model-only "
+                f"baseline, which asks about every span rather than the residual. That is "
+                f"a cost of measuring the tool and not of running it, so it is named here "
+                f"rather than divided into the figure above."
+            )
+        return line
 
 
 def from_ledger(
@@ -141,6 +193,7 @@ def from_ledger(
     ledger: Any,
     project: str,
     run_ids: tuple[str, ...] = PUBLISHED_RUNS,
+    pipeline_runs: tuple[str, ...] = PIPELINE_RUNS,
     pages: int,
     documents: int,
     cached_answers: int,
@@ -174,11 +227,14 @@ def from_ledger(
             f"would be wrong, so it is not written."
         )
     per_run: dict[str, float] = {}
+    calls_per_run: dict[str, int] = {}
     for r in rows:
         rid = str(r.get("run_id"))
         per_run[rid] = per_run.get(rid, 0.0) + float(r.get("cost_usd") or 0.0)
+        calls_per_run[rid] = calls_per_run.get(rid, 0) + 1
     return RunCost(
         run_ids=tuple(sorted(wanted)),
+        pipeline_runs=tuple(sorted(set(pipeline_runs) & wanted)),
         recorded_on=(today or dt.date.today()).isoformat(),
         model=model or str(rows[0].get("model_returned") or rows[0].get("model_requested") or ""),
         calls=len(rows),
@@ -191,6 +247,7 @@ def from_ledger(
         cached_answers=cached_answers,
         asks=asks,
         per_run={k: round(v, 6) for k, v in sorted(per_run.items())},
+        calls_per_run=dict(sorted(calls_per_run.items())),
     )
 
 
@@ -223,7 +280,8 @@ def read(path: Path = DEFAULT_COST_PATH) -> RunCost | None:
     fields = set(RunCost.__dataclass_fields__)
     kept = {k: v for k, v in data.items() if k in fields}
     kept["run_ids"] = tuple(kept.get("run_ids", ()))
-    if missing := fields - set(kept) - {"per_run"}:
+    kept["pipeline_runs"] = tuple(kept.get("pipeline_runs", ()))
+    if missing := fields - set(kept) - {"per_run", "calls_per_run"}:
         # A stale file from an older schema. Named rather than raised as a TypeError from
         # the constructor, because the reader of that traceback is someone running
         # `sever report` and wondering why the tables will not generate.

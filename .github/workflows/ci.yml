@@ -83,3 +83,10 @@ jobs:
       # enforceable, so its endpoint tests are worth naming separately from the suite.
       - name: The release gate
         run: uv run pytest -q tests/test_review_app.py
+
+      # The scan track needs Tesseract, a system binary, so the track itself does not run
+      # here. What does run is everything about it that can be wrong quietly: the edit
+      # distance, the character alignment, and the decision to count a label the scan
+      # destroyed rather than drop it from the recall denominator.
+      - name: The scan track's arithmetic, without an OCR engine
+        run: uv run pytest -q tests/test_ocr.py

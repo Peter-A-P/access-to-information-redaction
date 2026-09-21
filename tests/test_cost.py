@@ -140,6 +140,7 @@ def a_cost(**over: Any) -> RunCost:
         "ledger": ledger,
         "project": PROJECT,
         "run_ids": ("sever-full-001", "sever-full-210"),
+        "pipeline_runs": ("sever-full-001", "sever-full-210"),
         "pages": 10,
         "documents": 10,
         "cached_answers": 20,
@@ -248,3 +249,80 @@ def test_a_cost_recorded_for_this_corpus_size_is_used(tmp_path: Path) -> None:
     path = write(recorded, tmp_path / "cost.json")
 
     assert _cost_for(path, corpus) == recorded
+
+
+# --- the baseline's spend is not the tool's cost ---------------------------------
+
+
+def test_a_research_baseline_is_named_rather_than_divided_into_the_cost_per_page() -> None:
+    """The model-only baseline asks about every span rather than the residual, so it cost
+    three times what the pipeline's own rows did. Folding the two together would publish a
+    cost per page more than double the tool's, for a configuration nobody would deploy.
+
+    The integrity check still runs over both, because the answer cache does not record
+    which run bought which line and a check over a subset would pass while a whole run was
+    missing.
+    """
+    ledger = ledger_of(**{"sever-full-210": 10, "sever-modelonly-210": 30})
+
+    cost = from_ledger(
+        ledger=ledger,
+        project=PROJECT,
+        run_ids=("sever-full-210", "sever-modelonly-210"),
+        pipeline_runs=("sever-full-210",),
+        pages=10,
+        documents=10,
+        cached_answers=40,
+        asks=25,
+    )
+
+    assert cost.calls == 40, "the integrity check covers every run that filled the cache"
+    assert cost.pipeline_calls == 10
+    assert cost.pipeline_cost_usd == pytest.approx(0.01)
+    assert cost.baseline_cost_usd == pytest.approx(0.03)
+    assert cost.usd_per_page == pytest.approx(0.001), "the headline is the pipeline's alone"
+    assert "bought the model-only baseline" in cost.to_markdown()
+
+
+def test_deduplication_is_measured_against_the_pipeline_s_own_asks() -> None:
+    """The denominator has to be what the tool asked, not what every arm asked between
+    them. A denominator that quietly includes a research arm reports the tool as far more
+    cacheable than it is."""
+    ledger = ledger_of(**{"sever-full-210": 10, "sever-modelonly-210": 30})
+    cost = from_ledger(
+        ledger=ledger,
+        project=PROJECT,
+        run_ids=("sever-full-210", "sever-modelonly-210"),
+        pipeline_runs=("sever-full-210",),
+        pages=10,
+        documents=10,
+        cached_answers=40,
+        asks=25,
+    )
+    assert cost.deduplication == pytest.approx(1 - 10 / 25)
+
+
+def test_a_run_list_with_no_baselines_reports_no_baseline_cost() -> None:
+    cost = a_cost()
+    assert cost.baseline_cost_usd == pytest.approx(0.0)
+    assert "bought the model-only baseline" not in cost.to_markdown()
+
+
+def test_the_cost_line_and_the_results_file_are_a_cycle_and_the_order_matters() -> None:
+    """A note in code, because it is the kind of thing that looks fine and is not.
+
+    `sever cost` reads `model_asks` out of results.json for its denominator, and
+    `sever report` reads cost.json to splice its line. Running them in that order in one
+    chain spliced yesterday's figure into the README and only then recomputed it, which is
+    how a cost line reading 10,251 asks reached a published table for a pipeline that made
+    2,606. Cost first, then report.
+    """
+    from sever.eval import cost as cost_mod
+    from sever.eval.report import run as report_run
+
+    assert cost_mod.__doc__ is not None
+    assert "`sever cost` first" in cost_mod.__doc__
+    # `report.run` defaults its cost_path to the file `sever cost` writes, which is the
+    # other half of the cycle.
+    # Keyword-only, so the defaults live in __kwdefaults__.
+    assert (report_run.__kwdefaults__ or {}).get("cost_path") == cost_mod.DEFAULT_COST_PATH

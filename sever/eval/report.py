@@ -139,6 +139,10 @@ class Report:
     # number rather than only inside the prose of `model_note`, because `sever cost` needs
     # it as the denominator for deduplication and parsing a sentence is not a source.
     model_asks: int = 0
+    # The model-only baseline's share, kept apart from the line above: it asks about every
+    # span rather than the residual, so folding the two together would misreport both the
+    # tool's cacheability and its cost per page.
+    model_only_asks: int = 0
     jurisdiction: str = "federal"
     # Read from results/cost.json rather than measured here, because the ledger that holds
     # it lives in project 04. None when that file is absent, which is the CI case.
@@ -161,6 +165,7 @@ class Report:
             "model": self.model_name or None,
             "model_run": self.model_note or None,
             "model_asks": self.model_asks or None,
+            "model_only_asks": self.model_only_asks or None,
             "jurisdiction": self.jurisdiction,
             "cost": (
                 {
@@ -220,6 +225,7 @@ def run(
     cost_path: Path | None = DEFAULT_COST_PATH,
     jurisdiction: str = "federal",
     with_model_only: bool = True,
+    leak_ocr: bool = True,
 ) -> Report:
     """Every system over the corpus.
 
@@ -238,7 +244,13 @@ def run(
     sentence: dict[str, tuple[object, object]] = {}
     modelled: dict[str, tuple[object, object]] = {}
     model_only: dict[str, tuple[object, object]] = {}
-    leak = LeakChecker(use_ocr=False) if with_pdf_leak else None
+    model_only_asks = 0
+    # Both channels. This was hardcoded off from the first commit, when Tesseract was not
+    # installed on the machine, and the published table has been saying "text layer only"
+    # ever since. `LeakChecker` degrades gracefully where the binary is absent and says so
+    # in the output, which is what CI sees, so there is no reason for the caller to decide
+    # this in advance: asking and being told no is better than not asking.
+    leak = LeakChecker(use_ocr=leak_ocr) if with_pdf_leak else None
 
     for item in c:
         doc = item.rendered.document
@@ -264,6 +276,12 @@ def run(
                 model_confidence_threshold=model_confidence_threshold,
             ).propose(doc)
             modelled[doc.doc_id] = (released, labels)
+            # Both arms share one decider, so its counters are a running total across the
+            # two. The model-only arm's asks are measured as a delta and taken back out,
+            # because `model_asks` is the denominator `sever cost` divides the pipeline's
+            # deduplication by, and a denominator that quietly includes a research arm
+            # reports the tool as four times more cacheable than it is.
+            before_asks = _asks(model)
             if with_model_only:
                 # The same model, the same context record, the same threshold, and no
                 # rules at all: `rules=()` leaves every span undecided, so every span is
@@ -281,6 +299,7 @@ def run(
                     ).propose(doc),
                     labels,
                 )
+            model_only_asks += _asks(model) - before_asks
 
         if leak is not None and tmp_dir is not None:
             src = render_pdf(doc, tmp_dir / f"{doc.doc_id}.pdf")
@@ -296,7 +315,8 @@ def run(
         leak_report=leak.report() if leak is not None else None,
         model_name=str(getattr(model, "model", "")) if model is not None else "",
         model_note=_spend_summary(model),
-        model_asks=_asks(model),
+        model_asks=_asks(model) - model_only_asks,
+        model_only_asks=model_only_asks,
         jurisdiction=jurisdiction,
         cost=_cost_for(cost_path, c),
     )
@@ -404,7 +424,13 @@ def to_markdown(report: Report) -> str:
         *(
             [
                 f"**Model layer:** {report.model_name}, through the 04 gateway with data "
-                f"class `personal`. {report.model_note}.",
+                f"class `personal`. {report.model_note}"
+                + (
+                    f", of which {report.model_asks} were the tool's own residual and "
+                    f"{report.model_only_asks} the model-only baseline."
+                    if report.model_only_asks
+                    else "."
+                ),
                 "",
             ]
             if report.model_note
@@ -514,6 +540,34 @@ def write(report: Report, directory: Path) -> tuple[Path, Path]:
     return md, js
 
 
+# Headings the published block is expected to carry. A splice that would remove one of
+# these is refused rather than performed.
+#
+# Added 2026-09-20 after `sever report --readme README.md --no-pdf-leak` quietly deleted the
+# PDF leak table from the README. Nothing failed, the command said "updated", and a
+# published result disappeared. The generated block is the one part of the README that is
+# not reviewed by a person before it lands, which is exactly why it needs a check that a
+# person would otherwise have to remember to do.
+REQUIRED_SECTIONS: tuple[str, ...] = (
+    "**Against the baselines**",
+    "**Where the leaks come from**",
+    "**PDF leak test**",
+)
+
+
+class SpliceWouldRemoveASection(RuntimeError):
+    """The new block is missing something the README already publishes."""
+
+
+def missing_sections(existing: str, replacement: str) -> tuple[str, ...]:
+    """Sections the README has now and the replacement does not."""
+    return tuple(
+        heading
+        for heading in REQUIRED_SECTIONS
+        if heading in existing and heading not in replacement
+    )
+
+
 def splice_into_readme(readme: Path, markdown: str) -> bool:
     """Replace the block between the result markers. Returns True if the file changed."""
     start = "<!-- BEGIN RESULTS -->"
@@ -525,7 +579,15 @@ def splice_into_readme(readme: Path, markdown: str) -> bool:
             f"`sever report` knows where to write, rather than hand-editing them."
         )
     head, _, rest = text.partition(start)
-    _, _, tail = rest.partition(end)
+    published, _, tail = rest.partition(end)
+    if gone := missing_sections(published, markdown):
+        raise SpliceWouldRemoveASection(
+            f"this run would delete {list(gone)} from {readme}, which publishes them now. "
+            f"A partial run is fine; splicing it over a complete one is not, because the "
+            f"result disappears and the command still reports success. Re-run without the "
+            f"flag that turned the section off, or write to --out and leave the README "
+            f"alone."
+        )
     new = f"{head}{start}\n\n{markdown.strip()}\n\n{end}{tail}"
     if new == text:
         return False

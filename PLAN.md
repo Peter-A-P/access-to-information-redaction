@@ -268,12 +268,10 @@ Ticked as of 2026-09-20. A box is ticked only when the thing it names is measure
 published, not when the code for it exists.
 
 - [x] Taxonomy written against the federal acts and one provincial act, provisions verified, published as YAML and `docs/taxonomy.md`
-- [ ] Labelled corpus of 200+ pages with per-span categories, hand-verified, checksums committed; native and scanned tracks
-      (native track done at 210 pages; the scanned track does not exist)
+- [x] Labelled corpus of 200+ pages with per-span categories, hand-verified, checksums committed; native and scanned tracks
 - [x] Leak rate and over-redaction rate per category with bootstrap CIs, on the README's first screen
 - [x] Category accuracy and error decomposition reported
-- [ ] Blunt, model-only, rules-only and sentence-only baselines on the same corpus
-      (blunt, rules-only and sentence-only measured; model-only is the one still missing)
+- [x] Blunt, model-only, rules-only and sentence-only baselines on the same corpus
 - [ ] Over-redaction measured on published federal releases
 - [x] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
 - [x] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
@@ -986,3 +984,194 @@ baseline for.
 Recorded here rather than fixed in the same commit, deliberately. The fix is a rules change
 that moves published numbers, and it should be measured against a run that is not also
 changing for other reasons.
+
+### 12.22 The scanned track, and OCR costs the column nobody expected
+
+2026-09-20. Tesseract is installed, the scan track is built and measured, and section 10's
+"native and scanned tracks" line has a table under it. 50 documents, four degradation
+profiles, `results/scanned.md`.
+
+| Input | Character error rate | Labels that survived | Detector recall | Leak rate | Over-redaction |
+|---|---:|---:|---|---|---|
+| native (no OCR) | 0.0% | 100.0% | 98.0% | 3.0% | **28.7%** |
+| clean | 0.7% | 100.0% | 97.3% | 3.0% | **48.3%** |
+| scanner | 0.6% | 100.0% | 97.6% | 3.6% | **48.9%** |
+| photocopy | 0.9% | 99.9% | 96.8% | 3.9% | **48.1%** |
+| fax | 65.1% | 45.2% | 52.9% | 69.2% | 36.7% |
+
+**The column that moves is not the one anyone worries about.** The fear about OCR is that a
+misread name gets released. On these numbers that barely happens until the page falls apart
+entirely. What happens first is that the requester gets a blacker page: a near-perfect scan
+costs about a fifth of a point of recall and **twenty points of over-redaction**.
+
+The mechanism is structural rather than textual, and it is the reason a character error
+rate alone would have missed it. The characters are almost all there. The *layout* is not.
+`paragraph_blocks` recovers where the paragraphs are and nothing more, so every block is
+BODY, nothing is `is_role_bearing`, and the rules lose the signature block and the
+letterhead. Those are the evidence they lean on hardest to tell an official acting in an
+official capacity from a third party: a name in a signature block is a signer, the same
+name in body text is just a name. Unable to place the person, the rules escalate, and
+escalation withholds.
+
+This is the sentence-only ablation arriving by a different road. That ablation blanks the
+document context on purpose and reports 58 percent over-redaction; a scan blanks a
+particular slice of it by accident and reports 48. The two agree about what the context is
+worth, which is the closest thing to a corroborated result this project has.
+
+**The three profiles that work all work about equally.** Between 0.6 and 0.9 percent
+character error, nothing moves outside the intervals. That is worth knowing because it says
+the scan quality knob is not where the effort belongs: improving a 0.9 percent error rate
+to 0.6 buys nothing, and recovering block structure from the word geometry Tesseract already
+returns would buy twenty points. The scan track's finding is a layout-analysis todo, not an
+OCR one.
+
+**The fax row is where it falls out**, and it falls out completely rather than gradually:
+65 percent character error, 45 percent of labelled values gone from the page entirely, and
+a leak rate over the ones still there of 69 percent. 100 dpi is below what 9.5 point text
+survives. It is kept in the table because knowing where the floor is beats four rows that
+all work, and its denominators are smaller than the rows above precisely because half the
+values are no longer on the page to leak.
+
+**What the track is not.** These are renders of synthetic records put through a simulated
+scanner, not photographs of paper. Real scans bring skew that varies down the page, staples,
+punch holes, marginalia and records that were already photocopies when they were filed. And
+the corpus renders in Courier, monospaced and high contrast, which is close to the easiest
+thing an OCR engine can be handed: the `clean` row is a floor, not a typical case, and it is
+not zero even so.
+
+**A side effect worth naming.** The PDF leak test has had an OCR channel since it was
+written and has never run it, because Tesseract was not installed. It runs now, and the
+published leak test is no longer "text layer only": it renders every applied box and reads
+the pixels. The claim was always that the text under the box is gone; now both channels have
+been asked.
+
+### 12.23 The model-only baseline, and what the rules are actually worth
+
+2026-09-20. The last missing baseline. Same model, same context record, same confidence
+threshold, `rules=()` so every span is sent rather than only the residual the rules could
+not settle. The difference between it and the row above is the deterministic layer and
+nothing else.
+
+| System | Leak rate | Over-redaction | Escalation |
+|---|---|---|---|
+| sever, rules then the model on the residual | 5.3% (4.1 to 6.5) | **23.3%** (21.9 to 24.6) | 27.7% |
+| model-only, no rules | 4.8% (3.8 to 5.8) | **41.9%** (39.4 to 44.4) | 42.3% |
+| sever, rules only | 2.8% (1.8 to 4.0) | 30.3% (29.1 to 31.4) | 46.5% |
+| blunt redact-all-PII | 1.1% (0.6 to 1.7) | 98.5% (97.9 to 99.0) | 0.0% |
+| sentence-only, no document context | 2.8% (1.8 to 4.0) | 58.0% (56.0 to 59.9) | 66.9% |
+
+**The rules are worth eighteen points of over-redaction and nothing at all on leaks.** The
+leak columns are 5.3 and 4.8 with overlapping intervals, so on this corpus the rules do not
+make the tool safer. What they do is make its output usable: without them the model withholds
+nearly twice as much of what must be released, and escalates half again as often.
+
+That is the opposite of how a rules-plus-model architecture is usually justified. The pitch
+is that deterministic rules are the safety net under a probabilistic model. Here the model is
+about as safe on its own, and the rules earn their place by being **decisive**: they settle
+the cases that have a settled answer, so the model is only asked the genuinely ambiguous
+ones, and a model asked only hard questions escalates less than a model asked everything.
+
+**Read it against the sentence-only row and the picture completes.** Sentence-only is the
+same rules with the document context blanked: 58 percent over-redaction. Model-only is the
+same context with the rules removed: 41.9. Neither component is carrying the tool. The
+configuration that works is the one with both, at 23.3, and each ablation costs roughly
+what the other does.
+
+**What it cost, and why that number is kept separate.** 1,357 new paid calls, US$1.46, on
+top of the US$0.96 the pipeline's own rows cost. The baseline asks about every span rather
+than the residual, so it is the most expensive row in the table by a factor of three, and
+its spend is a cost of *measuring* the tool rather than of running it. `sever cost` reports
+the two separately for that reason: folding them together would have published a cost per
+page more than double the tool's, for a configuration nobody would deploy. Total project
+spend is now US$2.60, about CA$3.51, against a CA$55 budget.
+
+The answers are in the committed cache like every other row, so the model-only baseline
+replays for nothing from a clone with no key.
+
+### 12.24 Measuring the backstop by taking the detector away
+
+2026-09-20, from project 04 and the best idea either project has had this week. Their
+masking column read 100 percent everywhere with every recogniser present, and they noticed
+what that meant: "a masking column where a recogniser is doing the work says nothing about
+the layer that exists for when a recogniser is wrong." So they run every case twice, once
+as normal and once with every recogniser removed, and print both. It found two holes on the
+first run.
+
+The same test now exists here: every persona value on every page of the corpus, with the
+detector taken away entirely, nothing substituted, and only `scrub_unrecognised` standing
+between the value and the request.
+
+**It holds all of them.** And there is a second piece of evidence for that which is better
+than the assertion, because it was not arranged: after changing the second pass three times
+today, the committed answer cache still replays with no misses. A cache key is a hash of
+the outbound message, so an unchanged key means an unchanged message, which means **the
+second pass was not altering a single request in the corpus.** It was inert, exactly as 04
+predicted, and the only way to find that out was to remove the layer above it.
+
+**Their bracketed phone number was here too.** `(709) 555-0199` came out as
+`(709) [NUMBER?]`: the bracket ended the digit run, the rest was masked on its own, and the
+area code went out in clear beside its own placeholder, which is worse than leaving the
+whole thing alone because it advertises the shape of what was removed. Their rule is now
+this project's rule: a bracket may join a run but may not widen what gets masked, so a run
+containing a bracket needs seven digits before it is masked at all. `section 40(2)(f)`,
+`page 12 of 40` and `see s. 19(1)(a)` stay readable, with a test on each, and a released
+record that could not cite the provision it severs under would be its own kind of failure.
+
+**Their date limit is this project's limit and is now written down.** `14 March 1978` has no
+backstop and will not get one. Masking every date written in words would black out the dates
+a decision turns on: whether someone died more than twenty years ago is the whole of K4 and
+the year is what answers it. The recogniser handles the shape by requiring a label word in
+front of it, which is the same judgement made where there is enough context to make it. 04
+reached the identical conclusion on the identical shape the same day and left theirs at 66.7
+percent rather than masking it. A test now pins the limit, so changing that judgement means
+changing a test rather than discovering the gap in a release.
+
+**And the new 100 percent gets the warning it deserves.** It reads 100 because every secret
+this corpus puts on a page is name-shaped, digit-shaped, address-shaped or postcode-shaped,
+and those are the four shapes the second pass knows. The shape known to defeat it is one
+this corpus never generates, because persona dates of birth are ISO. It is a measurement
+against the shapes somebody thought to generate, like every recall figure here, and it is
+labelled as one in the test that produces it.
+
+**On precision, 04 agreed the number should not be manufactured** and added the part worth
+keeping: their corpus labels departments as ORGANISATION and towns as LOCATION, marked
+impersonal, so a detector that finds them is not punished for being right while the leak
+rate stays a count of personal values. Job titles are the case they have not covered and,
+on this project's evidence, the ones that cost. That is a corpus design idea worth taking if
+this corpus ever grows a precision column.
+
+**The tally, since both projects are keeping one.** Eleven defects on their side this week,
+two from reports here and the rest from probing or from their harness. Four on this side
+from their reports. Neither project's test suite found any of them.
+
+### 12.25 Two footguns in this project's own tooling, both found by using it
+
+2026-09-20. Neither of these is a redaction defect. Both are ways the machinery that
+publishes the numbers can quietly publish the wrong ones, which for a project whose entire
+claim is "every number here is generated, none is typed" is the same category of failure.
+
+**A partial run overwrote a complete one, and said "updated".**
+`sever report --readme README.md --no-pdf-leak` deleted the PDF leak table from the README.
+The flag did exactly what it says. The run succeeded, the command printed
+`README.md: updated`, and a published result was gone. The generated block is the one part
+of the README that changes without a person reading the diff, which is the whole point of
+it and also the reason it needs a check a person would otherwise have to remember.
+
+`splice_into_readme` now refuses a block that would remove a section the README already
+publishes, and `tests/test_readme_splice.py` holds the case. The guard is about losing
+something rather than about being complete: a README that has never published the leak table
+is not made worse by a run without it.
+
+**`sever cost` and `sever report` are a cycle, and the order matters.** Cost reads
+`model_asks` out of `results.json`; report reads `cost.json` to splice its line. Running
+report and then cost in one chain spliced the *previous* cost figure into the README and
+only then recomputed it, which is how a line reading "the pipeline asked 10,251 times"
+reached a published table for a pipeline that asked 2,606. Documented at the top of
+`sever/eval/cost.py`, with a test that the note and the default path still agree. Cost
+first, then report; both are free.
+
+The second one is worth a sentence beyond the fix. The wrong number was not wrong by a
+little. It was the model-only baseline's ask count standing in for the tool's, which would
+have published the tool as four times more cacheable than it is, in the one table that is
+supposed to need no trust. It was caught by reading the output, which is the same way most
+of the defects this week were caught, and not by anything in the suite.

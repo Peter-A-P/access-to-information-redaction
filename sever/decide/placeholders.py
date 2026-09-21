@@ -336,7 +336,23 @@ class PlaceholderPolicy:
 # where it can be written in Python rather than smuggled into a character class.
 _TOKEN = re.compile(r"[^\W\d_]+(?:['\u2019.\-][^\W\d_]+)*")
 _SEPARATORS = re.compile(r"['\u2019.\-]")
-_DIGIT_RUN = re.compile(r"\b\d[\d\s.,/-]{2,}\d\b")
+# A run of digits and the punctuation people write inside one, brackets included.
+#
+# Brackets were added 2026-09-20, from project 04, who found `(709) 555-0199` coming out as
+# `(709) [NUMBER?]`: the bracket ended the run, the rest was masked on its own, and the area
+# code went out in clear **beside its own placeholder**, which is worse than leaving the
+# whole thing alone because it advertises the shape of what was removed. The same defect
+# was here, identically.
+#
+# The rule that makes this safe is theirs too: a bracket may join a run but may not widen
+# what gets masked. A run containing a bracket has to carry `_MIN_BRACKETED_DIGITS` before
+# it is masked at all, so `section 40(2)` and `page 12 of 40` stay readable while a phone
+# number written in the ordinary way does not.
+_DIGIT_RUN = re.compile(r"(?<![\w(])\(?\d[\d\s.,/()\-]{2,}\d\)?")
+# Seven, because the shortest thing worth masking that needs a bracket is a phone number
+# with its area code, and the longest ordinary citation that gets caught by accident is a
+# subsection reference, which has two or three.
+_MIN_BRACKETED_DIGITS = 7
 _YEAR = re.compile(r"^(?:1[89]|20)\d{2}$")
 # Anything shaped like an email address, in any script, digits or no digits.
 #
@@ -471,6 +487,11 @@ def scrub_unrecognised(text: str) -> str:
         # A bare year is left alone: whether someone died more than twenty years ago is a
         # taxonomy question (K4) and the year is what answers it. A year identifies nobody.
         if _YEAR.match(raw.strip()):
+            return raw
+        # A bracket may join a run but may not widen what is masked. Without this,
+        # "section 40(2)" and "page 12 of 40" would go under a box and the released record
+        # would stop citing the law it is severing under.
+        if ("(" in raw or ")" in raw) and sum(c.isdigit() for c in raw) < _MIN_BRACKETED_DIGITS:
             return raw
         return UNKNOWN_NUMBER
 

@@ -300,3 +300,110 @@ def test_the_model_layer_is_off_by_default() -> None:
         pages_in_document=1,
     )
     assert GatewayModelDecider().decide([ctx]) == [None]
+
+
+# --- the backstop, measured with the detector taken away --------------------------
+
+
+def test_the_second_pass_alone_holds_most_of_the_corpus(corpus) -> None:  # type: ignore[no-untyped-def]
+    """Every request in the corpus, built with no detections at all.
+
+    Project 04, 2026-09-20, after their own masking column read 100 percent everywhere:
+    "a masking column where a recogniser is doing the work says nothing about the layer
+    that exists for when a recogniser is wrong." They now run every case twice, once as
+    normal and once with every recogniser removed, and it found two holes immediately.
+
+    The point applies here exactly. Every assertion above passes with the detector on, and
+    passed while `scrub_unrecognised` let every email address and every postal code through
+    untouched, because the recognisers were covering both. The only way to ask the backstop
+    a question is to take the first layer away, so this builds the policy from an empty
+    detection set: nothing is substituted, and whatever does not appear in the request was
+    masked by the second pass on shape alone.
+
+    The answer is that it holds all of it: every persona value on every page, with no
+    detector at all.
+
+    That number needs 04's own warning turned back on it. It reads 100 percent because
+    every secret this corpus puts on a page is name-shaped, digit-shaped, address-shaped or
+    postcode-shaped, and those are the four shapes the second pass knows. The shape known to
+    defeat it, a date written out in words, is one this corpus never generates: persona
+    dates of birth are ISO. So this measures the backstop against the shapes somebody
+    thought to generate, exactly like every recall figure here, and the companion tests name
+    what it cannot reach so the 100 does not read as completeness.
+    """
+    from sever.decide.placeholders import scrub_unrecognised
+
+    total = 0
+    survived: list[str] = []
+
+    for item in corpus:
+        doc = item.rendered.document
+        secrets = _persona_secrets(item.rendered.cast)
+        page_text = "\n\n".join(p.text for p in doc)
+        scrubbed = scrub_unrecognised(page_text)
+        lowered = scrubbed.casefold()
+        digits = normalise_identifier(scrubbed)
+        for secret in secrets:
+            if secret not in page_text:
+                continue
+            total += 1
+            d = normalise_identifier(secret)
+            if secret.casefold() in lowered or (len(d) >= 6 and d in digits):
+                survived.append(f"{doc.doc_id}: {secret!r}")
+
+    assert total > 0, "no persona values reached the pages, so this proved nothing"
+    assert not survived, (
+        f"{len(survived)} of {total} persona values survived the second pass with no "
+        f"detector present. This was exact when written, so a survivor is a new hole "
+        f"rather than a known limit; the known limits are in the test below.\n  "
+        + "\n  ".join(sorted(set(survived))[:12])
+    )
+
+
+def test_the_shapes_the_backstop_cannot_reach_are_named_rather_than_discovered() -> None:
+    """A stated limit with a test on it, so a future change to the judgement is visible.
+
+    A date written out in words has no backstop. "14 March 1978" is a date of birth and the
+    second pass leaves it alone, because masking every written date would black out the
+    dates a decision turns on: whether someone died more than twenty years ago is the whole
+    of K4, and the year is what answers it. The recogniser handles this shape by requiring a
+    label word in front of it, which is the same judgement made where there is enough
+    context to make it.
+
+    Project 04 reached the identical conclusion on the identical shape the same day and left
+    it at 66.7 percent rather than masking it. Recording it here means the next person to
+    change their mind has to change a test, rather than discovering the gap in a release.
+    """
+    from sever.decide.placeholders import scrub_unrecognised
+
+    assert scrub_unrecognised("14 March 1978") == "14 March 1978"
+    assert scrub_unrecognised("Date of birth: 14 March 1978") == "Date of birth: 14 March 1978"
+    # The digit forms are covered, which is what makes the gap specific rather than general.
+    assert scrub_unrecognised("1978-03-14") == "[NUMBER?]"
+    assert scrub_unrecognised("14/03/1978") == "[NUMBER?]"
+
+
+def test_the_backstop_holds_the_name_shapes_this_province_actually_uses() -> None:
+    """The same question as the corpus-wide one, on shapes the corpus cannot produce.
+
+    The published corpus is plain ASCII, so a backstop measured only against it is measured
+    against the easy half of the province. These are the shapes that got past this function
+    in 0.5.2, plus the accented address project 04 found getting past theirs and the
+    bracketed phone number they found half-masked.
+    """
+    from sever.decide.placeholders import scrub_unrecognised
+
+    shapes = (
+        "Renée Côté",
+        "MacDonald",
+        "O'Brien",
+        "Le Drew",
+        "Tuglavina",
+        "thérèse.gagné@example.gov.nl.ca",
+        "(709) 555-0199",
+        "A1B 2C3",
+    )
+    survived = [
+        shape for shape in shapes if shape in scrub_unrecognised(f"The record names {shape}.")
+    ]
+    assert not survived, f"the backstop let these through with no detector: {survived}"
