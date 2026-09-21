@@ -113,12 +113,25 @@ fourth, and none of the three closed in the direction that was guessed.
   it. Under the NL configuration, anything K3 reaches through general "already public"
   reasoning escalates, and it does so in the code rather than only here.
 
-The new question is what those three do to the NL numbers, and the honest answer is that
-nobody knows yet: every published figure in this repository is from the federal
-configuration, and the NL configuration has never been scored. Three codes moving toward
-escalation would raise the NL over-redaction rate against the federal one, which is a
-finding about the two statutes rather than about the tool. It is not measured and it is not
-claimed.
+The NL configuration has since been scored: `sever report --jurisdiction nl`, in
+[`results/nl/`](../results/nl/results.md). Two things came out of it.
+
+The overrides change almost nothing on this corpus, because the rules never propose K3 or
+K4 at all: `deceased_over_twenty_years` needs a date of death in the record and
+`already_published` needs a public-register match, and on 210 documents neither fires.
+Over-redaction reads 31.2 percent against the federal 30.3, and even that difference is the
+denominator rather than behaviour, because 350 spans leave the must-keep pool. Leak rate,
+escalation rate and recall are identical to the decimal.
+
+What the 350 spans are doing instead is the finding. They are not being escalated, they are
+being released, under some other keeping code: **78.9 percent of them (74.4 to 83.1)**. The
+tool settles, by machine, a question ATIPPA assigns to the head of a public body, and until
+`unweighed_release_rate` existed no published number could see it, because `must_redact` is
+REDACT, `must_keep` is KEEP, and a span whose true decision is escalate was in neither
+denominator.
+
+Every headline figure in the README remains the federal configuration and none of them
+moved.
 
 ## The number this page is about
 

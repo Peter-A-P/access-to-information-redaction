@@ -131,6 +131,30 @@ class SpanOutcome:
         return self.true_decision is Decision.KEEP
 
     @property
+    def must_be_weighed(self) -> bool:
+        """The statute reserves this span for a person, so the machine may not settle it.
+
+        Empty under the federal configuration, which is why this went unnoticed: no
+        federal code's true decision is `escalate`. Under ATIPPA two are, because
+        40(5)(j) makes the time since a death a circumstance the head of a public body
+        weighs and 40(2)(m) is too narrow to release a name that is public for some other
+        reason. See `sever/taxonomy/nl.yaml`.
+        """
+        return self.true_decision is Decision.ESCALATE
+
+    @property
+    def is_unweighed_release(self) -> bool:
+        """Released without the weighing the statute requires.
+
+        This is not a leak: the information might well have been releasable, and might not
+        have been. Nobody looked. For a tool whose first claim is that it proposes and a
+        person decides, deciding a question the Act assigns to a person is a failure of a
+        different kind from getting the answer wrong, and it needs its own number rather
+        than being folded into one of the others.
+        """
+        return self.must_be_weighed and not self.was_withheld
+
+    @property
     def was_withheld(self) -> bool:
         """An undetected span is released: nothing proposed a box over it."""
         return self.proposal is not None and self.proposal.withholds
@@ -216,6 +240,17 @@ class Scored:
         pool = [o for o in self.filtered(code) if o.must_keep]
         return _rate(pool, lambda o: o.is_over_redaction, seed=seed)
 
+    def unweighed_release_rate(
+        self, code: str | None = None, *, seed: int = DEFAULT_SEED
+    ) -> Interval:
+        """Of the spans the statute reserves for a person, how many the machine released.
+
+        The denominator is empty under the federal configuration and the cell reads n/a,
+        which is the honest rendering: there is nothing to report, not a perfect score.
+        """
+        pool = [o for o in self.filtered(code) if o.must_be_weighed]
+        return _rate(pool, lambda o: o.is_unweighed_release, seed=seed)
+
     def escalation_rate(self, code: str | None = None, *, seed: int = DEFAULT_SEED) -> Interval:
         pool = list(self.filtered(code))
         return _rate(pool, lambda o: o.is_escalation, seed=seed)
@@ -241,6 +276,8 @@ class Scored:
             "detector_mislabelled": mislabelled,
             "decision_wrong": len(leaks) - undetected - mislabelled,
             "must_redact_spans": sum(1 for o in self.outcomes if o.must_redact),
+            "must_be_weighed_spans": sum(1 for o in self.outcomes if o.must_be_weighed),
+            "unweighed_releases": sum(1 for o in self.outcomes if o.is_unweighed_release),
         }
 
     def confusion(self) -> dict[tuple[str, str], int]:
@@ -261,6 +298,7 @@ class Scored:
             "spans": len(self.outcomes),
             "documents": len(self.doc_ids),
             "over_redaction_rate": str(self.over_redaction_rate()),
+            "unweighed_release_rate": str(self.unweighed_release_rate()),
             "escalation_rate": str(self.escalation_rate()),
             "detector_recall": str(self.detector_recall()),
             "false_positive_spans": len(self.unlabelled_proposals),

@@ -17,7 +17,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-09-20 by `sever report`.
 
 **Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2606 answers replayed from the cache, nothing spent.
 
@@ -286,6 +286,7 @@ sever propose --documents 3           # proposals with the reason for each one
 sever export --documents 3            # redacted PDFs, schedules, and the leak test
 sever review --documents 3            # the reviewer's screen, on 127.0.0.1:8000
 sever report --readme README.md       # every number above
+sever report --jurisdiction nl        # the same corpus under the NL statute
 ```
 
 `sever report` is the one command behind every published figure. With no flags it runs
@@ -328,7 +329,8 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [detector comparison](results/detectors.md) · [threshold sweep](results/thresholds.md) ·
 [name shapes](results/names.md) · [the name sweep, ablated](results/sweep.md) ·
 [what the privacy boundary does to accuracy](results/placeholders.md) ·
-[reviewer time study](results/reviewer.md) · [plan](PLAN.md)
+[reviewer time study](results/reviewer.md) ·
+[the same corpus under ATIPPA](results/nl/results.md) · [plan](PLAN.md)
 
 ## Engineering
 

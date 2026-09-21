@@ -345,6 +345,10 @@ def report(
         Path | None, typer.Option(help="Splice the tables into this README.")
     ] = None,
     pdf_leak: Annotated[bool, typer.Option(help="Run the PDF leak test too.")] = True,
+    jurisdiction: Annotated[
+        str,
+        typer.Option(help="Which statute to decide under: 'federal' or 'nl'."),
+    ] = "federal",
     model: Annotated[
         bool,
         typer.Option(
@@ -400,6 +404,7 @@ def report(
             with_pdf_leak=pdf_leak,
             tmp_dir=tmp,
             model=decider,
+            jurisdiction=jurisdiction,
             model_confidence_threshold=(
                 DEFAULT_THRESHOLD if threshold < 0 else threshold
             ),

@@ -1,0 +1,130 @@
+{
+ "generated_on": "2026-09-20",
+ "corpus": {
+  "documents": 210,
+  "pages": 210,
+  "seed": 20270802,
+  "labels_by_code": {
+   "K1": 980,
+   "K2": 2345,
+   "K3": 280,
+   "K4": 70,
+   "K6": 280,
+   "R1": 1400
+  }
+ },
+ "detector": "sever-detector",
+ "model": null,
+ "model_run": null,
+ "model_asks": null,
+ "jurisdiction": "nl",
+ "cost": {
+  "run_ids": [
+   "sever-full-001",
+   "sever-full-210",
+   "sever-retype-210",
+   "sever-sweep-210"
+  ],
+  "usd_per_page": 0.00455755238095238,
+  "undeduplicated_usd_per_page": 0.013636029282160622,
+  "cost_usd": 0.9570859999999998,
+  "paid_calls": 871,
+  "asks": 2606
+ },
+ "systems": [
+  {
+   "name": "sever, rules only",
+   "note": "The model layer is off, so the residual the rules could not decide stays escalated rather than being decided. Escalations withhold, so they are counted in over-redaction. This row costs nothing to reproduce.",
+   "spans": 5355,
+   "documents": 210,
+   "over_redaction_rate": "31.2% (29.9% to 32.3%), n=3605",
+   "unweighed_release_rate": "78.9% (74.4% to 83.1%), n=350",
+   "escalation_rate": "46.5% (45.4% to 47.5%), n=5355",
+   "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
+   "false_positive_spans": 2396,
+   "decomposition_leaks": 39,
+   "decomposition_detector_missed": 16,
+   "decomposition_detector_mislabelled": 23,
+   "decomposition_decision_wrong": 0,
+   "decomposition_must_redact_spans": 1400,
+   "decomposition_must_be_weighed_spans": 350,
+   "decomposition_unweighed_releases": 276,
+   "leak_rate": "2.8% (1.8% to 4.0%), n=1400",
+   "category_accuracy": "5.1% (3.8% to 6.6%), n=1361",
+   "per_code_over_redaction": {
+    "K1": "9.1% (7.8% to 10.4%), n=980",
+    "K2": "41.1% (39.4% to 42.8%), n=2345",
+    "K3": "n/a (0)",
+    "K4": "n/a (0)",
+    "K6": "25.0% (21.3% to 28.6%), n=280"
+   },
+   "documents_resampled": 210,
+   "per_code_leak": {
+    "R1": "2.8% (1.8% to 4.0%), n=1400"
+   }
+  },
+  {
+   "name": "blunt redact-all-PII",
+   "note": "Every detected span redacted. What an off-the-shelf PII tool does.",
+   "spans": 5355,
+   "documents": 210,
+   "over_redaction_rate": "98.3% (97.7% to 98.9%), n=3605",
+   "unweighed_release_rate": "0.0% (0.0% to 0.0%), n=350",
+   "escalation_rate": "0.0% (0.0% to 0.0%), n=5355",
+   "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
+   "false_positive_spans": 2396,
+   "decomposition_leaks": 16,
+   "decomposition_detector_missed": 16,
+   "decomposition_detector_mislabelled": 0,
+   "decomposition_decision_wrong": 0,
+   "decomposition_must_redact_spans": 1400,
+   "decomposition_must_be_weighed_spans": 350,
+   "decomposition_unweighed_releases": 0,
+   "leak_rate": "1.1% (0.6% to 1.7%), n=1400",
+   "category_accuracy": "100.0% (100.0% to 100.0%), n=1384",
+   "per_code_over_redaction": {
+    "K1": "95.0% (93.2% to 96.8%), n=980",
+    "K2": "99.9% (99.7% to 100.0%), n=2345",
+    "K3": "n/a (0)",
+    "K4": "n/a (0)",
+    "K6": "97.1% (95.1% to 98.9%), n=280"
+   },
+   "documents_resampled": 210,
+   "per_code_leak": {
+    "R1": "1.1% (0.6% to 1.7%), n=1400"
+   }
+  },
+  {
+   "name": "sentence-only, no document context",
+   "note": "The same rules with the context record blanked: no block kind, no signature-block title, no register, no coreference.",
+   "spans": 5355,
+   "documents": 210,
+   "over_redaction_rate": "57.9% (55.7% to 59.9%), n=3605",
+   "unweighed_release_rate": "40.6% (36.3% to 44.6%), n=350",
+   "escalation_rate": "66.9% (65.5% to 68.4%), n=5355",
+   "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
+   "false_positive_spans": 2396,
+   "decomposition_leaks": 39,
+   "decomposition_detector_missed": 16,
+   "decomposition_detector_mislabelled": 23,
+   "decomposition_decision_wrong": 0,
+   "decomposition_must_redact_spans": 1400,
+   "decomposition_must_be_weighed_spans": 350,
+   "decomposition_unweighed_releases": 142,
+   "leak_rate": "2.8% (1.8% to 4.0%), n=1400",
+   "category_accuracy": "5.1% (3.8% to 6.6%), n=1361",
+   "per_code_over_redaction": {
+    "K1": "9.1% (7.8% to 10.4%), n=980",
+    "K2": "82.2% (80.3% to 83.9%), n=2345",
+    "K3": "n/a (0)",
+    "K4": "n/a (0)",
+    "K6": "25.0% (21.3% to 28.6%), n=280"
+   },
+   "documents_resampled": 210,
+   "per_code_leak": {
+    "R1": "2.8% (1.8% to 4.0%), n=1400"
+   }
+  }
+ ],
+ "pdf_leak_test": null
+}

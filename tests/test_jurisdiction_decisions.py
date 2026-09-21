@@ -84,3 +84,85 @@ def test_a_mapping_with_a_reason_and_no_override_is_fine() -> None:
     """Most mappings have neither. A reason without an override is harmless prose and the
     validator has no business refusing it."""
     CodeMapping(decision_reason="explaining something else")
+
+
+# --- the hole the override opened, and the number that fills it ------------------
+
+
+def test_a_span_the_statute_reserves_for_a_person_is_neither_keep_nor_redact() -> None:
+    """The reason this went unnoticed for the whole build.
+
+    `must_redact` is REDACT and `must_keep` is KEEP. Federally no code's true decision is
+    ESCALATE, so the third case was empty and every published rate covered every span.
+    Overriding two NL codes to escalate put 350 of the corpus's 5,355 spans into a state
+    that the leak rate and the over-redaction rate both skip.
+    """
+    from sever.eval.confusion import SpanOutcome
+
+    o = _outcome(Decision.ESCALATE, withheld=False)
+    assert not o.must_redact
+    assert not o.must_keep
+    assert o.must_be_weighed
+    assert not o.is_leak
+    assert not o.is_over_redaction
+    assert o.is_unweighed_release
+    assert isinstance(o, SpanOutcome)
+
+
+def test_withholding_a_span_the_statute_reserves_is_correct_and_not_over_redaction() -> None:
+    """Escalation withholds, pending a person. That is the outcome the Act asks for, so
+    counting it as over-redaction would penalise the tool for obeying the statute."""
+    o = _outcome(Decision.ESCALATE, withheld=True)
+    assert not o.is_unweighed_release
+    assert not o.is_over_redaction
+
+
+def test_the_rate_is_undefined_rather_than_perfect_where_the_act_reserves_nothing() -> None:
+    """A column of 0.0% would read as a perfect score. There is no question to score."""
+    from sever.corpus.labels import LabelSource
+    from sever.eval.confusion import Scored
+
+    federal_only = Scored(
+        outcomes=(_outcome(Decision.KEEP, withheld=False), _outcome(Decision.REDACT, withheld=True)),
+        label_source=LabelSource.CONSTRUCTED,
+    )
+    assert not federal_only.unweighed_release_rate().is_defined
+
+
+def _outcome(true_decision: Decision, *, withheld: bool):  # type: ignore[no-untyped-def]
+    from sever.corpus.labels import LabelledSpan
+    from sever.decide.pipeline import Proposal, Source
+    from sever.detect.types import Detection, EntityType
+    from sever.eval.confusion import SpanOutcome
+    from sever.ingest.document import Offsets
+
+    detection = Detection(
+        page=1,
+        offsets=Offsets(0, 5),
+        text="Hearn",
+        entity_type=EntityType.PERSON,
+        score=0.9,
+        recogniser="test",
+    )
+    proposal = Proposal(
+        detection=detection,
+        code="K3",
+        decision=Decision.ESCALATE if withheld else Decision.KEEP,
+        confidence=0.9,
+        reason="test",
+        source=Source.RULE,
+    )
+    return SpanOutcome(
+        doc_id="d1",
+        label=LabelledSpan(
+            page=1,
+            offsets=Offsets(0, 5),
+            text="Hearn",
+            code="K3",
+            persona_id="p1",
+            field_name="third_party.surname",
+        ),
+        proposal=proposal,
+        true_decision=true_decision,
+        proposed_decision=proposal.decision,
+    )

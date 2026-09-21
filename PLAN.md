@@ -862,3 +862,60 @@ results file, which is the evidence rather than the intention.
 whose decision changes between jurisdictions is usually two codes wearing one name. Two
 statutes genuinely disagreeing about the same question is the case it is for, and both
 instances here came from reading the Act rather than from designing the taxonomy.
+
+### 12.19 Scoring the other statute, and a whole class of failure nothing could see
+
+2026-09-20. `sever report --jurisdiction nl` exists, and running it answered the question
+12.17 left open, then asked a much worse one.
+
+**The overrides are inert on this corpus, and that is the small finding.** The rules never
+propose K3 or K4 at all: `deceased_over_twenty_years` needs a date of death in the record
+and `already_published` needs a public-register match, and on 210 documents neither fires.
+So the NL configuration scores 31.2 percent over-redaction against the federal 30.3, and
+the difference is not behaviour, it is the denominator: 350 spans leave the must-keep pool
+because their true decision is now escalate. Escalation, leak rate and recall are identical
+to the decimal.
+
+**The large finding is what happened to those 350 spans.** `must_redact` is REDACT and
+`must_keep` is KEEP. Federally no code's true decision is escalate, so the third case was
+empty, and every published rate covered every span by accident rather than by design.
+Override two codes to escalate and 350 spans fall into a state that the leak rate skips and
+the over-redaction rate skips.
+
+They are not being escalated. They are being **released**, under some other keeping code,
+because the rules never proposed K3 or K4 in the first place and something else reached them
+first.
+
+| System | Spans ATIPPA reserves for a person | Released anyway |
+|---|---:|---|
+| sever, rules only | 350 | **78.9%** (74.4 to 83.1) |
+| sentence-only, no document context | 350 | 40.6% (36.3 to 44.6) |
+| blunt redact-all-PII | 350 | 0.0% (0.0 to 0.0) |
+
+Nearly four in five. Under the NL statute this tool settles, silently and by machine, a
+question the Act assigns to the head of a public body, and not one published number moved
+when it started doing so.
+
+**So there is a new rate.** `unweighed_release_rate`: of the spans the configured statute
+reserves for a person, how many the machine released. It is deliberately not folded into the
+leak rate, because it is a different failure. A leak is the wrong answer. This is an answer
+where the Act asked for a judgement, and the information might well have been releasable:
+nobody looked. For a tool whose first claim is "the tool proposes; a person decides", that
+distinction is the whole product.
+
+Where the statute reserves nothing the cell is n/a rather than 0.0 percent, and the table
+does not render at all. A column of zeroes reads as a perfect score; there is no question
+being scored.
+
+**The pattern, for the fourth time in this build.** Every metric here had a denominator that
+happened to cover everything, until a change made it not. Recall could not see a wrong label
+until a name was typed as a place. The two-bucket decomposition blamed the rules until the
+third bucket existed. Now the leak and over-redaction rates turn out to have been a
+partition only because one configuration had no escalating ground truth. The lesson is not
+"add a bucket". It is that a rate whose denominator is "everything, as it happens" is one
+configuration change away from being a rate about a subset, silently.
+
+**What this does not claim.** Every headline figure in the README is still the federal
+configuration and none of them moved. The NL run is in `results/nl/` and is labelled with
+its jurisdiction in its own first line. Nothing here says the tool is worse than it was; it
+says there was a question nobody was asking.

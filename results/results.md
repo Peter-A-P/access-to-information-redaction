@@ -1,4 +1,4 @@
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Generated 2026-09-20 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-09-20 by `sever report`.
 
 **Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2606 answers replayed from the cache, nothing spent.
 

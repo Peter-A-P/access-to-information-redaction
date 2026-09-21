@@ -78,20 +78,25 @@ class CachingDetector:
         return hit
 
 
-def config_for(item: CorpusItem) -> RequestConfig:
+def config_for(item: CorpusItem, jurisdiction: str = "federal") -> RequestConfig:
     """The request configuration for a generated document.
 
     The requester is configuration in the real product too: a public body knows who asked.
     Here it comes from the persona the generator cast as the requester, which is the same
     information a real intake form would carry.
+
+    So is the jurisdiction. Federal is the default because every published number in this
+    repository is federal, and because a default that silently varies is worse than one
+    that is wrong in a stated direction.
     """
     requester = next(
         (p for p in item.rendered.cast.values() if p.role is PersonaRole.REQUESTER), None
     )
     if requester is None:
-        return RequestConfig(request_id=item.doc_id)
+        return RequestConfig(request_id=item.doc_id, jurisdiction=jurisdiction)
     return RequestConfig(
         request_id=item.doc_id,
+        jurisdiction=jurisdiction,
         requester_name=requester.full_name,
         emails=(requester.personal_email,),
         phones=(requester.personal_phone,),
@@ -134,6 +139,7 @@ class Report:
     # number rather than only inside the prose of `model_note`, because `sever cost` needs
     # it as the denominator for deduplication and parsing a sentence is not a source.
     model_asks: int = 0
+    jurisdiction: str = "federal"
     # Read from results/cost.json rather than measured here, because the ledger that holds
     # it lives in project 04. None when that file is absent, which is the CI case.
     cost: RunCost | None = None
@@ -155,6 +161,7 @@ class Report:
             "model": self.model_name or None,
             "model_run": self.model_note or None,
             "model_asks": self.model_asks or None,
+            "jurisdiction": self.jurisdiction,
             "cost": (
                 {
                     "run_ids": list(self.cost.run_ids),
@@ -211,6 +218,7 @@ def run(
     model: ModelDecider | None = None,
     model_confidence_threshold: float = DEFAULT_THRESHOLD,
     cost_path: Path | None = DEFAULT_COST_PATH,
+    jurisdiction: str = "federal",
 ) -> Report:
     """Every system over the corpus.
 
@@ -233,7 +241,7 @@ def run(
     for item in c:
         doc = item.rendered.document
         labels = item.rendered.labels
-        config = config_for(item)
+        config = config_for(item, jurisdiction)
 
         full = DecisionEngine(config=config, detector=det, taxonomy=taxonomy).propose(doc)
         ours[doc.doc_id] = (full, labels)
@@ -270,6 +278,7 @@ def run(
         model_name=str(getattr(model, "model", "")) if model is not None else "",
         model_note=_spend_summary(model),
         model_asks=_asks(model),
+        jurisdiction=jurisdiction,
         cost=_cost_for(cost_path, c),
     )
     report.systems = []
@@ -283,7 +292,7 @@ def run(
                     "an answer below the confidence threshold is escalated rather than "
                     "used."
                 ),
-                scored=score(modelled, taxonomy=taxonomy),  # type: ignore[arg-type]
+                scored=score(modelled, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
             )
         )
     report.systems += [
@@ -294,12 +303,12 @@ def run(
                 "escalated rather than being decided. Escalations withhold, so they are "
                 "counted in over-redaction. This row costs nothing to reproduce."
             ),
-            scored=score(ours, taxonomy=taxonomy),  # type: ignore[arg-type]
+            scored=score(ours, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
         ),
         SystemResult(
             name="blunt redact-all-PII",
             note="Every detected span redacted. What an off-the-shelf PII tool does.",
-            scored=score(blunt, taxonomy=taxonomy),  # type: ignore[arg-type]
+            scored=score(blunt, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
         ),
         SystemResult(
             name="sentence-only, no document context",
@@ -307,7 +316,7 @@ def run(
                 "The same rules with the context record blanked: no block kind, no "
                 "signature-block title, no register, no coreference."
             ),
-            scored=score(sentence, taxonomy=taxonomy),  # type: ignore[arg-type]
+            scored=score(sentence, taxonomy=taxonomy, jurisdiction=jurisdiction),  # type: ignore[arg-type]
         ),
     ]
     return report
@@ -357,6 +366,7 @@ def to_markdown(report: Report) -> str:
         f"**Corpus:** {len(c)} synthetic documents, {c.page_count} pages, "
         f"{sum(c.label_counts().values())} labelled spans, seed {c.seed}. "
         f"Labels known by construction. Detector: {report.detector_name}. "
+        f"Jurisdiction: {report.jurisdiction}. "
         f"Generated {report.generated_on.isoformat()} by `sever report`.",
         "",
         *(
@@ -394,6 +404,30 @@ def to_markdown(report: Report) -> str:
             f"| {s.name} | {_cell(s.leak)} | {_cell(s.over)} | {_cell(s.escalation)} | "
             f"{_cell(s.scored.detector_recall())} |"
         )
+    # Only where the configured statute actually reserves something for a person. Under
+    # the federal Acts no code's true decision is "escalate", so the whole table would be
+    # a column of n/a, which reads as a perfect score rather than as an empty question.
+    if any(s.scored.unweighed_release_rate().is_defined for s in report.systems):
+        lines += [
+            "",
+            "**Released without the weighing the statute requires**",
+            "",
+            "| System | Spans the Act reserves for a person | Released anyway |",
+            "|---|---:|---|",
+        ]
+        for s in report.systems:
+            rate = s.scored.unweighed_release_rate()
+            lines.append(f"| {s.name} | {rate.n} | {_cell(rate)} |")
+        lines += [
+            "",
+            "This is not a leak and it is not over-redaction. The information might have "
+            "been releasable and it might not: nobody weighed it. For a tool whose first "
+            "claim is that it proposes and a person decides, settling a question the Act "
+            "assigns to a person is a failure of a different kind from getting the answer "
+            "wrong, so it is counted separately rather than folded into a rate that would "
+            "hide it.",
+        ]
+
     lines += [
         "",
         "**Where the leaks come from**",
