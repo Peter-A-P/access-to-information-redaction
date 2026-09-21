@@ -17,19 +17,19 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-09-20 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-09-21 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 10251 answers replayed from the cache, nothing spent, of which 2606 were the tool's own residual and 7645 the model-only baseline.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 9818 answers replayed from the cache, nothing spent, of which 2173 were the tool's own residual and 7645 the model-only baseline.
 
-**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2606 times and paid 871 of them, because 67% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01364 each, which is the figure to read if your documents are not generated from templates. A further US$1.4616 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2173 times and paid 871 of them, because 60% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01137 each, which is the figure to read if your documents are not generated from templates. A further US$1.4616 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
 | `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
-| `K2` | 2345 | n/a | 34.0% (32.0% to 36.1%), n=2345 | 24.3% (22.3% to 26.5%), n=2345 |
-| `K3` | 280 | n/a | 7.1% (4.3% to 10.4%), n=280 | 7.1% (4.3% to 10.4%), n=280 |
+| `K2` | 2345 | n/a | 30.3% (28.1% to 32.5%), n=2345 | 20.6% (18.8% to 22.5%), n=2345 |
+| `K3` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
 | `R1` | 1400 | 5.3% (4.1% to 6.5%), n=1400 | n/a | 57.6% (54.8% to 60.6%), n=1400 |
@@ -38,11 +38,11 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 5.3% (4.1% to 6.5%), n=1400 | 23.3% (21.9% to 24.6%), n=3955 | 27.7% (26.4% to 29.1%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sever, rules then the model on the residual | 5.3% (4.1% to 6.5%), n=1400 | 20.5% (19.1% to 21.9%), n=3955 | 25.7% (24.5% to 26.9%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | model-only, no rules | 4.8% (3.8% to 5.8%), n=1400 | 41.9% (39.4% to 44.4%), n=3955 | 42.3% (41.2% to 43.3%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sever, rules only | 2.8% (1.8% to 4.0%), n=1400 | 30.3% (29.1% to 31.4%), n=3955 | 46.5% (45.4% to 47.5%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sever, rules only | 2.8% (1.8% to 4.0%), n=1400 | 23.2% (21.7% to 24.6%), n=3955 | 41.2% (40.0% to 42.4%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | blunt redact-all-PII | 1.1% (0.6% to 1.7%), n=1400 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sentence-only, no document context | 2.8% (1.8% to 4.0%), n=1400 | 58.0% (56.0% to 59.9%), n=3955 | 66.9% (65.5% to 68.4%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sentence-only, no document context | 2.8% (1.8% to 4.0%), n=1400 | 48.9% (46.7% to 50.8%), n=3955 | 60.2% (58.6% to 61.6%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 
 **Where the leaks come from**
 
@@ -60,7 +60,7 @@ The middle column is the one worth knowing about. A span typed as a place or an 
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2287 | 0 | text layer and OCR |
+| 2141 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -79,25 +79,39 @@ what nobody publishes.
 
 ## The honest limitation
 
-**The model layer buys usefulness with leaks, and this is what the exchange rate is.**
+**The case for the model layer is much weaker than it was, because the rules got better.**
 
-With the rules alone the tool leaks 2.8 percent and withholds 30.3 percent of what must be
+With the rules alone the tool leaks 2.8 percent and withholds 23.2 percent of what must be
 released. With the model deciding what the rules could not, at the confidence threshold
 measured in [`results/thresholds.md`](results/thresholds.md), it leaks 5.3 percent and
-withholds 23.3 percent. In counts, over 5,355 labelled spans: turning the model on
-correctly releases **277 spans the rules had withheld** and wrongly releases **35 that had
+withholds 20.5 percent. In counts, over 5,355 labelled spans: turning the model on
+correctly releases **107 spans the rules had withheld** and wrongly releases **35 that had
 to go**. Both rows are in the table above and neither is hidden behind the other.
 
-Eight to one is a reason to run the model, not a reason to trust it. The eight are a
-requester receiving their own record; the one is a third party's personal information in a
-stranger's hands, and it cannot be recalled. Which configuration to run is a public body's
-decision and this repository does not make it: the rules-only row is the safer one, costs
-nothing to reproduce and needs no gateway.
+That ratio was **eight to one** a day ago and it is **three to one** now. Nothing about the
+model changed. What changed is that the rules stopped escalating bare job titles, which
+removed seven points of over-redaction from the rules-only row at no cost in leaks, and a
+good part of what the model had been earning its keep on was cleaning up after a
+deterministic bug. The measurement that found the bug was not aimed at the model at all.
+
+**That is the general warning and it is worth more than the number.** A model layer measured
+on top of an imperfect deterministic layer is partly being paid to fix it, and the payment
+is invisible until the deterministic layer improves. Anyone comparing "rules" against
+"rules plus a model" is measuring the rules they happen to have, not the architecture.
+
+Three to one is thin. The three are a requester receiving their own record; the one is a
+third party's personal information in a stranger's hands, and it cannot be recalled. On
+these numbers the rules-only configuration is the defensible default, and it is what the
+tool does with no flags: the model layer is opt-in, costs money, and now has to argue for
+2.7 points of over-redaction against 2.5 points of leak. Which to run is a public body's
+decision and this repository does not make it.
 
 **Read the leak decomposition above before deciding the rules are the weak part.** Every
 one of the 39 leaks in the rules-only row is the detector's fault: 16 spans it never found
 and 23 it found and called a place or an organisation, which is not personal information,
-so the rule released them and said so. The deterministic rules contribute **zero**. That
+so the rule released them and said so. The deterministic rules contribute **zero**, and
+that stayed true through the job-title change, which is the check that mattered: releasing
+a category that used to be withheld is exactly how a leak class gets introduced. That
 column only exists because a two-bucket decomposition filed those 23 under "the decision
 was wrong" and pointed the next fix at the wrong module.
 
@@ -105,11 +119,10 @@ was wrong" and pointed the next fix at the wrong module.
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**There is no reviewer app yet.** The audit log, the true-redaction export and the
-generated schedule are built and tested; the page-by-page web interface that a reviewer
-would actually drive is not, and neither is the reviewer time study that would support any
-claim about hours saved. The "days of reading become hours of review" line at the top is
-the goal of the project, not a measured result.
+**Nobody has actually reviewed anything.** The page-by-page interface exists and the
+release gate is enforced in code, but the reviewer time study has not been run, so there is
+no measured support for any claim about hours saved. The "days of reading become hours of
+review" line at the top is the goal of the project, not a result.
 
 Three more limitations, none of them small:
 
@@ -173,7 +186,7 @@ residual. The difference between it and the full configuration is the determinis
 and nothing else.
 
 It leaks about the same, **4.8% against 5.3%, intervals overlapping**. It over-redacts
-nearly twice as much, **41.9% against 23.3%**.
+twice as much, **41.9% against 20.5%**.
 
 So the rules are not the safety net under the model, which is how this architecture is
 usually justified. The model is roughly as safe on its own. The rules earn their place by
@@ -182,7 +195,7 @@ the genuinely ambiguous ones, and a model asked only hard questions escalates fa
 a model asked everything.
 
 Read that against the `sentence-only` row, which is the same rules with the document context
-blanked, at 58%. Neither half is carrying the tool, and each ablation costs about what the
+blanked, at 48.9%. Neither half is carrying the tool, and each ablation costs about what the
 other does.
 
 ## What this does not do
@@ -210,8 +223,8 @@ the heading above it, whether a title is paired with this person anywhere in the
 whether they appear in a public register or on the letterhead, which other mentions in the
 record are the same person, and whether they match the configured requester. That record is
 the whole argument of the project, and the sentence-only row in the results table is what
-it is worth: judging a name from its sentence alone nearly doubles over-redaction, from
-30.3 percent to 58.0 percent with the same rules, because a person's capacity is almost
+it is worth: judging a name from its sentence alone more than doubles over-redaction, from
+23.2 percent to 48.9 percent with the same rules, because a person's capacity is almost
 never in the sentence
 that names them. It is three inches lower, in the signature block.
 

@@ -31,13 +31,25 @@ Development spend is deliberately outside that set. The smoke runs are not what 
 costs, they are what building the thing cost, and they are reported in PLAN.md where that
 belongs.
 
-## The order these two commands run in
+## The cycle between this and the report, and why it is broken rather than documented
 
-`sever cost` reads `model_asks` out of `results/results.json`, and `sever report` reads
-`results/cost.json` to splice its line. That is a cycle, and it bit once: running report
-and then cost in a single chain spliced the previous cost line into the README and only
-then recomputed it. Run `sever cost` first when the corpus or the arms have changed, then
-`sever report`. Both are free and replayable, so running report twice costs nothing.
+`sever cost` needs to know how many times the pipeline asked, to say what share of its
+requests repeated. That number is a property of a *run*, and the only thing that knows it is
+`sever report`. So the first version read it out of `results/results.json` while the report
+read the cost line out of `results/cost.json`, which is a cycle, and it produced two wrong
+published figures in one day: once by running the pair in the wrong order, and once by
+running them in the right order across a change that altered the residual, where one pass is
+not enough however it is ordered.
+
+The ordering was documented after the first and that did not prevent the second, which is
+the argument for fixing the shape instead. **`asks` is no longer read from a file.** This
+module stores only what the ledger knows, which changes when money is spent and at no other
+time, and the report supplies the denominator from the run it has just finished, through
+`RunCost.with_asks`. The stored value remains for `sever cost`'s own output and is
+explicitly not what the published line uses.
+
+The general form: a number that describes a run should be carried by the run, not
+round-tripped through a file that something else also writes.
 
 ## Why this reads a file instead of the ledger
 
@@ -53,7 +65,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +129,16 @@ class RunCost:
     asks: int
     per_run: dict[str, float] = field(default_factory=dict)
     calls_per_run: dict[str, int] = field(default_factory=dict)
+
+    def with_asks(self, asks: int) -> RunCost:
+        """The same ledger facts, against a fresh count of what the pipeline asked.
+
+        The report calls this with the run it has just finished, because the stored `asks`
+        describes whichever run last wrote `results/cost.json` and goes stale the moment
+        the residual changes. The ledger half of this object does not go stale, because it
+        only moves when money is spent.
+        """
+        return replace(self, asks=asks)
 
     @property
     def pipeline_cost_usd(self) -> float:

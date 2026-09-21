@@ -82,6 +82,14 @@ These are not escalations. The tool does not attempt them at all, and says so.
   "presumptively an unreasonable invasion, for the reviewer to weigh", not "the balance has
   been struck". This is a real difference from the federal position and it is recorded in
   `sever/taxonomy/nl.yaml` as well as here.
+- **Whether a unique office identifies its holder.** A job title is released as K6: a
+  position is not a person, and the privacy boundary already treats titles that way by
+  refusing to substitute them. What that cannot see is the narrow real case, an office held
+  by exactly one person in a small unit, where the title names them as surely as their name
+  would. It is not a property of the word "Minister" and it is not detectable from the page,
+  so it is left to the reviewer, who knows the organisation. Until 2026-09-21 the tool tried
+  to cover it by escalating any title with a name in the same sentence, which withheld the
+  word "Minister" about once a page and covered the real case only by accident.
 - **Handwriting.** Scanned typed documents only.
 - **Release.** There is no code path from a proposal to a released document without a
   reviewer action on every page.
@@ -119,24 +127,41 @@ The NL configuration has since been scored: `sever report --jurisdiction nl`, in
 The overrides change almost nothing on this corpus, because the rules never propose K3 or
 K4 at all: `deceased_over_twenty_years` needs a date of death in the record and
 `already_published` needs a public-register match, and on 210 documents neither fires.
-Over-redaction reads 31.2 percent against the federal 30.3, and even that difference is the
+Over-redaction reads 24.4 percent against the federal 23.2, and even that difference is the
 denominator rather than behaviour, because 350 spans leave the must-keep pool. Leak rate,
 escalation rate and recall are identical to the decimal.
 
 What the 350 spans are doing instead is the finding. They are not being escalated, they are
-being released, under some other keeping code: **78.9 percent of them (74.4 to 83.1)**. The
+being released under some other keeping code: **89.7 percent of them (86.3 to 92.7)**. The
 tool settles, by machine, a question ATIPPA assigns to the head of a public body, and until
 `unweighed_release_rate` existed no published number could see it, because `must_redact` is
 REDACT, `must_keep` is KEEP, and a span whose true decision is escalate was in neither
 denominator.
+
+**That figure was 78.9 percent on 2026-09-20 and the job-title change moved it to 89.7**,
+which is worth stating because the change was an unambiguous improvement federally and made
+this worse. The released spans break down as 40 labelled K3 released as K6, 40 labelled K3
+released as K2, and 11 labelled K4 released as K6. The first group is the one the change
+touched: a public figure's title used to be escalated by a guard that was wrong for other
+reasons, and is now released as "not information about an identifiable individual", which
+is correct federally, where K3 releases anyway, and wrong here, where ATIPPA has no general
+publicly-available exception.
+
+The jurisdiction override cannot reach it. That machinery changes what a *code* decides, and
+here the tool is not proposing K3 at all; it is proposing K6 about a span the ground truth
+says is a person's public information. So this is a labelling problem wearing a decision
+problem's clothes, for the third time in this project, and no rule can fix it from where the
+rules stand.
 
 Every headline figure in the README remains the federal configuration and none of them
 moved.
 
 ## The number this page is about
 
-At the last full run, **27.7 percent** of spans were escalated with the model layer on, and
-**46.5 percent** with the rules alone.
+At the last full run, **25.7 percent** of spans were escalated with the model layer on, and
+**41.2 percent** with the rules alone. Both fell on 2026-09-21 when the rules stopped
+escalating bare job titles, which is the largest single move either figure has made and was
+not a change to the escalation policy at all.
 
 The gap between those two columns is the whole argument of the model layer, and it is worth
 reading in the right direction. The model does not make the tool decisive by being clever

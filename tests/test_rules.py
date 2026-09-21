@@ -11,7 +11,7 @@ import datetime as dt
 
 import pytest
 
-from sever.context.record import ContextBuilder
+from sever.context.record import ContextBuilder, ContextRecord
 from sever.context.register import PublicRegister, RegisterEntry
 from sever.context.requester import RequestConfig
 from sever.decide import rules
@@ -273,3 +273,96 @@ def test_no_rule_path_releases_an_undecided_span() -> None:
 @pytest.mark.parametrize("code", ["E1", "E2"])
 def test_escalation_codes_withhold(code: str) -> None:
     assert default_taxonomy().decision(code).withholds
+
+
+# --- a job title is a position, not a person -------------------------------------
+
+
+def a_title_context(
+    text: str, *, sentence: str, title: str | None = None, co_mentions: int = 1
+) -> ContextRecord:
+    """A detected job title, with a person mentioned in the same sentence."""
+    from sever.detect.types import Detection
+    from sever.ingest.document import DocumentType, Offsets
+
+    return ContextRecord(
+        detection=Detection(
+            page=1,
+            offsets=Offsets(0, len(text)),
+            text=text,
+            entity_type=EntityType.JOB_TITLE,
+            score=0.85,
+            recogniser="test",
+        ),
+        doc_id="d",
+        doc_type=DocumentType.CORRESPONDENCE,
+        page_number=1,
+        pages_in_document=1,
+        block_kind=BlockKind.BODY,
+        sentence=sentence,
+        title=title,
+        co_mentions_in_sentence=tuple(f"person-{i}" for i in range(co_mentions)),
+    )
+
+
+def test_a_bare_job_title_is_released_as_not_personal_information() -> None:
+    """The word "Minister" is a public office and putting a box over it helps nobody.
+
+    Until 2026-09-21 a job title with any other person mentioned in the same sentence
+    yielded, fell through to E1, and was withheld pending a reviewer. Measuring unlabelled
+    detections found that every span this tool withheld that no persona owned was one of
+    these: 16 in twenty documents, "Minister", "Deputy Minister", "Manager", "officer",
+    about one box over the word "Minister" per page.
+    """
+    from sever.decide.rules import not_personal_information
+
+    ctx = a_title_context("Minister", sentence="The Minister wrote to Odette Tulk.")
+    outcome = not_personal_information(ctx)
+
+    assert outcome is not None
+    assert outcome.code == "K6"
+
+
+def test_the_decision_layer_and_the_privacy_boundary_agree_about_job_titles() -> None:
+    """They did not, and that was the argument for the change.
+
+    `placeholders.NOT_SUBSTITUTED` holds JOB_TITLE and says why: a position is not a
+    person, and substituting it would delete the evidence the K2 decision rests on. So the
+    tool sent titles to a vendor on the grounds that they are not personal information,
+    and then withheld them on the grounds that they might be. Both cannot be right.
+    """
+    from sever.decide.placeholders import NOT_SUBSTITUTED
+    from sever.decide.rules import not_personal_information
+    from sever.taxonomy.loader import Decision, default_taxonomy
+
+    assert EntityType.JOB_TITLE in NOT_SUBSTITUTED, "the boundary treats it as impersonal"
+    ctx = a_title_context("Manager", sentence="The Manager met Marie Chaulk.")
+    outcome = not_personal_information(ctx)
+    assert outcome is not None
+    assert default_taxonomy().decision(outcome.code) is Decision.KEEP, "so must the rules"
+
+
+def test_a_title_paired_with_this_person_still_yields() -> None:
+    """The guard that matters is the one on positive evidence, and it is untouched. A span
+    the record has paired with a title is a person, and K6 must not reach it."""
+    from sever.decide.rules import not_personal_information
+
+    ctx = a_title_context(
+        "Regional Director",
+        sentence="Marie Chaulk, Regional Director, signed.",
+        title="Regional Director",
+    )
+    assert not_personal_information(ctx) is None
+
+
+def test_a_name_mistyped_as_a_job_title_is_re_typed_before_the_rule_can_release_it() -> None:
+    """A releasing type needs the sweep's protection the moment it starts releasing.
+
+    JOB_TITLE joined `_RELEASING_TYPES` in the same commit that stopped it yielding, because
+    adding the two separately is how a leak class gets introduced by a change that reads as
+    a simplification. This is the "Tuglavina typed as a LOCATION" defect, waiting one type
+    over.
+    """
+    from sever.detect.sweep import _RELEASING_TYPES
+
+    assert EntityType.JOB_TITLE in _RELEASING_TYPES

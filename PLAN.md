@@ -1175,3 +1175,96 @@ little. It was the model-only baseline's ask count standing in for the tool's, w
 have published the tool as four times more cacheable than it is, in the one table that is
 supposed to need no trust. It was caught by reading the output, which is the same way most
 of the defects this week were caught, and not by anything in the suite.
+
+### 12.26 The box over the word "Minister", and two modules that disagreed
+
+2026-09-21. Deferred from 12.21 so it could be measured against a run that was not changing
+for other reasons. That run exists now, so here is the change.
+
+A job title with any other person mentioned in the same sentence used to yield from
+`not_personal_information`, on the reasoning that "a title beside a name may be identifying
+in a small unit". Written on the first build day. No test ever covered it. Renaming
+`false_positive_spans` found what it actually did: **every span this tool withheld that no
+persona owned was a bare job title escalated by this guard.** Sixteen in twenty documents,
+"Minister", "Deputy Minister", "Manager", "officer", about one box over the word "Minister"
+per page, each one a decision a reviewer has to make and clear.
+
+**The argument that settled it was not the count.** It was that the guard put two modules
+of this project in flat contradiction. `placeholders.NOT_SUBSTITUTED` holds JOB_TITLE and
+explains why in as many words: "Regional Director is a position, not a person", and
+substituting it would delete the evidence the K2 decision rests on. So the tool was sending
+a title to a vendor on the grounds that it is not personal information, and then putting a
+box over the same title on the grounds that it might be. Both cannot be right, and the
+taxonomy agrees with the boundary: K6 is "not information about an identifiable individual",
+and a public office is exactly that.
+
+**What was real in the concern is narrower than the guard.** An office held by one person in
+a small unit can name them as surely as their name would. That is not a property of the word
+"Minister", it is not detectable from a co-mention count, and it needs someone who knows the
+organisation. It is in `docs/escalation.md` as a thing this tool does not decide, which is
+where it should have been from the start.
+
+**The change came with its own guard, in the same commit and deliberately.** JOB_TITLE
+joined `sweep._RELEASING_TYPES`, so a person's name wrongly typed as a job title is re-typed
+to PERSON before the rule can release it. That is the "Tuglavina typed as a LOCATION" defect
+of 12.13 waiting one entity type over, and a releasing type needs that protection the moment
+it starts releasing. Shipping the two in separate commits is how a leak class gets introduced
+by a change that reads as a simplification.
+
+**Measured on twenty documents before the full run:** spurious withholding 16 to 0, and it
+moved the headline columns the right way as a side effect rather than as the point.
+
+The pattern this project keeps meeting, now from a fifth direction: the defect was not in a
+component, it was in two components that were each defensible alone and disagreed with each
+other. Nothing that tests a module in isolation can see that, and the thing that found it was
+a metric renamed because its name was wrong.
+
+### 12.27 Fixing the rules halved the case for the model layer
+
+2026-09-21, an hour after 12.26 and the most consequential thing in this file.
+
+The job-title change was measured on twenty documents as a fix for spurious withholding. On
+the full corpus it moved the headline table:
+
+| System | Leak rate | Over-redaction | Escalation |
+|---|---|---|---|
+| sever, rules then the model | 5.3% (unchanged) | **23.3 to 20.5** | 27.7 to 25.7 |
+| sever, rules only | 2.8% (unchanged) | **30.3 to 23.2** | 46.5 to 41.2 |
+| model-only, no rules | 4.8% (unchanged) | 41.9 (unchanged) | 42.3 (unchanged) |
+| sentence-only | 2.8% (unchanged) | 58.0 to 48.9 | 66.9 to 60.2 |
+
+Seven points off the rules-only row and not one leak rate moved. The model-only row is
+unchanged to the decimal, which is the sanity check: it has no rules, so the guard never
+applied to it.
+
+**And that is what makes the model layer's case collapse.** The exchange rate the README has
+been publishing was: turn the model on and it correctly releases 277 spans the rules
+withheld while wrongly releasing 35 that had to go. Eight to one. It is now **107 against
+35. Three to one.**
+
+Nothing about the model changed. A good part of what it had been earning its keep on was
+cleaning up after a deterministic bug, and the moment the bug went, so did most of its
+value. Three to one for 2.7 points of over-redaction against 2.5 points of leak is thin
+enough that the rules-only configuration is now the defensible default, which is fortunately
+what the tool already does with no flags.
+
+**The general warning is worth more than this project's number.** A model layer measured on
+top of an imperfect deterministic layer is partly being paid to fix it, and that payment is
+invisible until the deterministic layer improves. Anyone comparing "rules" against "rules
+plus a model" is measuring the rules they happen to have, not the architecture. This project
+published an eight-to-one figure in good faith for a week, and the measurement that
+overturned it was not aimed at the model at all: it was a metric renamed because its name
+was wrong.
+
+**One consequence went the other way, and it is recorded rather than buried.** Under ATIPPA
+the same change made things worse: unweighed releases went from 78.9 percent to 89.7. A
+public figure's title used to be escalated by the guard and is now released as "not
+information about an identifiable individual", which is right federally, where K3 releases
+anyway, and wrong under a statute with no general publicly-available exception. The
+jurisdiction override cannot reach it, because that machinery changes what a code decides
+and the tool is not proposing K3 here; it is proposing K6 about a span the ground truth says
+is a person's public information. A labelling problem wearing a decision problem's clothes,
+for the third time. `docs/escalation.md` carries the breakdown.
+
+So the change is an improvement federally, a regression provincially, and the honest
+statement is both.

@@ -236,8 +236,8 @@ def test_a_cost_recorded_for_another_corpus_size_is_dropped_rather_than_rescaled
     path = write(recorded, tmp_path / "cost.json")
     small = build(documents=4, seed=20270802)
 
-    assert _cost_for(path, small) is None
-    assert _cost_for(None, small) is None
+    assert _cost_for(path, small, 0) is None
+    assert _cost_for(None, small, 0) is None
 
 
 def test_a_cost_recorded_for_this_corpus_size_is_used(tmp_path: Path) -> None:
@@ -248,7 +248,7 @@ def test_a_cost_recorded_for_this_corpus_size_is_used(tmp_path: Path) -> None:
     recorded = a_cost(pages=corpus.page_count, documents=len(corpus))
     path = write(recorded, tmp_path / "cost.json")
 
-    assert _cost_for(path, corpus) == recorded
+    assert _cost_for(path, corpus, 0) == recorded
 
 
 # --- the baseline's spend is not the tool's cost ---------------------------------
@@ -308,21 +308,51 @@ def test_a_run_list_with_no_baselines_reports_no_baseline_cost() -> None:
     assert "bought the model-only baseline" not in cost.to_markdown()
 
 
-def test_the_cost_line_and_the_results_file_are_a_cycle_and_the_order_matters() -> None:
-    """A note in code, because it is the kind of thing that looks fine and is not.
+def test_the_stored_ask_count_is_not_what_the_published_line_uses() -> None:
+    """The cycle is broken in the shape rather than in a documented ordering.
 
-    `sever cost` reads `model_asks` out of results.json for its denominator, and
-    `sever report` reads cost.json to splice its line. Running them in that order in one
-    chain spliced yesterday's figure into the README and only then recomputed it, which is
-    how a cost line reading 10,251 asks reached a published table for a pipeline that made
-    2,606. Cost first, then report.
+    An ordering rule was written after the first wrong figure and did not prevent the
+    second, because no ordering helps when the file was written before the behaviour it
+    describes changed: the residual shrank from 2,606 asks to 2,173 in the same step. The
+    module says so now and the report supplies its own count.
     """
     from sever.eval import cost as cost_mod
     from sever.eval.report import run as report_run
 
     assert cost_mod.__doc__ is not None
-    assert "`sever cost` first" in cost_mod.__doc__
-    # `report.run` defaults its cost_path to the file `sever cost` writes, which is the
-    # other half of the cycle.
+    assert "no longer read from a file" in cost_mod.__doc__
+    assert hasattr(cost_mod.RunCost, "with_asks")
     # Keyword-only, so the defaults live in __kwdefaults__.
     assert (report_run.__kwdefaults__ or {}).get("cost_path") == cost_mod.DEFAULT_COST_PATH
+
+
+def test_the_ask_count_comes_from_the_run_and_not_from_the_file() -> None:
+    """The cycle, broken rather than documented.
+
+    `asks` describes a run; the ledger facts describe money already spent. Storing both in
+    one file and reading both back published two wrong figures in a day: once from running
+    the pair in the wrong order, and once from running them in the right order across a
+    change that altered the residual, where no ordering helps because the file was written
+    before the behaviour changed.
+    """
+    stored = a_cost(asks=2606)
+    fresh = stored.with_asks(2173)
+
+    assert stored.asks == 2606, "the file's value is untouched"
+    assert fresh.asks == 2173
+    assert fresh.cost_usd == stored.cost_usd, "the ledger half does not move"
+    assert fresh.pipeline_calls == stored.pipeline_calls
+    assert fresh.deduplication != stored.deduplication, "and the derived figure follows"
+
+
+def test_the_report_supplies_its_own_ask_count(tmp_path: Path) -> None:
+    from sever.corpus.generate import build
+    from sever.eval.report import _cost_for
+
+    corpus = build(documents=4, seed=20270802)
+    path = write(a_cost(pages=corpus.page_count, documents=len(corpus), asks=999), tmp_path / "c.json")
+
+    assert _cost_for(path, corpus, 40) is not None
+    assert _cost_for(path, corpus, 40).asks == 40  # type: ignore[union-attr]
+    # Zero means the model layer was off, and then there is nothing to override with.
+    assert _cost_for(path, corpus, 0).asks == 999  # type: ignore[union-attr]

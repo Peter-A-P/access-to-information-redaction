@@ -26,8 +26,8 @@ number, the blunt baseline would win and this project would not need to exist.
 | System | Leak rate | Over-redaction rate |
 |---|---|---|
 | Blunt redact-all-PII | 1.1% (0.6 to 1.7) | **98.5% (97.9 to 99.0)** |
-| This tool, rules then the model on the residual | 5.3% (4.1 to 6.5) | **23.3% (21.9 to 24.6)** |
-| This tool, rules only | 2.8% (1.8 to 4.0) | **30.3% (29.1 to 31.4)** |
+| This tool, rules then the model on the residual | 5.3% (4.1 to 6.5) | **20.5% (19.1 to 21.9)** |
+| This tool, rules only | 2.8% (1.8 to 4.0) | **23.2% (21.7 to 24.6)** |
 
 It withholds **98.5 percent of everything that must be released**. On the corpus that means
 the signing officer's name and title, the minister on the letterhead, the department, the

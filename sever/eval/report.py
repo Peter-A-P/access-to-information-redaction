@@ -318,7 +318,7 @@ def run(
         model_asks=_asks(model) - model_only_asks,
         model_only_asks=model_only_asks,
         jurisdiction=jurisdiction,
-        cost=_cost_for(cost_path, c),
+        cost=_cost_for(cost_path, c, _asks(model) - model_only_asks),
     )
     report.systems = []
     if modelled:
@@ -383,7 +383,7 @@ def _spend_summary(model: ModelDecider | None) -> str:
     return str(summary()) if callable(summary) else ""
 
 
-def _cost_for(path: Path | None, corpus: Corpus) -> RunCost | None:
+def _cost_for(path: Path | None, corpus: Corpus, asks: int) -> RunCost | None:
     """The recorded cost, but only when it was recorded against this many pages.
 
     `sever report --documents 60` is a smaller run than the published one, and splicing a
@@ -396,7 +396,10 @@ def _cost_for(path: Path | None, corpus: Corpus) -> RunCost | None:
     recorded = read_cost(path)
     if recorded is None or recorded.pages != corpus.page_count:
         return None
-    return recorded
+    # The ledger half of the file is durable; the ask count is not, because it describes
+    # whichever run last wrote it. Take that from this run instead. See the cycle note at
+    # the top of sever/eval/cost.py.
+    return recorded.with_asks(asks) if asks else recorded
 
 
 def _asks(model: ModelDecider | None) -> int:

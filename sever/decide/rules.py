@@ -110,14 +110,32 @@ def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
     public-register rule could and a minister's name was released as "not personal
     information" for the wrong reason. Right answer, wrong reasoning, and the reasoning is
     what goes in the schedule.
+
+    ## The job-title guard that was here until 2026-09-21
+
+    A job title with any other person mentioned in the same sentence used to yield, on the
+    reasoning that "a title beside a name may be identifying in a small unit". It was
+    written on the first build day, no test ever covered it, and measuring unlabelled
+    detections found what it actually did: **every span this tool withholds that no persona
+    owns is a bare job title escalated by this guard**, 16 of them in twenty documents.
+    "Minister", "Deputy Minister", "Manager", "officer". About one box over the word
+    "Minister" per page, each one costing a reviewer a decision.
+
+    The guard also put this module in direct contradiction with the privacy boundary.
+    `sever/decide/placeholders.py` does not substitute a job title before sending a request,
+    and says why in as many words: "Regional Director is a position, not a person". So the
+    tool was sending a title to a vendor on the grounds that it is not personal information
+    and then putting a box over it on the grounds that it might be. Both cannot be right,
+    and the boundary's reading is the one the taxonomy agrees with.
+
+    What remains of the concern is real but narrower than the guard was: a *unique* office
+    in a small unit can identify its holder. That is not a property of the word "Minister"
+    and it is not detectable from a co-mention count, so it belongs with the reviewer, who
+    sees the page. `docs/escalation.md` records it as a thing this tool does not decide.
     """
     if ctx.entity_type.is_about_a_person:
         return None
     if ctx.register_match is not None or ctx.title is not None:
-        return None
-    if ctx.entity_type is EntityType.JOB_TITLE and ctx.co_mentions_in_sentence:
-        # A title beside a name may be identifying in a small unit. Let the later rules
-        # and, failing them, the reviewer decide.
         return None
     return RuleOutcome(
         code="K6",

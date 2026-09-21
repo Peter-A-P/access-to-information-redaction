@@ -161,7 +161,14 @@ RETYPED = "name_sweep:retyped"
 # The types that mean "this is not information about an identifiable individual", and
 # therefore the types whose rule releases the span. A name mistyped as one of these is not
 # a missed detection, which recall would show, but a released one, which it would not.
-_RELEASING_TYPES = frozenset({EntityType.LOCATION, EntityType.ORGANISATION})
+# Types whose decision releases, so a person's name wrongly given one of them is released
+# with a reason attached rather than merely missed. JOB_TITLE joined the set on 2026-09-21,
+# when `not_personal_information` stopped yielding on job titles: a releasing type needs
+# this protection the moment it starts releasing, and adding the two in separate commits is
+# how a leak class gets introduced by a change that reads as a simplification.
+_RELEASING_TYPES = frozenset(
+    {EntityType.LOCATION, EntityType.ORGANISATION, EntityType.JOB_TITLE}
+)
 
 
 def retype_known_people(
