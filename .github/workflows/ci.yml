@@ -71,3 +71,15 @@ jobs:
 
       - name: The threshold sweep replays too
         run: uv run sever eval-thresholds --documents 60 --out /tmp/thresholds.md
+
+      # The NL configuration decides two codes differently from the federal one, and the
+      # difference is only visible in a rate that did not exist until 2026-09-20. Running
+      # it here means a change that quietly re-partitions the denominators shows up as a
+      # failing step rather than as a number nobody looked at.
+      - name: The same corpus scores under the other statute
+        run: uv run sever report --documents 60 --no-pdf-leak --jurisdiction nl --out /tmp/nl
+
+      # The reviewer application is the only place the "a person decides" claim is
+      # enforceable, so its endpoint tests are worth naming separately from the suite.
+      - name: The release gate
+        run: uv run pytest -q tests/test_review_app.py
