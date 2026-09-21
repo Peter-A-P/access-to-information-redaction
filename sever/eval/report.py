@@ -42,6 +42,8 @@ from sever.decide.pipeline import (
 from sever.detect.engine import SeverDetector
 from sever.detect.types import Detection, Detector
 from sever.eval.confusion import Interval, Scored, score
+from sever.eval.cost import DEFAULT_COST_PATH, RunCost
+from sever.eval.cost import read as read_cost
 from sever.eval.pdf_leak import LeakChecker, LeakReport
 from sever.ingest.document import Document
 from sever.review.export import apply_redactions, render_pdf
@@ -128,6 +130,13 @@ class Report:
     # Empty when the model layer was off, which is the default and the CI configuration.
     model_name: str = ""
     model_note: str = ""
+    # Times the model layer asked for an answer, paid and cached together. Recorded as a
+    # number rather than only inside the prose of `model_note`, because `sever cost` needs
+    # it as the denominator for deduplication and parsing a sentence is not a source.
+    model_asks: int = 0
+    # Read from results/cost.json rather than measured here, because the ledger that holds
+    # it lives in project 04. None when that file is absent, which is the CI case.
+    cost: RunCost | None = None
 
     @property
     def primary(self) -> SystemResult:
@@ -145,6 +154,19 @@ class Report:
             "detector": self.detector_name,
             "model": self.model_name or None,
             "model_run": self.model_note or None,
+            "model_asks": self.model_asks or None,
+            "cost": (
+                {
+                    "run_ids": list(self.cost.run_ids),
+                    "usd_per_page": self.cost.usd_per_page,
+                    "undeduplicated_usd_per_page": self.cost.undeduplicated_usd_per_page,
+                    "cost_usd": self.cost.cost_usd,
+                    "paid_calls": self.cost.calls,
+                    "asks": self.cost.asks,
+                }
+                if self.cost is not None
+                else None
+            ),
             "systems": [
                 {
                     "name": s.name,
@@ -188,6 +210,7 @@ def run(
     tmp_dir: Path | None = None,
     model: ModelDecider | None = None,
     model_confidence_threshold: float = DEFAULT_THRESHOLD,
+    cost_path: Path | None = DEFAULT_COST_PATH,
 ) -> Report:
     """Every system over the corpus.
 
@@ -246,6 +269,8 @@ def run(
         leak_report=leak.report() if leak is not None else None,
         model_name=str(getattr(model, "model", "")) if model is not None else "",
         model_note=_spend_summary(model),
+        model_asks=_asks(model),
+        cost=read_cost(cost_path) if cost_path is not None else None,
     )
     report.systems = []
     if modelled:
@@ -297,6 +322,13 @@ def _spend_summary(model: ModelDecider | None) -> str:
     return str(summary()) if callable(summary) else ""
 
 
+def _asks(model: ModelDecider | None) -> int:
+    """Answers the model layer needed, whether it paid for them or replayed them."""
+    if model is None:
+        return 0
+    return int(getattr(model, "calls", 0)) + int(getattr(model, "cache_reads", 0))
+
+
 def _cell(i: Interval) -> str:
     return "n/a" if not i.is_defined else str(i)
 
@@ -320,6 +352,7 @@ def to_markdown(report: Report) -> str:
             if report.model_note
             else []
         ),
+        *([report.cost.to_markdown(), ""] if report.cost is not None else []),
         "**Per category, this tool**",
         "",
         "| Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |",

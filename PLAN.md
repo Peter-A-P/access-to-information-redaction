@@ -264,20 +264,27 @@ Whichever produces the clearest evidence becomes `docs/rejected.md`.
 
 ## 10. Definition of done
 
+Ticked as of 2026-09-20. A box is ticked only when the thing it names is measured and
+published, not when the code for it exists.
+
 - [ ] Taxonomy written against the federal acts and one provincial act, provisions verified, published as YAML and `docs/taxonomy.md`
+      (written and published; 18 of 33 provisions verified, the rest marked unverified with the reason)
 - [ ] Labelled corpus of 200+ pages with per-span categories, hand-verified, checksums committed; native and scanned tracks
-- [ ] Leak rate and over-redaction rate per category with bootstrap CIs, on the README's first screen
-- [ ] Category accuracy and error decomposition reported
+      (native track done at 210 pages; the scanned track does not exist)
+- [x] Leak rate and over-redaction rate per category with bootstrap CIs, on the README's first screen
+- [x] Category accuracy and error decomposition reported
 - [ ] Blunt, model-only, rules-only and sentence-only baselines on the same corpus
+      (blunt, rules-only and sentence-only measured; model-only is the one still missing)
 - [ ] Over-redaction measured on published federal releases
-- [ ] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
+- [x] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
 - [ ] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
-- [ ] PDF leak test published, out of N
+      (the audit log, the export and the schedule are built and tested; nothing drives them but the CLI)
+- [x] PDF leak test published, out of N
 - [ ] Reviewer minutes per page with and without proposals, with CI
-- [ ] `docs/escalation.md`: where the tool declines to decide, and why
-- [ ] Cost per page from the gateway ledger
+- [x] `docs/escalation.md`: where the tool declines to decide, and why
+- [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
-- [ ] One rejected approach documented with evidence (Rule C)
+- [x] One rejected approach documented with evidence (Rule C)
 - [ ] Repository public, `v0.1.0` tagged
 
 ## 11. Deferred
@@ -445,7 +452,8 @@ before this; it does now, and it holds both label-word bugs as fixtures.
 Still outstanding from the definition of done in section 10: the placeholders ablation and
 the cost per page; the model-only baseline (rules-only, sentence-only and blunt are
 measured); the scanned track and its character error rate; the published-federal-releases
-track; the reviewer web app and the reviewer time study; the hosted demo.
+track; the reviewer web app and the reviewer time study; the hosted demo. (The ablation and
+the cost per page have since landed; section 10's boxes are the current list.)
 
 ### 12.10 The corpus was easier than the province, and an outside report is what showed it
 
@@ -693,3 +701,37 @@ now, in the generated file, the module, the command and the README's link. The n
 not change and nothing about the measurement changed; what changed is that the table no
 longer tells the reader what to find in it. Worth watching for elsewhere: a metric named
 after its expected sign cannot report the other one without sounding like a mistake.
+
+### 12.15 Cost per page, and the run list that would have halved it
+
+2026-09-20. Section 10 asks for cost per page and names the source: the gateway ledger.
+`sever cost` reads it, and `sever report` splices the line into the README from
+`results/cost.json`, which is committed for the same reason the answer cache is: the ledger
+is in project 04's working copy and nobody cloning this repository has one, so the number is
+recorded, dated and attributed rather than left unreproducible.
+
+**US$0.00456 per page**, CA$0.00615 at the portfolio's planning rate. US$0.9571 across 871
+paid calls over 210 pages. Against a CA$55 budget, a full run of the corpus costs under a
+cent a page and the whole project has spent CA$1.53.
+
+The first implementation totalled one run id and was wrong in the flattering direction.
+`sever-full-210` paid for 466 calls, but it answered the corpus partly out of answers that
+`sever-full-001`, `sever-sweep-210` and `sever-retype-210` had already paid for. Reported
+alone it gives US$0.00243 per page, which is half the truth, and nothing in the output would
+have said so.
+
+What makes it checkable is an identity that happens to hold: the committed answer cache has
+one line per distinct answer, the ledger has one row per paid call, every cached answer was
+paid for exactly once, and so the two counts must be equal. They are, at 871. `from_ledger`
+refuses to write a figure when they are not, in either direction, and `tests/test_cost.py`
+holds both directions with the real shape of the failure in the first case. Adding a paid
+run against this corpus and forgetting to list it now breaks the command rather than
+quietly discounting the price.
+
+**Two numbers, because one of them does not transfer.** The deduplicated figure is a
+property of a template-generated corpus: 67 percent of the requests in a run are
+byte-identical to one already made, because the personas are substituted into a small set of
+templates. Real records do not repeat like that. So the line also prints what the same pages
+would cost with no deduplication, about US$0.0136 each, and says that is the figure to read
+if your documents are not generated from templates. It is the less flattering number and it
+is the one a public body would actually budget against.

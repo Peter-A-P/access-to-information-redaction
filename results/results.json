@@ -16,6 +16,20 @@
  "detector": "sever-detector",
  "model": "anthropic/claude-haiku-4-5-20251001",
  "model_run": "2606 answers replayed from the cache, nothing spent",
+ "model_asks": 2606,
+ "cost": {
+  "run_ids": [
+   "sever-full-001",
+   "sever-full-210",
+   "sever-retype-210",
+   "sever-sweep-210"
+  ],
+  "usd_per_page": 0.00455755238095238,
+  "undeduplicated_usd_per_page": 0.013636029282160622,
+  "cost_usd": 0.9570859999999998,
+  "paid_calls": 871,
+  "asks": 2606
+ },
  "systems": [
   {
    "name": "sever, rules then the model on the residual",

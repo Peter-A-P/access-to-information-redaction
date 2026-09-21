@@ -2,6 +2,8 @@
 
 **Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 2606 answers replayed from the cache, nothing spent.
 
+**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2606 times and paid 871 of them, because 67% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01364 each, which is the figure to read if your documents are not generated from templates.
+
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |

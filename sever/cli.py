@@ -709,6 +709,93 @@ def audit(
             raise typer.Exit(code=1)
 
 
+@app.command()
+def cost(
+    runs: Annotated[
+        str,
+        typer.Option(help="Comma-separated ledger runs that paid for the committed answers."),
+    ] = "",
+    pages: Annotated[int, typer.Option(help="Pages the published table covers.")] = 210,
+    documents: Annotated[int, typer.Option()] = 210,
+    asks: Annotated[
+        int, typer.Option(help="Times the model layer asked. Read from results.json if 0.")
+    ] = 0,
+    answer_cache: Annotated[
+        Path, typer.Option(help="The committed answers, one line each.")
+    ] = Path("results/model-answers.jsonl"),
+    results: Annotated[Path, typer.Option(help="Where --asks is read from.")] = Path(
+        "results/results.json"
+    ),
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    out: Annotated[Path | None, typer.Option(help="Record it here for `sever report`.")] = Path(
+        "results/cost.json"
+    ),
+) -> None:
+    """Cost per page, out of the gateway ledger.
+
+    Needs project 04's ledger, so it runs on this machine and not in CI. What it writes is
+    committed, and `sever report` reads that file: the same arrangement as the answer
+    cache, and for the same reason. A cloned repository can read the number and see which
+    run and which date it came from, without holding the private dependency that produced
+    it.
+    """
+    import os
+
+    from sever.decide.model import CAPS_PROJECT
+    from sever.eval import cost as cost_mod
+
+    config = boundary_config or Path(
+        os.environ.get("BOUNDARY_CONFIG", "").strip() or DEFAULT_BOUNDARY_CONFIG
+    )
+    if not config.is_file():
+        raise typer.BadParameter(f"no gateway configuration at {config}")
+    try:
+        from boundary import Gateway
+        from boundary.ledger import LedgerStore
+    except ImportError as exc:
+        raise typer.BadParameter("boundary is not installed; see sever/gateway.py") from exc
+
+    gateway = Gateway.from_config(config, project=CAPS_PROJECT)
+    store = LedgerStore(Path(gateway.config.ledger.path))
+    if not answer_cache.is_file():
+        raise typer.BadParameter(
+            f"the committed answers are the check on the run list, and there are none at "
+            f"{answer_cache}"
+        )
+    cached = sum(1 for line in answer_cache.open(encoding="utf-8") if line.strip())
+    total_asks = asks
+    if not total_asks:
+        if not results.is_file():
+            raise typer.BadParameter(f"pass --asks, or run `sever report` first ({results})")
+        total_asks = int(json.loads(results.read_text(encoding="utf-8")).get("model_asks") or 0)
+    if not total_asks:
+        raise typer.BadParameter(
+            "the results file does not record how many times the model layer was asked, "
+            "so the deduplication figure has no denominator. Re-run `sever report` with "
+            "the model on, or pass --asks."
+        )
+    run_ids = (
+        tuple(r.strip() for r in runs.split(",") if r.strip())
+        if runs
+        else cost_mod.PUBLISHED_RUNS
+    )
+    try:
+        result = cost_mod.from_ledger(
+            ledger=store,
+            project=CAPS_PROJECT,
+            run_ids=run_ids,
+            pages=pages,
+            documents=documents,
+            cached_answers=cached,
+            asks=total_asks,
+        )
+    except (LookupError, cost_mod.LedgerMismatch) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"wrote {cost_mod.write(result, out)}")
+
+
 def main() -> None:
     app()
 

@@ -1,0 +1,29 @@
+{
+  "_comment": "Written by `sever cost`, which reads project 04's gateway ledger. Committed because that ledger is not in this repository, so `sever report` reads this instead. See sever/eval/cost.py.",
+  "run_ids": [
+    "sever-full-001",
+    "sever-full-210",
+    "sever-retype-210",
+    "sever-sweep-210"
+  ],
+  "recorded_on": "2026-09-20",
+  "model": "claude-haiku-4-5-20251001",
+  "calls": 871,
+  "cost_usd": 0.9570859999999998,
+  "input_tokens": 655261,
+  "output_tokens": 60365,
+  "uncosted": 0,
+  "pages": 210,
+  "documents": 210,
+  "cached_answers": 871,
+  "asks": 2606,
+  "per_run": {
+    "sever-full-001": 0.410757,
+    "sever-full-210": 0.510829,
+    "sever-retype-210": 0.008851,
+    "sever-sweep-210": 0.026649
+  },
+  "usd_per_page": 0.00455755,
+  "undeduplicated_usd_per_page": 0.01363603,
+  "cad_per_page": 0.0061527
+}
