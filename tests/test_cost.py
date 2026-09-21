@@ -215,3 +215,36 @@ def test_the_published_run_list_is_not_empty() -> None:
     and an empty default would silently report nothing at all."""
     assert PUBLISHED_RUNS
     assert len(set(PUBLISHED_RUNS)) == len(PUBLISHED_RUNS)
+
+
+# --- the cost line only belongs on the run it was measured for -------------------
+
+
+def test_a_cost_recorded_for_another_corpus_size_is_dropped_rather_than_rescaled(
+    tmp_path: Path,
+) -> None:
+    """`sever report --documents 60` is a smaller run than the published one. Splicing a
+    figure measured over 210 pages into it would attach a real number to the wrong
+    denominator, and rescaling would be worse: the answers behind the recorded cost are not
+    the answers that run made.
+    """
+    from sever.corpus.generate import build
+    from sever.eval.report import _cost_for
+
+    recorded = a_cost(pages=210, documents=210)
+    path = write(recorded, tmp_path / "cost.json")
+    small = build(documents=4, seed=20270802)
+
+    assert _cost_for(path, small) is None
+    assert _cost_for(None, small) is None
+
+
+def test_a_cost_recorded_for_this_corpus_size_is_used(tmp_path: Path) -> None:
+    from sever.corpus.generate import build
+    from sever.eval.report import _cost_for
+
+    corpus = build(documents=4, seed=20270802)
+    recorded = a_cost(pages=corpus.page_count, documents=len(corpus))
+    path = write(recorded, tmp_path / "cost.json")
+
+    assert _cost_for(path, corpus) == recorded

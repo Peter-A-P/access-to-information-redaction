@@ -270,7 +270,7 @@ def run(
         model_name=str(getattr(model, "model", "")) if model is not None else "",
         model_note=_spend_summary(model),
         model_asks=_asks(model),
-        cost=read_cost(cost_path) if cost_path is not None else None,
+        cost=_cost_for(cost_path, c),
     )
     report.systems = []
     if modelled:
@@ -320,6 +320,22 @@ def _spend_summary(model: ModelDecider | None) -> str:
         return ""
     summary = getattr(model, "spend_summary", None)
     return str(summary()) if callable(summary) else ""
+
+
+def _cost_for(path: Path | None, corpus: Corpus) -> RunCost | None:
+    """The recorded cost, but only when it was recorded against this many pages.
+
+    `sever report --documents 60` is a smaller run than the published one, and splicing a
+    cost line measured over 210 pages into it would attach a real number to the wrong
+    denominator. Dropped rather than rescaled: the answers behind the recorded figure are
+    not the answers this run made, so there is nothing honest to scale.
+    """
+    if path is None:
+        return None
+    recorded = read_cost(path)
+    if recorded is None or recorded.pages != corpus.page_count:
+        return None
+    return recorded
 
 
 def _asks(model: ModelDecider | None) -> int:
