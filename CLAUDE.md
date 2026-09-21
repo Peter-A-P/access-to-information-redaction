@@ -1,6 +1,6 @@
 # Working notes for Claude Code
 
-This repository is Access-to-Information Redaction, package `sever`: context-dependent
+This repository is Hundreds of Pages, Redacted in an Afternoon, package `sever`: context-dependent
 redaction proposals for access-to-information requests, with an exemption taxonomy
 mapped to public legislation, a rules-then-model decision layer through the portfolio
 gateway, a reviewer workflow with an append-only audit log, and true-redaction output.

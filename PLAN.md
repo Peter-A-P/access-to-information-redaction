@@ -1,4 +1,4 @@
-# Plan: Access-to-Information Redaction
+# Plan: Hundreds of Pages, Redacted in an Afternoon
 
 **Written:** 2026-09-07. **Status:** building. Started 2026-09-13, about eleven months
 ahead of the Aug 2027 slot, because nothing in the portfolio blocks it. Week 1 and most

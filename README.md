@@ -1,4 +1,4 @@
-# Access-to-Information Redaction
+# Hundreds of Pages, Redacted in an Afternoon
 
 An access-to-information request means staff reading hundreds of pages and deciding, line
 by line, which personal information must be withheld and which must be released. Blunt
