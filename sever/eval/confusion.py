@@ -329,8 +329,17 @@ def score(
     results: Mapping[str, tuple[DocumentProposals, LabelSet]],
     *,
     taxonomy: Taxonomy | None = None,
+    jurisdiction: str = "federal",
 ) -> Scored:
-    """Match proposals to labels by overlap, one document at a time."""
+    """Match proposals to labels by overlap, one document at a time.
+
+    `jurisdiction` decides what a label's code *means*, and it has to be the same
+    jurisdiction the proposals were made under. Two codes decide differently under ATIPPA
+    than federally, so scoring an NL run against federal ground truth would count a
+    correctly escalated span as an error, silently and in the flattering direction for
+    whichever configuration happened to match. Federal is the default because every
+    published number in this repository is federal.
+    """
     t = taxonomy or default_taxonomy()
     outcomes: list[SpanOutcome] = []
     unlabelled: list[Proposal] = []
@@ -355,7 +364,7 @@ def score(
                     doc_id=doc_id,
                     label=label,
                     proposal=best,
-                    true_decision=t.decision(label.code),
+                    true_decision=t.decision(label.code, jurisdiction),
                     proposed_decision=best.decision if best else None,
                 )
             )

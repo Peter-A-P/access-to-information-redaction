@@ -103,14 +103,15 @@ fourth, and none of the three closed in the direction that was guessed.
   weighs and **states no period at all**, where the federal Act excludes an individual dead
   more than twenty years from the definition outright. A K4 that releases on a fixed number
   of years performs a weighing the Act reserves to a person, against a threshold this
-  project invented. Under the NL configuration K4 escalates.
+  project invented. Under the NL configuration K4 escalates, and it does so in the code:
+  `sever/taxonomy/nl.yaml` carries the override and `docs/taxonomy.md` prints it.
 - **K3 under ATIPPA is narrower than anyone assumed**, and this one was not on the open
   list at all. There is **no general publicly-available exception** in the terms of the
   federal 19(2)(b). Paragraph 40(2)(m) releases two enumerated things only, attendance at a
   public event and receipt of an honour, and only where disclosure is not contrary to the
   public interest. A name that is already public for any other reason is not released by
   it. Under the NL configuration, anything K3 reaches through general "already public"
-  reasoning escalates.
+  reasoning escalates, and it does so in the code rather than only here.
 
 The new question is what those three do to the NL numbers, and the honest answer is that
 nobody knows yet: every published figure in this repository is from the federal

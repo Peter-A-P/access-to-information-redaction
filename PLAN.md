@@ -826,3 +826,39 @@ software. Not measured, not claimed, and worth doing.
 marginal note of ATIA section 23 is printed with an em dash. The quote here uses a hyphen
 and `federal.yaml` says so beside it, because silently normalising a quotation is the kind
 of small dishonesty this whole file format exists to prevent.
+
+### 12.18 A documented difference the software did not implement
+
+2026-09-20, immediately after 12.17. Writing up what the statutes said produced two
+sentences in `docs/escalation.md` of the form "under the NL configuration K4 escalates",
+and they were false. `decision` lived only in `categories.yaml`, which has no jurisdiction
+in it, so `taxonomy.decision("K4")` returned `keep` whatever statute was configured. The
+taxonomy could record the difference in a note and the pipeline would carry on releasing.
+
+That is worse than not having noticed. An undocumented difference is a gap; a documented
+one is a description of behaviour, and a reader has no reason to check it against the code.
+The note would have been read as a statement about what the tool does.
+
+**What changed.** A jurisdiction's mapping for a code may now carry `decision` and
+`decision_reason`, and the loader refuses the first without the second: the override
+changes what is released, and the reason is what a reviewer or an auditor reads.
+`Taxonomy.decision(code, jurisdiction)` honours it, `DecisionEngine` passes the
+jurisdiction it was configured with, and `docs/taxonomy.md` grows a table of every code a
+jurisdiction decides differently, with the reason, because a difference between two
+configurations of the same tool should not have to be found by diffing YAML.
+
+`score()` takes a jurisdiction too, and that is the subtle half. A label's code is ground
+truth about a question; what that code *does* is a fact about a statute. Scoring an NL run
+against federal ground truth would count a correctly escalated span as an error, silently,
+in whichever direction happened to match.
+
+**The guard.** Federal overrides nothing, every published figure in this repository is
+federal, and `tests/test_jurisdiction_decisions.py` asserts both: that the federal
+configuration's override set is empty and that every code decides federally exactly as
+`categories.yaml` says. Re-running `sever report` after the change produced a byte-identical
+results file, which is the evidence rather than the intention.
+
+**The expected frequency of this field is close to zero, and that is deliberate.** A code
+whose decision changes between jurisdictions is usually two codes wearing one name. Two
+statutes genuinely disagreeing about the same question is the case it is for, and both
+instances here came from reading the Act rather than from designing the taxonomy.

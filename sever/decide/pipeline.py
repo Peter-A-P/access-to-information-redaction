@@ -237,7 +237,10 @@ class DecisionEngine:
     def _proposal(
         self, ctx: ContextRecord, outcome: rules_mod.RuleOutcome, source: Source
     ) -> Proposal:
-        decision = self.taxonomy.decision(outcome.code)
+        # The jurisdiction is passed, because two codes decide differently under ATIPPA
+        # than under the federal Acts and the difference is the point of configuring a
+        # jurisdiction at all. See `Taxonomy.decision` and `sever/taxonomy/nl.yaml`.
+        decision = self.taxonomy.decision(outcome.code, self.config.jurisdiction)
         return Proposal(
             detection=ctx.detection,
             code=outcome.code,

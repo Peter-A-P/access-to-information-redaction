@@ -135,6 +135,31 @@ def render(t: Taxonomy, *, generated_on: dt.date | None = None) -> str:
             if note:
                 lines += [f"> {_para(note)}", ""]
 
+    overridden = {k: t.overrides(k) for k in sorted(t.jurisdictions)}
+    if any(overridden.values()):
+        lines += [
+            "## Where a jurisdiction decides a code differently",
+            "",
+            "A code means the same question everywhere, but the statutes do not always",
+            "answer it the same way. Where they differ the jurisdiction says so here and",
+            "the tool behaves accordingly: this is not documentation of an intention, it",
+            "is the decision the pipeline applies for a span under that statute.",
+            "",
+            "Every published number in this repository is the federal configuration, which",
+            "overrides nothing, so no result table is affected by the rows below.",
+            "",
+            "| Jurisdiction | Code | Default | Under this statute | Why |",
+            "|---|---|---|---|---|",
+        ]
+        for key in sorted(overridden):
+            for code, (decision, reason) in overridden[key].items():
+                lines.append(
+                    f"| {t.jurisdictions[key].name} | `{code}` | "
+                    f"{t.categories[code].decision.value} | **{decision.value}** | "
+                    f"{_para(reason)} |"
+                )
+        lines.append("")
+
     lines += ["## The statutes", ""]
     for key in sorted(t.jurisdictions):
         j = t.jurisdictions[key]
@@ -156,6 +181,12 @@ def render(t: Taxonomy, *, generated_on: dt.date | None = None) -> str:
         "provisions that carry it, or by naming it in `unmapped` with the reason the Act",
         "has no equivalent. The loader refuses a file that leaves a code unanswered, and",
         "refuses a provision that claims nothing about whether it was checked.",
+        "",
+        "Where the new Act answers a code differently from `categories.yaml`, set",
+        "`decision` on that code's mapping and say why in `decision_reason`. The loader",
+        "refuses an override with no reason, because the override changes what is released",
+        "and the reason is what a reviewer reads. Expect to need it rarely: a code whose",
+        "decision changes between jurisdictions is usually two codes wearing one name.",
         "",
     ]
     return "\n".join(lines).rstrip() + "\n"

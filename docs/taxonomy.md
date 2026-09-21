@@ -368,6 +368,21 @@ Examples:
 
 > NL also has a public-interest override at section 9 that can defeat a discretionary exception. This tool does not apply it and does not flag for it; that is recorded in docs/escalation.md as out of scope rather than left implicit.
 
+## Where a jurisdiction decides a code differently
+
+A code means the same question everywhere, but the statutes do not always
+answer it the same way. Where they differ the jurisdiction says so here and
+the tool behaves accordingly: this is not documentation of an intention, it
+is the decision the pipeline applies for a span under that statute.
+
+Every published number in this repository is the federal configuration, which
+overrides nothing, so no result table is affected by the rows below.
+
+| Jurisdiction | Code | Default | Under this statute | Why |
+|---|---|---|---|---|
+| Newfoundland and Labrador | `K3` | keep | **escalate** | ATIPPA has no general publicly-available exception. Paragraph 40(2)(m) releases two enumerated things, attendance at a public event and receipt of an honour, and only where the disclosure is not contrary to the public interest under subsection (3). A name that is public for any other reason is not released by it, so the federal meaning of K3 has no equivalent here and the span goes to a person. |
+| Newfoundland and Labrador | `K4` | keep | **escalate** | ATIPPA 40(5)(j) makes the time since a death a circumstance the head of a public body weighs and states no period, where the federal Act excludes a person dead more than twenty years from the definition outright. Releasing on a fixed number of years would perform a weighing the Act reserves to a person, against a threshold this project invented. |
+
 ## The statutes
 
 **Canada (federal)**
@@ -386,3 +401,9 @@ its statutes, then answers every code in `categories.yaml`: either with the
 provisions that carry it, or by naming it in `unmapped` with the reason the Act
 has no equivalent. The loader refuses a file that leaves a code unanswered, and
 refuses a provision that claims nothing about whether it was checked.
+
+Where the new Act answers a code differently from `categories.yaml`, set
+`decision` on that code's mapping and say why in `decision_reason`. The loader
+refuses an override with no reason, because the override changes what is released
+and the reason is what a reviewer reads. Expect to need it rarely: a code whose
+decision changes between jurisdictions is usually two codes wearing one name.

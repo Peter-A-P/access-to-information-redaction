@@ -181,6 +181,31 @@ class CodeMapping(_Strict):
 
     provisions: tuple[Provision, ...] = ()
     note: str | None = None
+    # What this code does under *this* statute, where that differs from the default in
+    # categories.yaml. Almost always absent: a code whose decision changes between
+    # jurisdictions is usually two codes wearing one name, and the override exists for the
+    # cases where the statutes genuinely disagree about the same question.
+    #
+    # Added on 2026-09-20 because verifying the provisions found two. ATIPPA 40(5)(j)
+    # makes the time since a death a circumstance the head of a public body weighs, with
+    # no period stated, where the federal Act excludes a person dead more than twenty
+    # years from the definition outright; and ATIPPA has no general publicly-available
+    # exception at all, where the federal 19(2)(b) does. Before this field the taxonomy
+    # could record that in a note and the code would carry on releasing, which is a
+    # documented difference the software does not implement. That is worse than an
+    # undocumented one.
+    decision: Decision | None = None
+    decision_reason: str | None = None
+
+    @model_validator(mode="after")
+    def _override_is_explained(self) -> Self:
+        if self.decision is not None and not self.decision_reason:
+            raise ValueError(
+                "a jurisdiction that overrides a code's decision must say why in "
+                "decision_reason: the override changes what is released and the reason "
+                "is what a reviewer or an auditor reads"
+            )
+        return self
 
 
 class Jurisdiction(_Strict):
@@ -240,8 +265,32 @@ class Taxonomy:
         m = j.mappings.get(code)
         return m.provisions if m is not None else ()
 
-    def decision(self, code: str) -> Decision:
+    def decision(self, code: str, jurisdiction: str | None = None) -> Decision:
+        """What this code does, under this statute.
+
+        The default lives in categories.yaml and is what every published number in this
+        repository uses, because every published number is the federal configuration.
+        A jurisdiction may override it, and two do: see `CodeMapping.decision`.
+
+        `jurisdiction` is optional so that callers who genuinely have no jurisdiction in
+        hand, such as a test asserting that every escalating code withholds, do not have
+        to invent one. A caller that is deciding a real span passes it.
+        """
+        if jurisdiction is not None:
+            m = self.jurisdictions[jurisdiction].mappings.get(code)
+            if m is not None and m.decision is not None:
+                return m.decision
         return self.categories[code].decision
+
+    def overrides(self, jurisdiction: str) -> dict[str, tuple[Decision, str]]:
+        """Every code this jurisdiction decides differently, and why. Printed in
+        docs/taxonomy.md, because a difference between two configurations of the same tool
+        is exactly the thing a reader should not have to find by diffing YAML."""
+        out: dict[str, tuple[Decision, str]] = {}
+        for code, m in self.jurisdictions[jurisdiction].mappings.items():
+            if m.decision is not None and m.decision is not self.categories[code].decision:
+                out[code] = (m.decision, m.decision_reason or "")
+        return dict(sorted(out.items()))
 
     def verification_summary(self) -> dict[str, tuple[int, int]]:
         """Per jurisdiction: (verified provisions, total provisions). Reported in

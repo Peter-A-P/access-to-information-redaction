@@ -141,6 +141,13 @@ mappings:
       docs/escalation.md records it.
 
   K3:
+    decision: escalate
+    decision_reason: >-
+      ATIPPA has no general publicly-available exception. Paragraph 40(2)(m) releases two
+      enumerated things, attendance at a public event and receipt of an honour, and only
+      where the disclosure is not contrary to the public interest under subsection (3). A
+      name that is public for any other reason is not released by it, so the federal
+      meaning of K3 has no equivalent here and the span goes to a person.
     provisions:
       - statute: atippa
         section: 40(2)(m)
@@ -168,6 +175,13 @@ mappings:
       escalation. Recorded in docs/escalation.md.
 
   K4:
+    decision: escalate
+    decision_reason: >-
+      ATIPPA 40(5)(j) makes the time since a death a circumstance the head of a public
+      body weighs and states no period, where the federal Act excludes a person dead more
+      than twenty years from the definition outright. Releasing on a fixed number of years
+      would perform a weighing the Act reserves to a person, against a threshold this
+      project invented.
     provisions:
       - statute: atippa
         section: 40(5)(j)
