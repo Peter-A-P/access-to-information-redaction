@@ -22,8 +22,8 @@ marked unverified with a reason, and the counts are printed here.
 
 | Jurisdiction | Provisions verified against the consolidated text |
 |---|---|
-| Canada (federal) | 13 of 18 (72%) |
-| Newfoundland and Labrador | 5 of 15 (33%) |
+| Canada (federal) | 18 of 18 (100%) |
+| Newfoundland and Labrador | 18 of 18 (100%) |
 
 Unchecked rows are listed in full in the jurisdiction sections below, each with
 the reason it has not been checked. Nothing defaults to verified.
@@ -79,7 +79,7 @@ Traps:
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
 | Access to Information and Protection of Privacy Act, 2015, s. 40(1) | Disclosure harmful to personal privacy | checked 2026-09-13 | "The head of a public body shall refuse to disclose personal information to an applicant where the disclosure would be an unreasonable invasion of a third party's personal privacy." |
-| Access to Information and Protection of Privacy Act, 2015, s. 2 | Definition of personal information | **not checked** | The definition was read on 2026-09-13 and is materially the federal one plus sex, sexual orientation, political belief and health care status, but it was read in summary rather than captured verbatim, so no quote is claimed here. |
+| Access to Information and Protection of Privacy Act, 2015, s. 2 | Definition of personal information | checked 2026-09-20 | ""personal information" means recorded information about an identifiable individual, including (i) the individual's name, address or telephone number, (ii) the individual's race, national or ethnic origin, colour, or religious or political beliefs or associations, (iii) the individual's age, sex, sexual orientation, marital status or family status, (iv) an identifying number, symbol or other particular assigned to the individual, (v) the individual's fingerprints, blood type or inheritable characteristics, (vi) information about the individual's health care status or history, including a physical or mental disability, (vii) information about the individual's educational, financial, criminal or employment status or history, (viii) the opinions of a person about the individual, and (ix) the individual's personal views or opinions, except where they are about someone else" |
 
 > The NL test is different in kind from the federal one and the difference matters. Federally, section 19 refuses disclosure of personal information as such. Here the refusal is triggered by an "unreasonable invasion" of privacy, section 40(4) sets out presumptions of unreasonable invasion and section 40(5) sets out the factors to weigh. A single R1 code cannot carry that weighing, so under this configuration R1 means "presumptively an unreasonable invasion, for the reviewer to weigh", and docs/escalation.md records that the tool does not perform the section 40(5) balance.
 
@@ -166,7 +166,7 @@ Traps:
 |---|---|---|---|
 | Privacy Act, s. 3(j) | Exclusion, officers and employees of a government institution | checked 2026-09-13 | "information about an individual who is or was an officer or employee of a government institution that relates to the position or functions of the individual." |
 | Privacy Act, s. 3(k) | Exclusion, individuals performing services under contract | checked 2026-09-13 | "information about an individual who is or was performing services under contract for a government institution that relates to the services performed." |
-| Privacy Act, s. 3(j.1) | Exclusion, ministerial advisers and staff | **not checked** | The paragraph exists in the consolidated text and covers the identity of ministerial advisers and ministers' staff, but the exact wording was not captured on 2026-09-13 and no quote is claimed. K2 does not depend on it: (j) and (k) carry the code on their own. |
+| Privacy Act, s. 3(j.1) | Exclusion, ministerial advisers and staff | checked 2026-09-20 | "the fact that an individual is or was a ministerial adviser or a member of a ministerial staff, as those terms are defined in subsection 2(1) of the Conflict of Interest Act, as well as the individual's name and title," |
 
 > The exclusion is expressly limited to sections 7, 8 and 26 of the Privacy Act and section 19 of the Access to Information Act. That is the section this tool operates under, so the exclusion applies. The words that do the work are "relates to the position or functions": an official's own grievance, medical leave or home address does not, and is R1.
 
@@ -174,9 +174,11 @@ Traps:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 40(2) | Exceptions, employment responsibilities of a public body officer | **not checked** | Section 40(2) contains an exception for information about a third party's position, functions or remuneration as an officer, employee or member of a public body, and a further one for services performed under contract. The paragraph letters were not confirmed on 2026-09-13 and are not guessed here. Confirm the letters against the consolidated text before the schedule generated under this jurisdiction is shown to anyone. |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(f) | Exception, position, functions or remuneration of a public body officer | checked 2026-09-20 | "the information is about a third party's position, functions or remuneration as an officer, employee or member of a public body or as a member of a minister's staff" |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(g) | Exception, details of a contract to supply goods or services | checked 2026-09-20 | "the disclosure reveals financial and other details of a contract to supply goods or services to a public body" |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(h) | Exception, opinions given in the course of performing services | checked 2026-09-20 | "the disclosure reveals the opinions or views of a third party given in the course of performing services for a public body, except where they are given in respect of another individual" |
 
-> This is the largest open item in the NL mapping and it is the code the whole over-redaction number turns on, so it is flagged rather than filled in.
+> This was the largest open item in the NL mapping and the code the whole over-redaction number turns on, so the letters were confirmed against the consolidated text rather than guessed: (f), (g) and (h), on 2026-09-20. Paragraph (h) carries a limit that K2 does not encode and a reviewer has to apply: an opinion given in the course of performing services is not an unreasonable invasion "except where they are given in respect of another individual". An official's assessment of a member of the public is outside the exception, so K2 is wrong for it and the span is R1. The tool does not detect that distinction and docs/escalation.md records it.
 
 ### `K3`: Already publicly available
 
@@ -204,7 +206,9 @@ Traps:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 40(2) | Exceptions, information available to the public | **not checked** | Section 40(2) includes exceptions covering information a third party has provided for a public event or a published honour or award. Whether the Act carries a general "publicly available" exception in the same terms as the federal 19(2)(b) was not confirmed on 2026-09-13. Do not rely on this row. |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(m) | Exception, attendance at a public event and receipt of an honour | checked 2026-09-20 | "the disclosure is not contrary to the public interest as described in subsection (3) and reveals only the following personal information about a third party: (i) attendance at or participation in a public event or activity related to a public body, including a graduation ceremony, sporting event, cultural program or club, or field trip, or (ii) receipt of an honour or award granted by or through a public body" |
+
+> Checked on 2026-09-20, and the answer to the open question is that the NL Act has no general publicly-available exception in the terms of the federal 19(2)(b). Paragraph (m) is narrow: two enumerated situations, and only where the disclosure is not contrary to the public interest as described in subsection (3). So K3 does not mean under this jurisdiction what it means federally, and the difference is not cosmetic. A name that is already public for some other reason, published elsewhere or otherwise in the public domain is not released by paragraph (m). Under the NL configuration K3 covers the two enumerated situations only, and anything the detector reaches through general "already public" reasoning belongs in escalation. Recorded in docs/escalation.md.
 
 ### `K4`: An individual dead more than twenty years
 
@@ -230,9 +234,9 @@ Traps:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 40(5) | Relevant circumstances, information about a deceased person | **not checked** | NL treats the passage of time since a death as a factor in the section 40(5) weighing rather than as a hard exclusion from the definition, which is a real difference from the federal paragraph 3(m). The exact paragraph and the period were not confirmed on 2026-09-13. |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(5)(j) | Relevant circumstance, information about a deceased person | checked 2026-09-20 | "the information is about a deceased person and, if so, whether the length of time the person has been deceased indicates the disclosure is not an unreasonable invasion of the deceased person's personal privacy" |
 
-> Because this is a factor rather than an exclusion, the NL configuration should arguably route K4 to escalation rather than to keep. That is a taxonomy question, not a code question, and it is recorded in docs/escalation.md as open.
+> Confirmed on 2026-09-20, and the quote settles a question that was open. The federal Act excludes an individual dead more than twenty years from the definition of personal information outright. NL does not. Paragraph 40(5)(j) makes the length of time a relevant circumstance the head of a public body weighs, and it states no period at all. A K4 that releases on a fixed number of years is therefore wrong under this jurisdiction twice over: it performs a weighing the Act reserves to a person, and the threshold it weighs against is one this project invented. Under the NL configuration K4 routes to escalation. docs/escalation.md recorded this as an open taxonomy question; it is now a decided one.
 
 ### `K5`: Consent given, or a discretionary benefit of a financial nature
 
@@ -261,7 +265,10 @@ Traps:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 40(2) | Exceptions, consent and discretionary benefits | **not checked** | Section 40(2) includes both an applicant-consent exception and a discretionary-benefit exception. Paragraph letters not confirmed on 2026-09-13. |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(b) | Exception, the third party has consented in writing | checked 2026-09-20 | "the third party to whom the information relates has, in writing, consented to or requested the disclosure" |
+| Access to Information and Protection of Privacy Act, 2015, s. 40(2)(l) | Exception, a discretionary benefit of a financial nature | checked 2026-09-20 | "the disclosure reveals details of a discretionary benefit of a financial nature granted to a third party by a public body, not including (i) personal information that is supplied in support of the application for the benefit, or (ii) personal information that relates to eligibility for income and employment support under the Income and Employment Support Act or to the determination of income or employment support levels" |
+
+> Letters confirmed on 2026-09-20: (b) for consent, (l) for a discretionary benefit of a financial nature. Paragraph (l) carves out more than the federal equivalent and the carve-out is the part that matters. The information supplied in support of an application, and anything about eligibility for or the level of income and employment support, stays withheld. A record about a benefit is therefore usually a mixture, one part releasable under (l) and the rest not, and K5 cannot make that split. The tool proposes K5 for the fact and the amount of a discretionary benefit only.
 
 ### `K6`: Not personal information
 
@@ -290,7 +297,7 @@ Traps:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 2 | Definition of personal information | **not checked** | Same definition row as R1: read on 2026-09-13, summarised rather than quoted. |
+| Access to Information and Protection of Privacy Act, 2015, s. 2 | Definition of personal information | checked 2026-09-20 | ""personal information" means recorded information about an identifiable individual, including (i) the individual's name, address or telephone number, (ii) the individual's race, national or ethnic origin, colour, or religious or political beliefs or associations, (iii) the individual's age, sex, sexual orientation, marital status or family status, (iv) an identifying number, symbol or other particular assigned to the individual, (v) the individual's fingerprints, blood type or inheritable characteristics, (vi) information about the individual's health care status or history, including a physical or mental disability, (vii) information about the individual's educational, financial, criminal or employment status or history, (viii) the opinions of a person about the individual, and (ix) the individual's personal views or opinions, except where they are about someone else" |
 
 > As federally, K6 records a detector false positive rather than an exemption.
 
@@ -343,21 +350,21 @@ Examples:
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information Act, s. 16 | Law enforcement and investigations | **not checked** | Section number and marginal heading read from the consolidated text on 2026-09-13; no quote captured because E3 makes no proposal and cites the heading only, so the reviewer opens the section themselves. |
-| Access to Information Act, s. 20 | Third party information | **not checked** | Section number and marginal heading read from the consolidated text on 2026-09-13; no quote captured, same reason as section 16. |
-| Access to Information Act, s. 21 | Advice, etc. | **not checked** | Section number and marginal heading read from the consolidated text on 2026-09-13; no quote captured, same reason as section 16. |
-| Access to Information Act, s. 23 | Protected information, solicitors, advocates and notaries | **not checked** | Section number and marginal heading read from the consolidated text on 2026-09-13; no quote captured, same reason as section 16. |
+| Access to Information Act, s. 16 | Law enforcement and investigations | checked 2026-09-20 | "Law enforcement and investigations" |
+| Access to Information Act, s. 20 | Third party information | checked 2026-09-20 | "Third party information" |
+| Access to Information Act, s. 21 | Advice, etc. | checked 2026-09-20 | "Advice, etc." |
+| Access to Information Act, s. 23 | Protected information - solicitors, advocates and notaries | checked 2026-09-20 | "Protected information - solicitors, advocates and notaries" |
 
-> These four are flags with no proposal. They are in the taxonomy so that a reviewer reading a briefing note is not left to notice the advice exemption unaided, and so that the evaluation can report how often the flag was useful.
+> These four are flags with no proposal. They are in the taxonomy so that a reviewer reading a briefing note is not left to notice the advice exemption unaided, and so that the evaluation can report how often the flag was useful. The quote on each of these four is the marginal note, verbatim, and not the operative text of the section. That is what E3 cites, because E3 sends a reviewer to read the section rather than proposing anything under it, and quoting the whole of section 16 here would imply a precision this code does not have. Recorded explicitly so that "verified" is not read as more than it is. One typographic note, because a verbatim quote and this repository's punctuation rule collide exactly once. The marginal note of section 23 is printed with an em dash: "Protected information - solicitors, advocates and notaries" appears in the Act with an em dash where the hyphen is here. The words are unchanged.
 
 *Newfoundland and Labrador:*
 
 | Provision | Heading | Verification | Text or reason |
 |---|---|---|---|
-| Access to Information and Protection of Privacy Act, 2015, s. 29 | Policy advice or recommendations | **not checked** | Section number and heading read from the consolidated text on 2026-09-13; no quote captured because E3 makes no proposal and cites the heading only. |
-| Access to Information and Protection of Privacy Act, 2015, s. 30 | Legal advice | **not checked** | Section number and heading read on 2026-09-13; no quote captured, same reason. |
-| Access to Information and Protection of Privacy Act, 2015, s. 31 | Disclosure harmful to law enforcement | **not checked** | Section number and heading read on 2026-09-13; no quote captured, same reason. |
-| Access to Information and Protection of Privacy Act, 2015, s. 39 | Disclosure harmful to business interests of a third party | **not checked** | Section number and heading read on 2026-09-13; no quote captured, same reason. |
+| Access to Information and Protection of Privacy Act, 2015, s. 29 | Policy advice or recommendations | checked 2026-09-20 | "Policy advice or recommendations" |
+| Access to Information and Protection of Privacy Act, 2015, s. 30 | Legal advice | checked 2026-09-20 | "Legal advice" |
+| Access to Information and Protection of Privacy Act, 2015, s. 31 | Disclosure harmful to law enforcement | checked 2026-09-20 | "Disclosure harmful to law enforcement" |
+| Access to Information and Protection of Privacy Act, 2015, s. 39 | Disclosure harmful to business interests of a third party | checked 2026-09-20 | "Disclosure harmful to business interests of a third party" |
 
 > NL also has a public-interest override at section 9 that can defeat a discretionary exception. This tool does not apply it and does not flag for it; that is recorded in docs/escalation.md as out of scope rather than left implicit.
 
@@ -370,7 +377,7 @@ Examples:
 
 **Newfoundland and Labrador**
 
-- [Access to Information and Protection of Privacy Act, 2015](https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm) (SNL 2015, c. A-1.2); consolidation read: unknown
+- [Access to Information and Protection of Privacy Act, 2015](https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm) (SNL 2015, c. A-1.2); consolidation read: 2026 c16 s2, read 2026-09-20
 
 ## Adding a jurisdiction
 

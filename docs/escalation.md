@@ -86,16 +86,38 @@ These are not escalations. The tool does not attempt them at all, and says so.
 - **Release.** There is no code path from a proposal to a released document without a
   reviewer action on every page.
 
-## Open questions, recorded rather than resolved
+## Questions that were open, and what the statute said
 
-- **K4 under ATIPPA.** Newfoundland and Labrador treats the passage of time since a death
-  as a factor in the section 40(5) weighing rather than as an exclusion from the
-  definition. The NL configuration arguably should route K4 to escalation rather than to
-  keep. It currently does not. This is a taxonomy question and it is open.
-- **The K2 paragraph letters under ATIPPA.** The exception for a third party's position or
-  functions exists in section 40(2); the paragraph letters were not confirmed against the
-  consolidated text and are recorded as unverified. K2 is the code the whole over-redaction
-  number turns on, so this is the largest open item in the NL mapping.
+All 36 provisions in the taxonomy are now verified against the consolidated texts, federal
+on 2026-07-21 and ATIPPA on 2026-09-20. Reading them closed three questions and opened a
+fourth, and none of the three closed in the direction that was guessed.
+
+- **The K2 paragraph letters under ATIPPA** are **(f), (g) and (h)**, confirmed rather than
+  guessed. This was the largest open item because K2 carries 2,345 of the corpus's 5,355
+  spans. Paragraph (h) carries a limit the code does not encode: an opinion given in the
+  course of performing services is released "except where they are given in respect of
+  another individual", so an official's assessment of a member of the public is R1 and not
+  K2. The tool cannot see that distinction and a reviewer has to.
+- **K4 under ATIPPA** is decided, and it goes the way the open question suspected.
+  Paragraph 40(5)(j) makes the time since a death a circumstance the head of a public body
+  weighs and **states no period at all**, where the federal Act excludes an individual dead
+  more than twenty years from the definition outright. A K4 that releases on a fixed number
+  of years performs a weighing the Act reserves to a person, against a threshold this
+  project invented. Under the NL configuration K4 escalates.
+- **K3 under ATIPPA is narrower than anyone assumed**, and this one was not on the open
+  list at all. There is **no general publicly-available exception** in the terms of the
+  federal 19(2)(b). Paragraph 40(2)(m) releases two enumerated things only, attendance at a
+  public event and receipt of an honour, and only where disclosure is not contrary to the
+  public interest. A name that is already public for any other reason is not released by
+  it. Under the NL configuration, anything K3 reaches through general "already public"
+  reasoning escalates.
+
+The new question is what those three do to the NL numbers, and the honest answer is that
+nobody knows yet: every published figure in this repository is from the federal
+configuration, and the NL configuration has never been scored. Three codes moving toward
+escalation would raise the NL over-redaction rate against the federal one, which is a
+finding about the two statutes rather than about the tool. It is not measured and it is not
+claimed.
 
 ## The number this page is about
 

@@ -17,7 +17,10 @@ statutes:
     title: Access to Information and Protection of Privacy Act, 2015
     citation: SNL 2015, c. A-1.2
     url: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
-    consolidated_to: unknown
+    # The Assembly's consolidation states its currency as an amending citation rather
+    # than a date. Recorded as printed rather than converted to a date, because a date
+    # here would be this project's inference and the field is meant to be checkable.
+    consolidated_to: "2026 c16 s2, read 2026-09-20"
 
 mappings:
   R1:
@@ -34,10 +37,21 @@ mappings:
       - statute: atippa
         section: "2"
         heading: Definition of personal information
-        unverified: >
-          The definition was read on 2026-09-13 and is materially the federal one plus
-          sex, sexual orientation, political belief and health care status, but it was
-          read in summary rather than captured verbatim, so no quote is claimed here.
+        quote: >-
+          "personal information" means recorded information about an identifiable
+          individual, including (i) the individual's name, address or telephone number,
+          (ii) the individual's race, national or ethnic origin, colour, or religious or
+          political beliefs or associations, (iii) the individual's age, sex, sexual
+          orientation, marital status or family status, (iv) an identifying number,
+          symbol or other particular assigned to the individual, (v) the individual's
+          fingerprints, blood type or inheritable characteristics, (vi) information about
+          the individual's health care status or history, including a physical or mental
+          disability, (vii) information about the individual's educational, financial,
+          criminal or employment status or history, (viii) the opinions of a person about
+          the individual, and (ix) the individual's personal views or opinions, except
+          where they are about someone else
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
     note: >
       The NL test is different in kind from the federal one and the difference matters.
       Federally, section 19 refuses disclosure of personal information as such. Here the
@@ -89,61 +103,147 @@ mappings:
   K2:
     provisions:
       - statute: atippa
-        section: 40(2)
-        heading: Exceptions, employment responsibilities of a public body officer
-        unverified: >
-          Section 40(2) contains an exception for information about a third party's
-          position, functions or remuneration as an officer, employee or member of a
-          public body, and a further one for services performed under contract. The
-          paragraph letters were not confirmed on 2026-09-13 and are not guessed here.
-          Confirm the letters against the consolidated text before the schedule generated
-          under this jurisdiction is shown to anyone.
+        section: 40(2)(f)
+        heading: Exception, position, functions or remuneration of a public body officer
+        quote: >-
+          the information is about a third party's position, functions or remuneration as
+          an officer, employee or member of a public body or as a member of a minister's
+          staff
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+      - statute: atippa
+        section: 40(2)(g)
+        heading: Exception, details of a contract to supply goods or services
+        quote: >-
+          the disclosure reveals financial and other details of a contract to supply goods
+          or services to a public body
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+      - statute: atippa
+        section: 40(2)(h)
+        heading: Exception, opinions given in the course of performing services
+        quote: >-
+          the disclosure reveals the opinions or views of a third party given in the
+          course of performing services for a public body, except where they are given in
+          respect of another individual
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
     note: >
-      This is the largest open item in the NL mapping and it is the code the whole
-      over-redaction number turns on, so it is flagged rather than filled in.
+      This was the largest open item in the NL mapping and the code the whole
+      over-redaction number turns on, so the letters were confirmed against the
+      consolidated text rather than guessed: (f), (g) and (h), on 2026-09-20.
+
+      Paragraph (h) carries a limit that K2 does not encode and a reviewer has to apply:
+      an opinion given in the course of performing services is not an unreasonable
+      invasion "except where they are given in respect of another individual". An
+      official's assessment of a member of the public is outside the exception, so K2 is
+      wrong for it and the span is R1. The tool does not detect that distinction and
+      docs/escalation.md records it.
 
   K3:
     provisions:
       - statute: atippa
-        section: 40(2)
-        heading: Exceptions, information available to the public
-        unverified: >
-          Section 40(2) includes exceptions covering information a third party has
-          provided for a public event or a published honour or award. Whether the Act
-          carries a general "publicly available" exception in the same terms as the
-          federal 19(2)(b) was not confirmed on 2026-09-13. Do not rely on this row.
+        section: 40(2)(m)
+        heading: Exception, attendance at a public event and receipt of an honour
+        quote: >-
+          the disclosure is not contrary to the public interest as described in subsection
+          (3) and reveals only the following personal information about a third party:
+          (i) attendance at or participation in a public event or activity related to a
+          public body, including a graduation ceremony, sporting event, cultural program
+          or club, or field trip, or (ii) receipt of an honour or award granted by or
+          through a public body
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+    note: >
+      Checked on 2026-09-20, and the answer to the open question is that the NL Act has no
+      general publicly-available exception in the terms of the federal 19(2)(b). Paragraph
+      (m) is narrow: two enumerated situations, and only where the disclosure is not
+      contrary to the public interest as described in subsection (3).
+
+      So K3 does not mean under this jurisdiction what it means federally, and the
+      difference is not cosmetic. A name that is already public for some other reason,
+      published elsewhere or otherwise in the public domain is not released by paragraph
+      (m). Under the NL configuration K3 covers the two enumerated situations only, and
+      anything the detector reaches through general "already public" reasoning belongs in
+      escalation. Recorded in docs/escalation.md.
 
   K4:
     provisions:
       - statute: atippa
-        section: 40(5)
-        heading: Relevant circumstances, information about a deceased person
-        unverified: >
-          NL treats the passage of time since a death as a factor in the section 40(5)
-          weighing rather than as a hard exclusion from the definition, which is a real
-          difference from the federal paragraph 3(m). The exact paragraph and the period
-          were not confirmed on 2026-09-13.
+        section: 40(5)(j)
+        heading: Relevant circumstance, information about a deceased person
+        quote: >-
+          the information is about a deceased person and, if so, whether the length of
+          time the person has been deceased indicates the disclosure is not an
+          unreasonable invasion of the deceased person's personal privacy
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
     note: >
-      Because this is a factor rather than an exclusion, the NL configuration should
-      arguably route K4 to escalation rather than to keep. That is a taxonomy question,
-      not a code question, and it is recorded in docs/escalation.md as open.
+      Confirmed on 2026-09-20, and the quote settles a question that was open. The federal
+      Act excludes an individual dead more than twenty years from the definition of
+      personal information outright. NL does not. Paragraph 40(5)(j) makes the length of
+      time a relevant circumstance the head of a public body weighs, and it states no
+      period at all.
+
+      A K4 that releases on a fixed number of years is therefore wrong under this
+      jurisdiction twice over: it performs a weighing the Act reserves to a person, and
+      the threshold it weighs against is one this project invented. Under the NL
+      configuration K4 routes to escalation. docs/escalation.md recorded this as an open
+      taxonomy question; it is now a decided one.
 
   K5:
     provisions:
       - statute: atippa
-        section: 40(2)
-        heading: Exceptions, consent and discretionary benefits
-        unverified: >
-          Section 40(2) includes both an applicant-consent exception and a
-          discretionary-benefit exception. Paragraph letters not confirmed on 2026-09-13.
+        section: 40(2)(b)
+        heading: Exception, the third party has consented in writing
+        quote: >-
+          the third party to whom the information relates has, in writing, consented to or
+          requested the disclosure
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+      - statute: atippa
+        section: 40(2)(l)
+        heading: Exception, a discretionary benefit of a financial nature
+        quote: >-
+          the disclosure reveals details of a discretionary benefit of a financial nature
+          granted to a third party by a public body, not including (i) personal
+          information that is supplied in support of the application for the benefit, or
+          (ii) personal information that relates to eligibility for income and employment
+          support under the Income and Employment Support Act or to the determination of
+          income or employment support levels
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
+    note: >
+      Letters confirmed on 2026-09-20: (b) for consent, (l) for a discretionary benefit of
+      a financial nature.
+
+      Paragraph (l) carves out more than the federal equivalent and the carve-out is the
+      part that matters. The information supplied in support of an application, and
+      anything about eligibility for or the level of income and employment support, stays
+      withheld. A record about a benefit is therefore usually a mixture, one part
+      releasable under (l) and the rest not, and K5 cannot make that split. The tool
+      proposes K5 for the fact and the amount of a discretionary benefit only.
 
   K6:
     provisions:
       - statute: atippa
         section: "2"
         heading: Definition of personal information
-        unverified: >
-          Same definition row as R1: read on 2026-09-13, summarised rather than quoted.
+        quote: >-
+          "personal information" means recorded information about an identifiable
+          individual, including (i) the individual's name, address or telephone number,
+          (ii) the individual's race, national or ethnic origin, colour, or religious or
+          political beliefs or associations, (iii) the individual's age, sex, sexual
+          orientation, marital status or family status, (iv) an identifying number,
+          symbol or other particular assigned to the individual, (v) the individual's
+          fingerprints, blood type or inheritable characteristics, (vi) information about
+          the individual's health care status or history, including a physical or mental
+          disability, (vii) information about the individual's educational, financial,
+          criminal or employment status or history, (viii) the opinions of a person about
+          the individual, and (ix) the individual's personal views or opinions, except
+          where they are about someone else
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
     note: >
       As federally, K6 records a detector false positive rather than an exemption.
 
@@ -170,24 +270,31 @@ mappings:
       - statute: atippa
         section: "29"
         heading: Policy advice or recommendations
-        unverified: >
-          Section number and heading read from the consolidated text on 2026-09-13; no
-          quote captured because E3 makes no proposal and cites the heading only.
+        quote: >-
+          Policy advice or recommendations
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
       - statute: atippa
         section: "30"
         heading: Legal advice
-        unverified: >
-          Section number and heading read on 2026-09-13; no quote captured, same reason.
+        quote: >-
+          Legal advice
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
       - statute: atippa
         section: "31"
         heading: Disclosure harmful to law enforcement
-        unverified: >
-          Section number and heading read on 2026-09-13; no quote captured, same reason.
+        quote: >-
+          Disclosure harmful to law enforcement
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
       - statute: atippa
         section: "39"
         heading: Disclosure harmful to business interests of a third party
-        unverified: >
-          Section number and heading read on 2026-09-13; no quote captured, same reason.
+        quote: >-
+          Disclosure harmful to business interests of a third party
+        checked_on: 2026-09-20
+        checked_against: https://www.assembly.nl.ca/legislation/sr/statutes/a01-2.htm
     note: >
       NL also has a public-interest override at section 9 that can defeat a discretionary
       exception. This tool does not apply it and does not flag for it; that is recorded in

@@ -158,9 +158,12 @@ Three more limitations, none of them small:
   wrong answer: names the rules could not pair with a title anywhere in the record, which
   the model was also unwilling to place. It rose once when detection improved, because
   finding more of a record's people means more of them reaching the escalation path.
-- **18 of 33 statutory provisions are verified** against the consolidated texts. The rest
-  are marked unverified with the reason, in the YAML and on the generated page. Nothing
-  defaults to verified.
+- **All 36 statutory provisions are verified** against the consolidated texts, federal
+  current to 2026-07-21 and ATIPPA to 2026-09-20: each carries the quote, the date it was
+  checked and the URL it was checked against. Nothing defaults to verified, and the format
+  refuses a provision that is neither verified nor explicitly excused with a reason.
+  Reading them changed three mappings; [docs/escalation.md](docs/escalation.md) says which
+  and why.
 
 ## What this does not do
 
@@ -382,7 +385,7 @@ detector would ever have flagged them and the corpus had never exercised that pa
 
 | Built and measured | Not built |
 |---|---|
-| Taxonomy, two jurisdictions, generated docs | Reviewer time study (the app records it; nobody has sat down yet) |
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study (the app records it; nobody has sat down yet) |
 | 210-page labelled corpus, labels by construction | Scanned track and OCR error rate |
 | Detection, context record, rules, escalation | Published-federal-releases track |
 | The model layer, through the gateway on placeholders | Model-only baseline |

@@ -125,11 +125,12 @@ mappings:
       - statute: privacy
         section: 3(j.1)
         heading: Exclusion, ministerial advisers and staff
-        unverified: >
-          The paragraph exists in the consolidated text and covers the identity of
-          ministerial advisers and ministers' staff, but the exact wording was not
-          captured on 2026-09-13 and no quote is claimed. K2 does not depend on it: (j)
-          and (k) carry the code on their own.
+        quote: >-
+          the fact that an individual is or was a ministerial adviser or a member of a
+          ministerial staff, as those terms are defined in subsection 2(1) of the
+          Conflict of Interest Act, as well as the individual's name and title,
+        checked_on: 2026-09-20
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/page-1.html
     note: >
       The exclusion is expressly limited to sections 7, 8 and 26 of the Privacy Act and
       section 19 of the Access to Information Act. That is the section this tool operates
@@ -232,29 +233,43 @@ mappings:
       - statute: atia
         section: "16"
         heading: Law enforcement and investigations
-        unverified: >
-          Section number and marginal heading read from the consolidated text on
-          2026-09-13; no quote captured because E3 makes no proposal and cites the
-          heading only, so the reviewer opens the section themselves.
+        quote: >-
+          Law enforcement and investigations
+        checked_on: 2026-09-20
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/a-1/page-2.html
       - statute: atia
         section: "20"
         heading: Third party information
-        unverified: >
-          Section number and marginal heading read from the consolidated text on
-          2026-09-13; no quote captured, same reason as section 16.
+        quote: >-
+          Third party information
+        checked_on: 2026-09-20
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/a-1/page-3.html
       - statute: atia
         section: "21"
         heading: Advice, etc.
-        unverified: >
-          Section number and marginal heading read from the consolidated text on
-          2026-09-13; no quote captured, same reason as section 16.
+        quote: >-
+          Advice, etc.
+        checked_on: 2026-09-20
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/a-1/page-3.html
       - statute: atia
         section: "23"
-        heading: Protected information, solicitors, advocates and notaries
-        unverified: >
-          Section number and marginal heading read from the consolidated text on
-          2026-09-13; no quote captured, same reason as section 16.
+        heading: Protected information - solicitors, advocates and notaries
+        quote: >-
+          Protected information - solicitors, advocates and notaries
+        checked_on: 2026-09-20
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/a-1/page-4.html
     note: >
       These four are flags with no proposal. They are in the taxonomy so that a reviewer
       reading a briefing note is not left to notice the advice exemption unaided, and so
       that the evaluation can report how often the flag was useful.
+
+      The quote on each of these four is the marginal note, verbatim, and not the
+      operative text of the section. That is what E3 cites, because E3 sends a reviewer to
+      read the section rather than proposing anything under it, and quoting the whole of
+      section 16 here would imply a precision this code does not have. Recorded explicitly
+      so that "verified" is not read as more than it is.
+
+      One typographic note, because a verbatim quote and this repository's punctuation
+      rule collide exactly once. The marginal note of section 23 is printed with an em
+      dash: "Protected information - solicitors, advocates and notaries" appears in the
+      Act with an em dash where the hyphen is here. The words are unchanged.

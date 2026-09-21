@@ -267,8 +267,7 @@ Whichever produces the clearest evidence becomes `docs/rejected.md`.
 Ticked as of 2026-09-20. A box is ticked only when the thing it names is measured and
 published, not when the code for it exists.
 
-- [ ] Taxonomy written against the federal acts and one provincial act, provisions verified, published as YAML and `docs/taxonomy.md`
-      (written and published; 18 of 33 provisions verified, the rest marked unverified with the reason)
+- [x] Taxonomy written against the federal acts and one provincial act, provisions verified, published as YAML and `docs/taxonomy.md`
 - [ ] Labelled corpus of 200+ pages with per-span categories, hand-verified, checksums committed; native and scanned tracks
       (native track done at 210 pages; the scanned track does not exist)
 - [x] Leak rate and over-redaction rate per category with bootstrap CIs, on the README's first screen
@@ -782,3 +781,48 @@ run it. `results/reviewer.md` says so in those words rather than reporting an em
 and `sever eval-reviewer` refuses to print a ratio until both arms have reached three
 documents, because two sessions on one record produce a computable number that means
 nothing and would be read as measured.
+
+### 12.17 Reading the statutes, and three mappings that were wrong
+
+2026-09-20. All 36 provisions are verified: quote, date checked, URL checked against.
+Federal current to 2026-07-21, ATIPPA to the Assembly's consolidation at 2026 c16 s2. The
+count was 18 of 33 and the rest were carrying a written reason for not having been checked,
+which is the honest state but not the finished one.
+
+Reading them was not clerical. Three of the NL mappings were wrong, and none of the three
+was wrong in the direction the open questions had guessed.
+
+**K2 is (f), (g) and (h).** This was the item flagged as largest, correctly: K2 carries
+2,345 of the corpus's 5,355 spans. The letters were right to refuse to guess, and they are
+now confirmed. What the confirmation added is a limit nobody had written down: paragraph (h)
+releases an opinion given in the course of performing services "except where they are given
+in respect of another individual". An official's assessment of a member of the public is
+therefore R1 and not K2. The tool cannot see that distinction and the schedule would have
+argued the wrong way about it.
+
+**K4 is a weighing with no period in it.** The federal Act excludes a person dead more than
+twenty years from the definition of personal information outright. ATIPPA 40(5)(j) makes the
+time since death a circumstance the head of a public body weighs, and states no period at
+all. So a K4 that releases after a fixed number of years is wrong twice under this
+jurisdiction: it performs a weighing the Act reserves to a person, and it weighs against a
+threshold this project invented. K4 escalates under the NL configuration. This was on the
+open list and is now decided.
+
+**K3 is far narrower than assumed, and this one was not on the list.** There is no general
+publicly-available exception in ATIPPA in the terms of the federal 19(2)(b). Paragraph
+40(2)(m) releases two enumerated things, attendance at a public event and receipt of an
+honour, and only where the disclosure is not contrary to the public interest. A name that
+is already public for any other reason is not released by it. Under the NL configuration
+anything K3 reaches through general "already public" reasoning escalates.
+
+**What this does to the numbers, and the answer is nothing yet.** Every published figure in
+this repository comes from the federal configuration. The NL configuration has never been
+scored, so three codes moving toward escalation change no table here. What it does do is
+make the NL configuration a different tool from the federal one in a way the taxonomy now
+records, and scoring it would be a statement about two statutes rather than about this
+software. Not measured, not claimed, and worth doing.
+
+**The one place a verbatim quote and this repository's punctuation rule collide.** The
+marginal note of ATIA section 23 is printed with an em dash. The quote here uses a hyphen
+and `federal.yaml` says so beside it, because silently normalising a quotation is the kind
+of small dishonesty this whole file format exists to prevent.
