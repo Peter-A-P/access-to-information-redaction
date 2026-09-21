@@ -82,19 +82,59 @@ letter's letterhead is published by the department in the act of writing the let
 carrying it into the register for every other record in the request would be an inference
 rather than an observation.
 
+## Published federal releases: terms recorded, loader built, nothing fetched yet
+
+The real-record over-redaction test. Everything still visible in a completed
+access-to-information release was judged releasable by a public body's reviewer, which makes
+a visible span a must-keep label that nobody in this project chose. What sits under the
+existing black boxes cannot be recovered and is not a label at all, so leak rate is not
+computable on that track and `sever/eval/confusion.py::Scored.leak_rate` refuses to compute
+it rather than returning a number that means nothing.
+
+**The source.** Library and Archives Canada publishes completed release packages for
+archival records and serves them free of charge at
+<https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca>. Other
+federal institutions publish packages on their own sites. `open.canada.ca` publishes
+*summaries* of completed requests, which are metadata and not records, and are no use for
+this test.
+
+**The terms, read 2026-09-21 at <https://www.canada.ca/en/transparency/terms.html>.**
+Government of Canada material "may be reproduced in whole or in part for non-commercial
+purposes, and in any format, without charge or further permission", subject to exercising
+due diligence in ensuring accuracy, identifying the source, and not representing the
+reproduction as an official version. Commercial redistribution needs written permission and
+is not in scope here. This project is non-commercial, it reproduces nothing publicly in any
+case, and it records the source URL of every package it measures.
+
+**There is no fetcher, on purpose.** The LAC search runs on an undocumented endpoint behind
+a JavaScript front end. Reverse-engineering it was attempted on 2026-09-21 and abandoned: it
+is fragile, it is not a use the site documents, and a published number that depends on an
+undocumented endpoint staying stable is not reproducible in the way the rest of this
+repository is. So the track is manifest-driven. A person downloads packages,
+`sever releases add` records each with its sha256, its source URL and the retrieval date,
+and **the manifest is committed while the PDFs are not**. Anyone can download the same
+packages from the same URLs and reproduce the number, or get a checksum failure naming the
+file that differs.
+
+**One guard before anything is scored.** A released PDF is supposed to have had the text
+under its boxes removed, and not all of them do. A package that merely draws rectangles over
+live text still carries the withheld names in its text layer, and this loader would read
+them as visible and count every one as a must-keep label, marking the tool down for
+proposing to redact exactly what the reviewer redacted. `inspect_redaction` checks for that
+and excludes the package with a reason. It is the question `sever/eval/pdf_leak.py` asks of
+this project's own exports, turned around and asked of somebody else's.
+
+Status: loader, guard, measurement and `sever eval-releases` are built and tested against
+synthesised stand-ins. No real package has been downloaded, so `results/releases.md` says so
+instead of reporting a rate.
+
 ## Planned, not present
 
-`PLAN.md` describes two further sources. Neither has been fetched and neither has a loader.
+`PLAN.md` describes one further source.
 
-- **Published completed federal access-to-information releases**, 60 to 100 pages sampled
-  across departments, as the real-record over-redaction test. Everything visible in a
-  released record was judged releasable by a human, which makes a visible span a genuine
-  must-keep label. What sits under the existing black boxes cannot be recovered and is not
-  a label at all, so leak rate is not computable on that track. The evaluation refuses to
-  compute it rather than reporting a number that means nothing
-  (`sever/eval/confusion.py::Scored.leak_rate`).
 - **A scanned track**, corpus pages rasterised with noise and skew and read back through
-  OCR, with the character error rate measured and reported separately.
+  OCR, with the character error rate measured and reported separately. **Built and measured
+  on 2026-09-20**; see `results/scanned.md`.
 
 ## The employer's own disclosure log is excluded, by decision
 

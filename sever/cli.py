@@ -851,6 +851,94 @@ def cost(
         typer.echo(f"wrote {cost_mod.write(result, out)}")
 
 
+releases_app = typer.Typer(no_args_is_help=True, help="Published federal release packages.")
+app.add_typer(releases_app, name="releases")
+
+
+@releases_app.command("add")
+def releases_add(
+    pdf: Annotated[Path, typer.Argument(help="A downloaded release package.")],
+    source_url: Annotated[str, typer.Option(help="Where it was downloaded from.")],
+    institution: Annotated[str, typer.Option(help="Which public body released it.")] = "",
+    request_number: Annotated[str, typer.Option()] = "",
+    note: Annotated[str, typer.Option()] = "",
+    manifest: Annotated[Path, typer.Option()] = Path("data/releases/manifest.json"),
+) -> None:
+    """Record a downloaded package in the committed manifest, with its checksum.
+
+    The PDFs are not committed and the manifest is, so anyone can download the same
+    packages from the same URLs and reproduce the number, or get a checksum failure naming
+    the file that differs. There is no fetcher on purpose; see `sever/ingest/releases.py`.
+    """
+    from sever.ingest import releases
+
+    try:
+        record = releases.add(
+            pdf,
+            source_url=source_url,
+            institution=institution,
+            request_number=request_number,
+            note=note,
+            manifest=manifest,
+        )
+    except releases.ManifestError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    check = releases.inspect_redaction(pdf)
+    typer.echo(f"recorded {record.file_name} sha256 {record.sha256[:16]} in {manifest}")
+    if check.sound:
+        typer.echo(f"redaction check: {check.boxes} boxes, none with text under them")
+    elif check.checked:
+        typer.echo(
+            f"REFUSED BY THE REDACTION CHECK: {check.boxes_with_text} of {check.boxes} "
+            f"boxes still have text under them. This package's visible text carries values "
+            f"a reviewer withheld, so it will be excluded from the measurement."
+        )
+    else:
+        typer.echo(f"redaction check: not run, {check.note}")
+
+
+@releases_app.command("check")
+def releases_check(
+    manifest: Annotated[Path, typer.Option()] = Path("data/releases/manifest.json"),
+    root: Annotated[Path, typer.Option()] = Path("data/releases"),
+) -> None:
+    """Verify every package in the manifest is present, unmodified and soundly redacted."""
+    from sever.ingest import releases
+
+    loaded = releases.load(manifest, root)
+    for r in loaded.releases:
+        typer.echo(
+            f"  ok  {r.record.file_name}: {len(r.document)} pages, "
+            f"{r.scorable_pages} with visible text, {r.redaction.boxes} boxes"
+        )
+    for reason in loaded.excluded:
+        typer.echo(f"  no  {reason}")
+    typer.echo(f"{len(loaded.releases)} usable, {len(loaded.excluded)} excluded")
+
+
+@app.command("eval-releases")
+def eval_releases(
+    manifest: Annotated[Path, typer.Option()] = Path("data/releases/manifest.json"),
+    root: Annotated[Path, typer.Option()] = Path("data/releases"),
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/releases.md"
+    ),
+) -> None:
+    """Over-redaction on records a public body actually released.
+
+    The only track whose ground truth nobody in this project chose. A span still visible in
+    a completed release was judged releasable by a reviewer, so a box over it is an
+    over-redaction against a real decision. Leak rate is not computable here and is not
+    reported.
+    """
+    from sever.eval import releases as releases_eval
+
+    result = releases_eval.run(manifest=manifest, root=root)
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"wrote {releases_eval.write(result, out)}")
+
+
 @app.command("eval-scanned")
 def eval_scanned(
     documents: Annotated[int, typer.Option(help="Documents to scan. This track is slow.")] = 50,

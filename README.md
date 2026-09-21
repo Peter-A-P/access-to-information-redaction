@@ -389,7 +389,8 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [what the privacy boundary does to accuracy](results/placeholders.md) ·
 [reviewer time study](results/reviewer.md) ·
 [the same corpus under ATIPPA](results/nl/results.md) ·
-[the scanned track](results/scanned.md) · [plan](PLAN.md)
+[the scanned track](results/scanned.md) ·
+[real released records](results/releases.md) · [plan](PLAN.md)
 
 ## Engineering
 
@@ -449,6 +450,7 @@ detector would ever have flagged them and the corpus had never exercised that pa
 | Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study (the app records it; nobody has sat down yet) |
 | 210-page labelled corpus, labels by construction | Published-federal-releases track |
 | Detection, context record, rules, escalation | Hosted demo |
+| The real-record track, built and tested; no packages downloaded yet | |
 | The model layer, through the gateway on placeholders | |
 | Blunt, rules-only and sentence-only baselines, with intervals | |
 | The placeholders ablation, and the threshold sweep | |

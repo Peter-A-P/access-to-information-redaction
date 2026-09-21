@@ -20,7 +20,11 @@ build/
 
 # Data (loaders fetch and verify; nothing raw is committed)
 data/raw/
-data/releases/
+# The release packages themselves are not committed; the manifest that names them, with
+# their checksums and source URLs, is. That is the whole reproducibility claim of the
+# real-record track: anyone can obtain the same bytes from the same URLs.
+data/releases/*
+!data/releases/manifest.json
 corpus/generated/
 corpus/scans/
 

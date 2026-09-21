@@ -90,3 +90,10 @@ jobs:
       # destroyed rather than drop it from the recall denominator.
       - name: The scan track's arithmetic, without an OCR engine
         run: uv run pytest -q tests/test_ocr.py
+
+      # The real-record track has no data in CI and is not supposed to. What runs here is
+      # the guard that decides whether a downloaded package can be used at all: a released
+      # PDF whose boxes still have live text under them would turn a reviewer's withheld
+      # values into must-keep labels, and the tool would be marked down for agreeing.
+      - name: The guard on somebody else's redactions
+        run: uv run pytest -q tests/test_releases.py

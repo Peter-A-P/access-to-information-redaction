@@ -1268,3 +1268,54 @@ for the third time. `docs/escalation.md` carries the breakdown.
 
 So the change is an improvement federally, a regression provincially, and the honest
 statement is both.
+
+### 12.28 The real-record track, built without a fetcher on purpose
+
+2026-09-21. Section 10's last measurement that is not waiting on a person: over-redaction on
+records a public body actually released. Loader, guard, measurement and `sever eval-releases`
+are built and tested. No package has been downloaded, and `results/releases.md` says so
+rather than reporting a rate.
+
+**Why there is no fetcher, which is the decision worth recording.** Library and Archives
+Canada serves completed release packages free of charge, behind a JavaScript front end whose
+search runs on an undocumented POST endpoint. I found the endpoint, worked out the payload
+shape from the site's own `DataService.js`, and then stopped. Three reasons, in order of
+weight: a published number that depends on an undocumented endpoint staying stable is not
+reproducible in the way everything else here is; automated access is not a use the site
+documents, and the terms I could find cover reproduction rather than scraping; and the
+records are archival, which is a weaker match for a tool aimed at modern records about
+living people than the effort implied.
+
+So the track is manifest-driven. A person downloads packages, `sever releases add` records
+each with its sha256, source URL and retrieval date, and **the manifest is committed while
+the PDFs are not**. Anyone can obtain the same bytes from the same URLs and reproduce the
+number, or get a checksum failure naming the file that differs. That is slower than a
+fetcher and more honest than one, and it is what section 3's data rules already asked for:
+"Loaders fetch and verify checksums; the manifest is committed."
+
+**The guard is the part of this I would keep if I had to throw the rest away.** A released
+PDF is supposed to have had the text under its boxes removed. Not all of them do. A package
+that merely draws rectangles over live text still carries the withheld names in its text
+layer, and this loader would read those as visible and count every one as a must-keep label,
+marking this tool down for proposing to redact exactly what the reviewer redacted. A
+measurement that punishes agreement is worse than no measurement. `inspect_redaction` reads
+the text inside every filled rectangle and excludes the package with a reason, which is the
+question `sever/eval/pdf_leak.py` asks of this project's own exports, turned around and asked
+of somebody else's. A package with no rectangles at all is reported as *unchecked* rather
+than sound, because claiming a check that did not happen is the same error one level down.
+
+**Two handicaps this track carries, both stated in its own output.** A released PDF is a
+flat text layer, so nothing says which paragraph was a signature block and every block is
+body text; `results/scanned.md` measures what that costs where the truth is known, and it is
+about twenty points of over-redaction. And there is no configured requester on a downloaded
+package, so every span that would have been K1 is something else here. Both push the same
+way, so the figure is a floor.
+
+**And the denominator is a choice, so both are printed.** The headline counts spans that
+could be personal information; the second row counts every detected span including the
+organisations, places, job titles and dates the tool releases by design. A package full of
+department names would move a blended rate without saying anything about a decision anybody
+would argue with, and a reader should be able to see the effect of that choice rather than
+trust it.
+
+What is left for this track is not code. It is somebody downloading sixty to a hundred pages.
