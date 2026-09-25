@@ -334,7 +334,8 @@ because a document nobody has reviewed is not a release however good the redacti
 ## Try it
 
 ```bash
-uv venv && uv pip install -e ".[detect]" --group dev
+uv sync --extra detect --group dev    # the versions in uv.lock, the same ones CI runs
+source .venv/bin/activate
 python -m spacy download en_core_web_lg
 
 sever taxonomy check                  # the codes, and how many provisions are verified
@@ -367,7 +368,8 @@ project 04's library, `boundary`, a private repository that is not on PyPI, so i
 declared dependency here and cannot be: the `boundary` package on PyPI is an unrelated
 project. Where you have project 04, install it by path with
 `uv pip install -e ../04-compliant-ai-gateway`; the version this project needs, and why, is
-in `sever/gateway.py`.
+in `sever/gateway.py`. Neither it nor the spaCy model is in `uv.lock`, and `uv sync` removes
+whatever the lock does not list, so re-sync with `uv sync --inexact` once they are installed.
 
 ## Repository
 
