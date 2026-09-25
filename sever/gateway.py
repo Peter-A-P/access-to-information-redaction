@@ -11,8 +11,8 @@ So the library is installed by path:
     uv pip install -e ../04-compliant-ai-gateway
 
 and the version floor a dependency line would have bought is enforced here instead, at the
-point of use. The floor is 0.5.5, and each release between 0.2 and it is a correctness fix
-this project depends on rather than a preference for the newest thing:
+point of use. The floor is 0.6.4, and each release named below is a correctness fix this
+project depends on rather than a preference for the newest thing:
 
   * **0.5.1** resolves an overlap by containment before score. Before it, Presidio's
     LOCATION "Bannerman Street" beat this project's ADDRESS "14 Bannerman Street" on score
@@ -35,8 +35,30 @@ this project depends on rather than a preference for the newest thing:
     quietly. Nothing in this project rebuilds a policy today, which is why the gap was
     invisible here; the reviewer app will, because showing a reviewer what was sent means
     rehydrating in a different request than the one that redacted.
+  * **0.6.0** masks an email address no recogniser claimed, including one spelled with
+    accents. Before it, an address with no digit in it was neither identifier-shaped nor
+    name-shaped and crossed `Policy.outbound` in clear. This project found the same class
+    in its own scrub (the "email leak" amendment in PLAN.md) and fixed it there; the floor
+    stops the layer underneath it from being the weaker of the two.
+  * **0.6.2** lets a bracketed group join a code run, so `(709) 555-0199` is masked whole.
+    Before it, `555-0199` was masked and the area code went out beside its own
+    placeholder, and a bracketed area code is how a phone number is usually written.
+  * **0.6.3** `Policy.second_pass` names the placeholders the fallback minted, which the
+    entity type stopped saying once 0.6.0 minted `EMAIL` from the second pass. A leak
+    decomposition that separates "the recogniser found it" from "only the backstop did"
+    has to read this rather than the type.
+  * **0.6.4** rehydrates a placeholder a model rewrote inside its brackets (a hyphen or a
+    space for the underscore, a zero-padded index, a line break). Before it, those
+    resolved to nothing and were listed in `unresolved`. `LayeredPolicy.rehydrate` passes
+    straight through to this, and nothing here rehydrates model output today; the floor
+    is set so that the first thing that does gets the values back.
 
-All four are the difference between a redaction that holds and one that leaks, so an
+Checked against 0.12.0, the version installed when the floor was raised: the full suite
+passes. The 0.5.3 behaviour change 04 flagged (`Policy.outbound` refuses text carrying a
+placeholder it minted) does not reach this project, because `LayeredPolicy` hands it source
+text once and applies its own scrub afterwards; `tests/test_boundary_adapter.py` pins that.
+
+All of them are the difference between a redaction that holds and one that leaks, so an
 older `boundary` raises rather than running: an unmarked downgrade of the redaction is
 exactly the failure this project is about. There is no upper bound to enforce, because
 nothing pulls a newer one in by accident; a release of 04 that breaks this project breaks
@@ -47,7 +69,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-MINIMUM_BOUNDARY: Final = (0, 5, 5)
+MINIMUM_BOUNDARY: Final = (0, 6, 4)
 
 INSTALL: Final = "uv pip install -e ../04-compliant-ai-gateway"
 
@@ -99,9 +121,10 @@ def require_boundary() -> Any:
         wanted = ".".join(str(n) for n in MINIMUM_BOUNDARY)
         raise BoundaryUnavailable(
             f"boundary {version or 'of an unreported version'} is installed, and this "
-            f"project needs {wanted} or newer. Four correctness fixes in between decide "
-            f"whether a house number, a health number or a rehydrated placeholder reaches "
-            f"a released record; see sever/gateway.py for which. Update project 04 and "
+            f"project needs {wanted} or newer. The correctness fixes in between decide "
+            f"whether a house number, a health number, an email address, an area code or "
+            f"a rehydrated placeholder reaches a released record; see sever/gateway.py "
+            f"for which. Update project 04 and "
             f"reinstall it: `{INSTALL}`."
         )
     return boundary

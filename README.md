@@ -130,7 +130,8 @@ Three more limitations, none of them small:
   documents were written, which is the only affordable way to get 5,355 labelled spans. It
   also means the documents are template-shaped. The real-record test that would check this
   (published federal releases, where everything visible was judged releasable by a human)
-  is designed and not built.
+  is built and tested, and has not been run: no release package has been added yet, so
+  [`results/releases.md`](results/releases.md) reports no rate rather than a made-up one.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -439,24 +440,16 @@ correct detector would ever have flagged them and the corpus had never exercised
 And it settled the spaCy model: `en_core_web_lg` over `en_core_web_sm` is 97.4 percent
 recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the time.
 
-The comparison was worth running in both directions. It found three defects in the
-gateway's engine, all since fixed, the worst of which returned a Medical Care Plan number
-unredacted on 57 of 210 pages without refusing. It also found two in this project: personas
-were generating social insurance numbers that failed the Luhn checksum, so no correct
-detector would ever have flagged them and the corpus had never exercised that path at all.
-
 ## What is built, and what is not
 
-| Built and measured | Not built |
-|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study (the app records it; nobody has sat down yet) |
-| 210-page labelled corpus, labels by construction | Published-federal-releases track |
-| Detection, context record, rules, escalation | Hosted demo |
-| The real-record track, built and tested; no packages downloaded yet | |
-| The model layer, through the gateway on placeholders | |
-| Blunt, rules-only and sentence-only baselines, with intervals | |
-| The placeholders ablation, and the threshold sweep | |
-| All four baselines, including model-only | |
+| Built and measured | Built, not yet measured | Not built |
+|---|---|---|
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: the app times both arms; nobody has sat down yet | Hosted demo |
+| 210-page labelled corpus, labels by construction | Over-redaction on published federal releases: loader, guard and measurement tested; no package added yet | |
+| Detection, context record, rules, escalation | | |
+| The model layer, through the gateway on placeholders | | |
+| All four baselines (blunt, rules-only, sentence-only, model-only), with intervals | | |
+| The placeholders ablation, and the threshold sweep | | |
 | The scanned track, four degradation profiles, CER measured | |
 | True-redaction export, schedule, PDF leak test | |
 | Append-only hash-chained audit log | |

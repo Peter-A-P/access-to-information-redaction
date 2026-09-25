@@ -52,23 +52,23 @@ def test_nothing_declares_a_dependency_named_boundary() -> None:
 def test_a_boundary_below_the_floor_raises_rather_than_running(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """0.5.4 cannot carry a second-pass placeholder across a rebuilt policy, so a
-    rehydration in a later request silently resolves nothing."""
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.4"))
-    with pytest.raises(BoundaryUnavailable, match=r"0\.5\.5 or newer"):
+    """0.6.1 masks `555-0199` and sends the area code of `(709) 555-0199` in clear beside
+    its own placeholder."""
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.6.1"))
+    with pytest.raises(BoundaryUnavailable, match=r"0\.6\.4 or newer"):
         require_boundary()
     assert available() is False
 
 
 def test_the_floor_itself_is_enough(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.5.5"))
-    assert require_boundary().__version__ == "0.5.5"
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.6.4"))
+    assert require_boundary().__version__ == "0.6.4"
     assert available() is True
 
 
 def test_a_newer_boundary_is_not_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     """There is no upper bound: a break in 04 should fail a test, not a version check."""
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.9.0"))
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.12.0"))
     assert available() is True
 
 
