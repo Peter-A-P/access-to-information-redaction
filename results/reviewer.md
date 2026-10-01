@@ -4,4 +4,4 @@
 
 No review sessions have been timed yet.
 
-This is the one measurement in the definition of done that a program cannot produce: it needs a person to review the same records twice, once with the tool's proposals and once without them. `sever review --mode proposals` and `sever review --mode unaided` record the timings, and this table fills in from `review/timings.jsonl`.
+This is the one measurement in the definition of done that a program cannot produce: it needs people to review records with the tool's proposals and without them. `sever study` runs it, one reviewer at a time, and `sever study report` fills this table in. See `docs/reviewer-study.md`. (`sever review --mode proposals` and `sever review --mode unaided` time a single arm by hand.)

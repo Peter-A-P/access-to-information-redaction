@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Reviewer study{% endblock %}
+{% block content %}
+<div class="study">
+<h2>Thank you for taking part</h2>
+<p>
+  You are about to review {{ study.tasks|length }} short records the way an
+  access-to-information analyst would: deciding, for each piece of personal information,
+  whether it is released to the requester or withheld. Each record is one page. It takes
+  most people about an hour, and you can stop and come back at any time.
+</p>
+<p>
+  Every person and record here is invented. Nothing you see is real.
+</p>
+
+<h3>How it works</h3>
+<ol>
+  <li>The records come in two halves. In one half the tool has already proposed what to
+    withhold and why, and you accept or overrule each proposal. In the other half there
+    are no proposals and you find everything yourself. Each half starts with a practice
+    page that is not counted.</li>
+  <li><strong>With proposals:</strong> every highlighted span has three buttons. Withhold
+    accepts the proposal, Release leaves the text in the record, and Escalate withholds it
+    and marks it for a second opinion. If the tool missed something, select the text with
+    your mouse and press Add severance.</li>
+  <li><strong>Without proposals:</strong> select each piece of text that must be withheld,
+    check the category, and press Add severance. If you make a mistake, press Undo
+    beside it.</li>
+  <li>When the page is done, press <strong>Mark page complete</strong>, then
+    <strong>Next record</strong>.</li>
+</ol>
+
+<h3>Two things that matter</h3>
+<ul>
+  <li><strong>Work at your normal pace.</strong> Each page is timed from when it opens
+    until you mark it complete. Accuracy matters as much as speed: being fast and wrong
+    does not help the study.</li>
+  <li><strong>Take breaks between records,</strong> after you press Mark page complete and
+    before you press Next record. The clock is stopped there.</li>
+</ul>
+
+<h3>What to release and what to withhold</h3>
+{% include "_reference.html" %}
+<p class="note">This list is also folded away at the top of every record.</p>
+
+<form method="get" action="/next">
+  <button class="primary big" type="submit">Start the first record</button>
+</form>
+</div>
+{% endblock %}

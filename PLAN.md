@@ -277,7 +277,8 @@ published, not when the code for it exists.
 - [x] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
 - [x] PDF leak test published, out of N
 - [ ] Reviewer minutes per page with and without proposals, with CI
-      (both arms are built and timed by `sever review`; nobody has sat down and run them yet)
+      (`sever study` runs the whole study and `sever study report` scores it; see 12.29.
+      Nobody has sat down yet)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -1319,3 +1320,38 @@ would argue with, and a reader should be able to see the effect of that choice r
 trust it.
 
 What is left for this track is not code. It is somebody downloading sixty to a hundred pages.
+
+### 12.29 The study is one command, and the export was not reading the reviewer
+
+2026-10-01. Section 5 had four reviewers doing twenty pages each "with and without
+proposals", and `sever review --mode` timed one arm at a time. Read literally that is the
+same twenty pages twice per person, which measures memory: the second pass is fast because
+the reviewer has read the letter. `sever study` replaces it with a crossover. Twenty test
+split records are dealt into two halves balanced by document type; each reviewer does one
+half with proposals and the other unaided and never sees a record twice; the halves swap
+between reviewers 1 and 2 and the order swaps between 1-2 and 3-4. Each arm opens with a
+practice page that is timed, recorded and left out. The record-by-record ratio over records
+reviewed in both arms is the figure to quote, because it holds the documents fixed.
+
+Two things were added because the study would have been unfair without them. Every page
+now names the requester and offers the release rules and the public register, since the
+tool is configured with those facts and an unaided reviewer was not. And a reviewer's own
+severances are now drawn on the page with an Undo, because in the unaided arm those are
+all of them and they had been invisible once made. The highlighted button on each proposal
+is now the one the tool proposes; it had been Withhold on every span, which nudged a
+reviewer towards withholding the officials the tool proposed to release.
+
+Accuracy is scored beside speed, per arm, against the labels, with the tool's unreviewed
+proposals on the same records as the reference row. An arm that is fast because the
+reviewer accepted everything unread is measuring trust, not help.
+
+**Building it found a leak in the export.** `sever export --audit` checked that every page
+had a completion row and then applied the tool's *proposals*. A rejected proposal was
+still severed, and a name a reviewer selected and severed because the detector had missed
+it was released in clear. `sever.review.decisions.final_spans` now reads the log and the
+proposals together, the export and the schedule apply its answer, and
+`tests/test_export_reads_decisions.py` checks the PDF. The released-record screen had the
+related fault that a span moved from R1 to R2 dropped out of its schedule, because
+`CHANGE_CATEGORY` withholds or releases depending on the code, which only the taxonomy
+knows.
+

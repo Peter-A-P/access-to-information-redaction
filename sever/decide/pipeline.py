@@ -57,6 +57,9 @@ class Source(StrEnum):
     MODEL = "model"
     FALLTHROUGH = "fallthrough"
     BASELINE = "baseline"
+    # A severance a person made on the review screen, which the tool never proposed or
+    # proposed under another code. Only `sever.review.decisions` creates these.
+    REVIEWER = "reviewer"
 
 
 @dataclass(frozen=True, slots=True)

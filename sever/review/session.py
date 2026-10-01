@@ -33,6 +33,7 @@ from pathlib import Path
 from sever.decide.pipeline import Proposal
 from sever.ingest.document import Document
 from sever.review.audit import Action, AuditLog
+from sever.review.decisions import FinalSpan, Origin, final_spans
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
 
@@ -68,6 +69,10 @@ class PageTiming:
     completed_at: dt.datetime
     spans_on_page: int
     actions: int
+    # Who reviewed, as the study's pseudonym rather than a name, and whether the page was
+    # the warm-up a study discards before it starts counting.
+    reviewer: str | None = None
+    practice: bool = False
 
     @property
     def seconds(self) -> float:
@@ -84,6 +89,8 @@ class PageTiming:
             "seconds": round(self.seconds, 3),
             "spans_on_page": self.spans_on_page,
             "actions": self.actions,
+            "reviewer": self.reviewer,
+            "practice": self.practice,
         }
 
 
@@ -93,6 +100,14 @@ class Item:
 
     document: Document
     proposals: tuple[Proposal, ...]
+    # Set in the reviewer study, where one session serves both arms: which arm this record
+    # is in, and whether it is the warm-up page. Outside the study both are left alone and
+    # the session's own mode applies.
+    arm: Mode | None = None
+    practice: bool = False
+    # Who made the request. The tool is configured with it, so a reviewer has to be told it
+    # too, or the unaided arm is being asked a question with half the facts.
+    requester: str | None = None
 
     @property
     def doc_id(self) -> str:
@@ -118,6 +133,7 @@ class Session:
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     timings_path: Path | None = None
     actor: str | None = None
+    jurisdiction: str | None = None
     # When each page was last served, so a completion can be measured against it. In
     # memory: a restart loses the open pages, which is correct, because a page served
     # before a restart was not being read during it.
@@ -132,6 +148,34 @@ class Session:
             if i.doc_id == doc_id:
                 return i
         raise KeyError(doc_id)
+
+    def mode_of(self, doc_id: str) -> Mode:
+        """The arm this record is served in: its own in the study, the session's otherwise."""
+        arm = self.item(doc_id).arm
+        return arm if arm is not None else self.mode
+
+    def final_spans(self, doc_id: str) -> tuple[FinalSpan, ...]:
+        """What the reviewer decided for this record, which is what an export applies."""
+        return final_spans(
+            self.log.rows(request_id=self.request_id),
+            self.item(doc_id).proposals,
+            doc_id=doc_id,
+            taxonomy=self.taxonomy,
+            jurisdiction=self.jurisdiction,
+        )
+
+    def added_spans(self, doc_id: str, page: int) -> tuple[FinalSpan, ...]:
+        """Severances the reviewer made that the tool never proposed, still standing.
+
+        Shown on the page so a reviewer can see, and undo, what they selected. A reviewer
+        who cannot see their own severances cannot check them, and in the unaided arm those
+        are all of them.
+        """
+        return tuple(
+            s
+            for s in self.final_spans(doc_id)
+            if s.page == page and s.origin is Origin.REVIEWER and s.withholds
+        )
 
     # --- what the reviewer has done so far ---------------------------------------
 
@@ -238,11 +282,13 @@ class Session:
             request_id=self.request_id,
             doc_id=doc_id,
             page=page,
-            mode=self.mode,
+            mode=self.mode_of(doc_id),
             served_at=served,
             completed_at=done_at,
             spans_on_page=len(self.item(doc_id).on_page(page)),
             actions=len(self.acted_spans(doc_id, page)),
+            reviewer=self.actor,
+            practice=self.item(doc_id).practice,
         )
         self.timings.append(timing)
         if self.timings_path is not None:
@@ -264,6 +310,7 @@ def build_session(
     mode: Mode = Mode.PROPOSALS,
     timings_path: Path | None = None,
     actor: str | None = None,
+    jurisdiction: str | None = None,
 ) -> Session:
     """A session over a DuckDB log at `log_path`, creating it if it is not there.
 
@@ -272,7 +319,13 @@ def build_session(
     one template edit away from not being a control.
     """
     kept = tuple(
-        Item(document=i.document, proposals=i.proposals if mode.shows_proposals else ())
+        Item(
+            document=i.document,
+            proposals=i.proposals if (i.arm or mode).shows_proposals else (),
+            arm=i.arm,
+            practice=i.practice,
+            requester=i.requester,
+        )
         for i in items
     )
     return Session(
@@ -282,4 +335,5 @@ def build_session(
         mode=mode,
         timings_path=timings_path,
         actor=actor,
+        jurisdiction=jurisdiction,
     )

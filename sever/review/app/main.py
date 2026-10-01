@@ -44,7 +44,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -53,7 +53,11 @@ from fastapi.templating import Jinja2Templates
 from sever.decide.pipeline import Proposal
 from sever.ingest.document import Page
 from sever.review.audit import Action
+from sever.review.decisions import FinalSpan
 from sever.review.session import NotReviewed, Session
+
+if TYPE_CHECKING:
+    from sever.review.study import StudyRun
 
 TEMPLATES = Path(__file__).parent / "templates"
 
@@ -75,13 +79,21 @@ class Fragment:
     text: str
     proposal: Proposal | None = None
     acted: Action | None = None
+    # A severance the reviewer made that the tool never proposed.
+    added: FinalSpan | None = None
 
     @property
     def is_span(self) -> bool:
         return self.proposal is not None
 
     @property
+    def is_added(self) -> bool:
+        return self.added is not None
+
+    @property
     def span_id(self) -> str:
+        if self.added is not None:
+            return f"s{self.added.start}-{self.added.end}"
         p = self.proposal
         if p is None:
             return ""
@@ -90,30 +102,45 @@ class Fragment:
     @property
     def state(self) -> str:
         """The CSS class, and the word the reviewer reads."""
+        if self.added is not None:
+            return Action.ADD.value
         if self.acted is None:
             return "pending"
         return self.acted.value
 
 
 def fragments(
-    page: Page, proposals: Sequence[Proposal], acted: dict[tuple[int, int], Action]
+    page: Page,
+    proposals: Sequence[Proposal],
+    acted: dict[tuple[int, int], Action],
+    added: Sequence[FinalSpan] = (),
 ) -> tuple[Fragment, ...]:
     """Cut the page text at the span boundaries.
 
-    Overlapping proposals are not expected and are not rendered twice: the later one is
+    Overlapping spans are not expected and are not rendered twice: the later one is
     dropped rather than allowed to produce interleaved markup, because a reviewer looking
-    at broken highlighting cannot tell which span they are acting on.
+    at broken highlighting cannot tell which span they are acting on. A reviewer's own
+    severance that overlaps a proposal is still in the list under the record and still
+    applied by the export; only its highlight gives way.
     """
+    marks: list[tuple[int, int, Proposal | None, FinalSpan | None]] = [
+        (p.detection.offsets.start, p.detection.offsets.end, p, None) for p in proposals
+    ]
+    marks += [(a.start, a.end, None, a) for a in added]
     out: list[Fragment] = []
     cursor = 0
-    for p in sorted(proposals, key=lambda p: p.detection.offsets.start):
-        start, end = p.detection.offsets.start, p.detection.offsets.end
+    for start, end, p, a in sorted(marks, key=lambda m: (m[0], m[1])):
         if start < cursor:
             continue
         if start > cursor:
             out.append(Fragment(text=page.text[cursor:start]))
         out.append(
-            Fragment(text=page.text[start:end], proposal=p, acted=acted.get((start, end)))
+            Fragment(
+                text=page.text[start:end],
+                proposal=p,
+                acted=acted.get((start, end)) if p is not None else None,
+                added=a,
+            )
         )
         cursor = end
     if cursor < len(page.text):
@@ -121,12 +148,20 @@ def fragments(
     return tuple(out)
 
 
-def create_app(session: Session) -> FastAPI:
-    """The application, over one session. A session per process, deliberately."""
+def create_app(session: Session, study: StudyRun | None = None) -> FastAPI:
+    """The application, over one session. A session per process, deliberately.
+
+    With `study`, the same screens run the reviewer time study: a welcome page, one record
+    after another in the order the study chose, a pause where the arm changes, and no index
+    or audit-log links to wander off through. See `sever.review.study`.
+    """
     app = FastAPI(title="sever review", docs_url=None, redoc_url=None)
     templates = Jinja2Templates(directory=str(TEMPLATES))
     templates.env.globals["session"] = session
     templates.env.globals["span_actions"] = SPAN_ACTIONS
+    templates.env.globals["study"] = study
+    if study is not None:
+        _study_routes(app, templates, study)
 
     def _page_context(doc_id: str, number: int) -> dict[str, Any]:
         try:
@@ -138,10 +173,23 @@ def create_app(session: Session) -> FastAPI:
         page = item.document.page(number)
         acted = session.acted_spans(doc_id, number)
         proposals = item.on_page(number)
+        added = session.added_spans(doc_id, number)
+        withholding = [
+            c.code
+            for c in session.taxonomy.categories
+            if session.taxonomy.decision(c.code, session.jurisdiction).withholds
+        ]
         return {
             "item": item,
             "page": page,
-            "fragments": fragments(page, proposals, acted),
+            "mode": session.mode_of(doc_id),
+            "task": study.task(doc_id) if study is not None else None,
+            "added": added,
+            # What a reviewer can sever a span under. A keep code here would offer to
+            # withhold a span as "the requester's own information", which means nothing.
+            # R1 first, because it is what an added span almost always is.
+            "add_codes": sorted(withholding, key=lambda c: (c != "R1", c)),
+            "fragments": fragments(page, proposals, acted, added),
             "proposals": proposals,
             "acted": acted,
             "outstanding": session.outstanding(doc_id, number),
@@ -200,7 +248,12 @@ def create_app(session: Session) -> FastAPI:
             ),
             None,
         )
-        if proposal is None and chosen is not Action.ADD:
+        is_undo = (
+            proposal is None
+            and chosen is Action.REJECT
+            and any((a.start, a.end) == (start, end) for a in session.added_spans(doc_id, number))
+        )
+        if proposal is None and chosen is not Action.ADD and not is_undo:
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -261,9 +314,18 @@ def create_app(session: Session) -> FastAPI:
         except NotReviewed as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         item = session.item(doc_id)
-        approvals = [
-            r for r in session.log.approvals(session.request_id) if r.doc_id == doc_id
-        ]
+        # The latest row for every span the reviewer's decisions withhold. Read through
+        # `final_spans` rather than `AuditLog.approvals`, because a span moved from R1 to
+        # R2 is withheld by a CHANGE_CATEGORY row, which only the taxonomy can tell apart
+        # from one moved to K2.
+        kept = {s.key for s in session.final_spans(doc_id) if s.withholds}
+        latest: dict[tuple[int, int, int], Any] = {}
+        for r in session.log.rows(request_id=session.request_id):
+            if r.action in (Action.COMMENT, Action.PAGE_COMPLETE):
+                continue
+            if r.doc_id == doc_id and r.span_start is not None and r.span_end is not None:
+                latest[(r.page, r.span_start, r.span_end)] = r
+        approvals = [r for k, r in sorted(latest.items()) if k in kept]
         return templates.TemplateResponse(
             request,
             "released.html",
@@ -280,3 +342,26 @@ def create_app(session: Session) -> FastAPI:
         )
 
     return app
+
+
+def _study_routes(app: FastAPI, templates: Jinja2Templates, study: StudyRun) -> None:
+    """The study's own screens. Registered before the ordinary ones, so `/` is the
+    welcome page rather than the document index."""
+
+    @app.get("/", response_class=HTMLResponse)
+    def welcome(request: Request) -> Any:
+        if study.completed:
+            return RedirectResponse(url="/next", status_code=303)
+        return templates.TemplateResponse(request, "study_welcome.html", {})
+
+    @app.get("/next", response_class=HTMLResponse)
+    def next_record(request: Request) -> Any:
+        task = study.next_task()
+        if task is None:
+            return templates.TemplateResponse(request, "study_done.html", {})
+        before = study.previous(task)
+        if before is not None and before.arm is not task.arm and study.done(before):
+            # The arm changes here. A pause, and the instructions for the other arm,
+            # before the clock starts on a page.
+            return templates.TemplateResponse(request, "study_break.html", {"task": task})
+        return RedirectResponse(url=f"/doc/{task.doc_id}/page/1", status_code=303)

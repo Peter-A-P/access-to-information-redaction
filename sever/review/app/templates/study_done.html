@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Done{% endblock %}
+{% block content %}
+<div class="study">
+<h2>That is everything. Thank you.</h2>
+<p>
+  All {{ study.tasks|length }} records are complete and your work has been saved. You can
+  close this window.
+</p>
+<p class="note">
+  For whoever is running the study: stop the server with Ctrl+C. The next person starts
+  with <code>sever study</code>, and <code>sever study report</code> updates the results.
+</p>
+</div>
+{% endblock %}

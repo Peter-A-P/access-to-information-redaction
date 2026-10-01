@@ -28,7 +28,20 @@
   {% endif %}
 </div>
 
-<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="{{ f.proposal.code }}: {{ f.proposal.reason }}">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
+{% if item.requester %}
+<div class="requester">
+  This request was made by <strong>{{ item.requester }}</strong>. Their own information is
+  released to them.
+</div>
+{% endif %}
+{% if study %}
+<details class="reference">
+  <summary>Reference: what to release and what to withhold</summary>
+  {% include "_reference.html" %}
+</details>
+{% endif %}
+
+<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="{{ f.proposal.code }}: {{ f.proposal.reason }}">{{ f.text }}</mark>{% elif f.is_added %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="you withheld this: {{ f.added.code }}">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
 
 <form id="addbar" hidden method="post"
       action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
@@ -39,13 +52,35 @@
   <strong>Withhold this text the tool did not propose:</strong>
   <span class="quote" id="addquote"></span>
   <select name="code">
-    {% for c in codes %}
+    {% for c in add_codes %}
       <option value="{{ c }}">{{ c }} - {{ taxonomy[c].name }}</option>
     {% endfor %}
   </select>
   <input type="text" name="reason" placeholder="why (optional)" size="28">
   <button class="primary" type="submit">Add severance</button>
 </form>
+
+{% if added %}
+<div class="spans">
+  <p class="note"><strong>Withheld by you</strong> ({{ added|length }}). Undo puts the text back in the record.</p>
+  {% for a in added %}
+  <div class="span-row" id="row-s{{ a.start }}-{{ a.end }}">
+    <div class="span-head">
+      <span class="quote">{{ page.text[a.start:a.end] }}</span>
+      <span class="code">{{ a.code }}</span>
+      <span class="note">{{ taxonomy[a.code].name if a.code else '' }}</span>
+      <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
+            data-swap="#body" style="display:inline; margin-left:auto">
+        <input type="hidden" name="start" value="{{ a.start }}">
+        <input type="hidden" name="end" value="{{ a.end }}">
+        <input type="hidden" name="action" value="reject">
+        <button type="submit">Undo</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 <div class="spans">
 {% for p in proposals %}
@@ -58,6 +93,7 @@
       <span class="note">{{ taxonomy[p.code].name }}</span>
       {% if p.citation %}<span class="note">{{ p.citation }}</span>{% endif %}
       <span class="note">{{ p.source.value }}, confidence {{ '%.2f'|format(p.confidence) }}</span>
+      <span class="note"><strong>proposes: {{ 'escalate' if p.is_escalation else ('withhold' if p.withholds else 'release') }}</strong></span>
       {% if done %}<span class="pill done">{{ done.value }}</span>{% endif %}
     </div>
     <div class="why">
@@ -74,8 +110,13 @@
           <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
           <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
           <input type="hidden" name="action" value="{{ action.value }}">
+          {# The highlighted button is what the tool proposes, so that agreeing with it is
+             one obvious click whichever way it went. Highlighting Withhold on every span
+             nudged a reviewer towards withholding the officials the tool had proposed to
+             release, which is the over-redaction this project exists to measure. #}
+          {% set proposed = 'escalate' if p.is_escalation else ('approve' if p.withholds else 'reject') %}
           <button type="submit" title="{{ tip }}"
-                  class="{{ 'primary' if action.value == 'approve' and not done else '' }}">{{ label }}</button>
+                  class="{{ 'primary' if action.value == proposed and not done else '' }}">{{ label }}</button>
         </form>
       {% endfor %}
       <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
@@ -94,11 +135,12 @@
   </div>
 {% else %}
   <p class="note">
-    {% if session.mode.shows_proposals %}
+    {% if mode.shows_proposals %}
       The tool proposes nothing on this page. Read it, add anything it missed, and complete
       the page.
     {% else %}
-      Select any text above that must be withheld.
+      Select any text above that must be withheld, choose a category and press Add
+      severance. When nothing else on the page must go, mark it complete.
     {% endif %}
   </p>
 {% endfor %}
@@ -116,6 +158,11 @@
   {% endif %}
   {% if page.number < pages %}
     <a href="/doc/{{ item.doc_id }}/page/{{ page.number + 1 }}">next page</a>
+  {% elif study %}
+    {% if session.releasable(item.doc_id) %}
+      <form method="get" action="/next" style="display:inline"><button class="primary big" type="submit">Next record</button></form>
+      <span class="note">The clock has stopped. Take a break here if you need one.</span>
+    {% endif %}
   {% elif session.releasable(item.doc_id) %}
     <a href="/doc/{{ item.doc_id }}/released">release this record</a>
   {% else %}

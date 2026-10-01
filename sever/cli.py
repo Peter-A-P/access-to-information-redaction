@@ -284,12 +284,17 @@ def export(
     from sever.detect.engine import SeverDetector
     from sever.eval.pdf_leak import LeakChecker
     from sever.eval.report import config_for
+    from sever.review.decisions import as_released, final_spans
     from sever.review.export import apply_redactions, build_schedule, render_pdf
+    from sever.taxonomy.loader import default_taxonomy
+
+    taxonomy = default_taxonomy()
 
     out.mkdir(parents=True, exist_ok=True)
     detector = SeverDetector()
     checker = LeakChecker()
     reviewed: frozenset[tuple[str, int]] = frozenset()
+    audit_rows: tuple[Any, ...] = ()
     if audit is not None:
         if not audit.is_file():
             raise typer.BadParameter(f"no audit log at {audit}")
@@ -300,6 +305,7 @@ def export(
             if not ok:
                 raise typer.BadParameter(f"the audit log is not intact: {message}")
             reviewed = log.pages_reviewed(request_id)
+            audit_rows = log.rows(request_id=request_id)
         typer.echo(f"audit log {audit}: {len(reviewed)} pages completed under {request_id}")
     else:
         typer.echo(
@@ -317,11 +323,22 @@ def export(
                 f"written as proposed rather than released"
             )
         suffix = "released" if released else "proposed"
+        if released:
+            # What the reviewer decided, not what the tool proposed: a rejected proposal
+            # stays in the record and a span the reviewer severed themselves goes.
+            applied = as_released(
+                final_spans(audit_rows, tuple(proposals), doc_id=doc.doc_id, taxonomy=taxonomy),
+                tuple(proposals),
+                doc,
+                taxonomy=taxonomy,
+            )
+        else:
+            applied = tuple(proposals)
         source = render_pdf(doc, out / f"{doc.doc_id}.pdf")
         result = apply_redactions(
-            source, out / f"{doc.doc_id}-{suffix}.pdf", doc, proposals, rasterise=rasterise
+            source, out / f"{doc.doc_id}-{suffix}.pdf", doc, applied, rasterise=rasterise
         )
-        schedule = build_schedule(doc.doc_id, doc, tuple(proposals))
+        schedule = build_schedule(doc.doc_id, doc, applied)
         (out / f"{doc.doc_id}-schedule.md").write_text(schedule.to_markdown(), encoding="utf-8")
         checker.check(result.path, result.regions, document=doc.doc_id)
         typer.echo(
@@ -1098,6 +1115,97 @@ def review(
     typer.echo(f"audit log {log}; timings {timings}")
     typer.echo(f"http://{host}:{port}")
     uvicorn.run(create_app(session), host=host, port=port, log_level="warning")
+
+
+study_app = typer.Typer(help="The reviewer time study: one command per reviewer.")
+app.add_typer(study_app, name="study")
+
+
+@study_app.callback(invoke_without_command=True)
+def study(
+    ctx: typer.Context,
+    reviewer: Annotated[
+        int | None,
+        typer.Option(help="Resume this reviewer. Default: resume the last one, or start the next."),
+    ] = None,
+    new: Annotated[bool, typer.Option("--new", help="Start the next reviewer now.")] = False,
+    port: Annotated[int, typer.Option()] = 8000,
+    browser: Annotated[bool, typer.Option(help="Open the browser.")] = True,
+) -> None:
+    """Sit someone down and run this. It does the rest.
+
+    Picks the records, puts each in its arm, serves them in order with a practice page at
+    the start of each half, times every page, and keeps each reviewer's work in its own
+    folder under review/study/. Running it again resumes the same reviewer until they
+    finish; after that it starts the next one. Then `sever study report`.
+    """
+    if ctx.invoked_subcommand is not None:
+        return
+    import threading
+    import webbrowser
+
+    import uvicorn
+
+    from sever.review import study as st
+    from sever.review.app import create_app
+
+    number = reviewer if reviewer is not None else st.pick_reviewer(new=new)
+    typer.echo(f"preparing reviewer {number}'s records...")
+    run = st.open_run(number)
+    if run.finished:
+        typer.echo(
+            f"reviewer {number} has finished all {len(run.tasks)} records. "
+            f"`sever study --new` starts the next reviewer; `sever study report` updates "
+            f"the results."
+        )
+        return
+    url = f"http://127.0.0.1:{port}/"
+    typer.echo(
+        f"reviewer {number}: {run.completed} of {len(run.tasks)} records done. "
+        f"Open {url}  (Ctrl+C to stop; running this again resumes)"
+    )
+    if browser:
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+    uvicorn.run(create_app(run.session, study=run), host="127.0.0.1", port=port, log_level="warning")
+
+
+@study_app.command("status")
+def study_status() -> None:
+    """Who has done how much, without building anything."""
+    from sever.review import study as st
+
+    numbers = st.enrolled()
+    if not numbers:
+        typer.echo("nobody has started yet. Run `sever study`.")
+        return
+    total = st.STUDY_RECORDS + st.PRACTICE_RECORDS
+    for n in numbers:
+        done = st._completed_positions(st.reviewer_dir(n) / "timings.jsonl")
+        typer.echo(f"reviewer {n}: {done} of {total} records timed")
+
+
+@study_app.command("report")
+def study_report(
+    out: Annotated[Path, typer.Option(help="The table.")] = Path("results/reviewer.md"),
+    data: Annotated[Path, typer.Option(help="The scored pages, committed as evidence.")] = (
+        Path("results/reviewer-study.jsonl")
+    ),
+) -> None:
+    """Score every completed page and write the results.
+
+    Writes the scored pages to `results/reviewer-study.jsonl`, which carries reviewer
+    numbers and never names, and then builds `results/reviewer.md` from that file alone,
+    so the table reproduces from what is committed.
+    """
+    from sever.eval import reviewer as rv
+    from sever.review import study as st
+
+    results = st.collect()
+    typer.echo(f"{len(results)} completed pages from {len(st.enrolled())} reviewer(s)")
+    st.write_results(results, data)
+    path = rv.write_study(rv.read_study(data), out)
+    typer.echo(path.read_text(encoding="utf-8"))
+    typer.echo(f"wrote {data} and {path}")
 
 
 def main() -> None:

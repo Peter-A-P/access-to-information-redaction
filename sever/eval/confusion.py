@@ -382,6 +382,18 @@ def _rate[C: Clustered](
     )
 
 
+def clustered_rate[C: Clustered](
+    pool: Sequence[C],
+    predicate: Callable[[C], bool],
+    *,
+    seed: int = DEFAULT_SEED,
+    resamples: int = BOOTSTRAP_RESAMPLES,
+) -> Interval:
+    """The same proportion and interval every table in this project uses, for callers
+    outside this module (the reviewer study is the first)."""
+    return _rate(pool, predicate, seed=seed, resamples=resamples)
+
+
 def score(
     results: Mapping[str, tuple[DocumentProposals, LabelSet]],
     *,

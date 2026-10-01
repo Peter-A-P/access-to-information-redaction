@@ -47,3 +47,7 @@ Thumbs.db
 
 # Generated results are committed (they are the evidence); scratch exports are not.
 results/*.tmp
+
+# The reviewer study's working folders: audit logs and raw timings, on the machine that ran it.
+# What is committed is results/reviewer-study.jsonl, scored and carrying reviewer numbers only.
+review/study/

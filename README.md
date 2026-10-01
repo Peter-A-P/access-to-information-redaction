@@ -122,7 +122,9 @@ rate and no reason to exist.
 **Nobody has actually reviewed anything.** The page-by-page interface exists and the
 release gate is enforced in code, but the reviewer time study has not been run, so there is
 no measured support for any claim about hours saved. The "days of reading become hours of
-review" line at the top is the goal of the project, not a result.
+review" line at the top is the goal of the project, not a result. The study itself is one
+command, `sever study`, and [docs/reviewer-study.md](docs/reviewer-study.md) is how to run
+it; what it is waiting for is people.
 
 Three more limitations, none of them small:
 
@@ -328,9 +330,15 @@ The application fetches nothing from anywhere. No CDN, no bundler, no client fra
 server-rendered HTML, form posts, and about thirty lines of hand-written JavaScript. A tool
 for reading government records should run with the network cable out.
 
-`sever export --audit review/audit.duckdb` applies the redactions. Without that flag the
-same PDFs are written, the same leak test runs, and the files are named `-proposed.pdf`,
-because a document nobody has reviewed is not a release however good the redactions are.
+`sever export --audit review/audit.duckdb` applies the redactions the reviewer decided:
+a proposal they rejected stays in the record, a span they moved to a keep category stays,
+and a span they selected and severed themselves goes. Until 2026-10-01 it applied the
+tool's proposals to any page the log said was complete, so a reviewer's own severance of a
+name the tool had missed went out in clear;
+[`tests/test_export_reads_decisions.py`](tests/test_export_reads_decisions.py) holds the fix
+against the PDF. Without `--audit` the same PDFs are written, the same leak test runs, and
+the files are named `-proposed.pdf`, because a document nobody has reviewed is not a release
+however good the redactions are.
 
 ## Try it
 
@@ -344,6 +352,8 @@ sever corpus build --documents 210    # the labelled corpus, from a seed, offlin
 sever propose --documents 3           # proposals with the reason for each one
 sever export --documents 3            # redacted PDFs, schedules, and the leak test
 sever review --documents 3            # the reviewer's screen, on 127.0.0.1:8000
+sever study                           # the reviewer time study, one person at a time
+sever study report                    # score it: minutes per page and accuracy, per arm
 sever report --readme README.md       # every number above
 sever report --jurisdiction nl        # the same corpus under the NL statute
 sever eval-scanned --documents 50     # render, scan, read back, and score it (needs Tesseract)
@@ -444,7 +454,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: the app times both arms; nobody has sat down yet | Hosted demo |
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: `sever study` runs and scores it; nobody has sat down yet | Hosted demo |
 | 210-page labelled corpus, labels by construction | Over-redaction on published federal releases: loader, guard and measurement tested; no package added yet | |
 | Detection, context record, rules, escalation | | |
 | The model layer, through the gateway on placeholders | | |

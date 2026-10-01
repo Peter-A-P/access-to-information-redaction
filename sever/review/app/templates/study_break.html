@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Halfway{% endblock %}
+{% block content %}
+<div class="study">
+<h2>Halfway there</h2>
+<p>
+  That is the first half done. This is a good moment for a break; nothing is being timed.
+</p>
+{% if task.arm.shows_proposals %}
+<p>
+  <strong>In the second half the tool proposes what to withhold.</strong> Each highlighted
+  span has Withhold, Release and Escalate buttons. Check every one, and select anything it
+  missed and press Add severance.
+</p>
+{% else %}
+<p>
+  <strong>In the second half there are no proposals.</strong> Select each piece of text
+  that must be withheld, check the category, and press Add severance. Undo removes one.
+</p>
+{% endif %}
+<p>The first record of this half is a practice page and is not counted.</p>
+<form method="get" action="/doc/{{ task.doc_id }}/page/1">
+  <button class="primary big" type="submit">Start the second half</button>
+</form>
+</div>
+{% endblock %}

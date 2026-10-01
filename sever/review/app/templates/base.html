@@ -82,6 +82,12 @@
   .pill.done { border-color: var(--release); color: var(--release); }
   #addbar { margin: .8rem 0; padding: .6rem .8rem; border: 1px dashed var(--rule); background: #fff; }
   #addbar[hidden] { display: none; }
+  .requester { border-left: 3px solid var(--pending); background: #eef2ff; padding: .5rem .8rem; margin: 0 0 .8rem; }
+  details.reference { margin: .6rem 0 1rem; font-size: .88rem; }
+  details.reference summary { cursor: pointer; color: var(--muted); }
+  .study { max-width: 44rem; }
+  .study li { margin-bottom: .35rem; }
+  .big { font-size: 1.05rem; padding: .5rem 1.2rem; }
 </style>
 </head>
 <body>
@@ -89,8 +95,13 @@
   <h1><a href="/" style="text-decoration:none;color:inherit">sever</a></h1>
   <span class="proposes">The tool proposes; a person decides.</span>
   <nav>
-    <span class="pill">{{ session.mode.value }}</span>
-    <a href="/log">audit log</a>
+    {% if study %}
+      <span class="note">reviewer {{ study.reviewer }}{% if task %}, record {{ task.position }} of {{ study.tasks|length }}{% endif %}</span>
+      {% if task %}<span class="pill">{{ 'with proposals' if task.arm.shows_proposals else 'unaided' }}{{ ', practice' if task.practice else '' }}</span>{% endif %}
+    {% else %}
+      <span class="pill">{{ (mode or session.mode).value }}</span>
+      <a href="/log">audit log</a>
+    {% endif %}
   </nav>
 </header>
 <main id="main">

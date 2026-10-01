@@ -1,0 +1,31 @@
+{# The rules the study's records were labelled under, in the words a reviewer needs. Shown
+   on the welcome page and folded away on every record, in both arms, so that neither arm
+   is working from facts the other does not have. #}
+<ul>
+  <li><strong>Release the requester's own information.</strong> Their name, address,
+    telephone, date of birth, health and file numbers. The requester is named at the top of
+    every record.</li>
+  <li><strong>Release officials acting in their official capacity:</strong> the name, job
+    title and business contact details of public servants doing their jobs. Withhold an
+    official's employee number and anything personal about them, such as a home address
+    or a health number.</li>
+  <li><strong>Release what is already public:</strong> a name printed on the record's own
+    letterhead, and the people on the public register below.</li>
+  <li><strong>Release information about someone dead more than twenty years.</strong></li>
+  <li><strong>Release what is not personal information:</strong> organisations, places that
+    are not someone's address, dates, and job titles on their own.</li>
+  <li><strong>Withhold everything personal about anyone else:</strong> their names
+    (including a first name used on its own), addresses, telephone numbers, email
+    addresses, identifiers and dates of birth. That includes outside professionals, such as
+    a physician writing about a client, and family members.</li>
+  <li><strong>When you cannot tell</strong> whether someone is an official or a third
+    party, withhold it. In the proposals arm, Escalate does that.</li>
+</ul>
+{% if study and study.register %}
+<p class="note">The public register for this request:</p>
+<ul>
+  {% for e in study.register %}
+    <li>{{ e.name }}{% if e.title %}, {{ e.title }}{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}
