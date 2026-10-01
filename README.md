@@ -180,11 +180,16 @@ Three more limitations, none of them small:
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the
   plain corpus so they stay comparable; the harder numbers sit beside them.
-- **34.0 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table, and 24.3 of those 34.0 points are escalation rather than a
-  wrong answer: names the rules could not pair with a title anywhere in the record, which
-  the model was also unwilling to place. It rose once when detection improved, because
-  finding more of a record's people means more of them reaching the escalation path.
+- **30.3 percent over-redaction on officials acting in an official capacity** is the
+  weakest number in the table, and 20.6 of those 30.3 points are escalation rather than a
+  wrong answer: names and work addresses the rules could not pair with a title anywhere in
+  the record, which the model was also unwilling to place. A published staff directory is
+  the remedy a person would use, and [results/directory.md](results/directory.md) measures
+  it: matched on the work email address alone it takes the rules-only figure from 30.7 to
+  20.3 percent with no leak at all, and matched on names it multiplies the leak rate by
+  twelve, because an employee who files a grievance is in the directory too.
+  [docs/rejected.md](docs/rejected.md) entry 6 has the account. The headline tables use no
+  directory, because a directory is something a public body supplies.
 - **All 36 statutory provisions are verified** against the consolidated texts, federal
   current to 2026-07-21 and ATIPPA to 2026-09-20: each carries the quote, the date it was
   checked and the URL it was checked against. Nothing defaults to verified, and the format

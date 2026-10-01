@@ -1377,3 +1377,21 @@ the README's "35 wrongly released" seen through a different test, and it moves t
 recommendation from "rules only is defensible" to "rules only is what the release gate
 allows".
 
+### 12.31 A staff directory, and why it matches on the email address only
+
+2026-10-01. Over-redaction of officials is the weakest published number, and most of it is
+escalation of names and work contacts the record never pairs with a title. Peter asked for
+a public list of officials modelled on 04's allow list. `sever.context.directory` is that
+list and `staff_directory` the rule that reads it, late in the order and off unless a
+directory is configured. `sever eval-directory` builds a synthetic directory from the
+corpus's officials at 50, 80 and 100 percent coverage.
+
+Matched on names and work contacts it multiplied the leak rate by twelve (2.8 to 32.9
+percent at full coverage). Part of that is the corpus's small name pool and thousand-number
+telephone block, which a real province does not have; but 129 of the 422 leaks were the
+listed employee themselves, a grievant in their own complaint, which no larger pool fixes.
+Matched on the work email alone it took officials' over-redaction from 30.7 to 20.3
+percent and leaked nothing. That is the default for a configured directory now, and
+`docs/rejected.md` entry 6 records the name match as the rejected approach. The headline
+stays directory-free.
+

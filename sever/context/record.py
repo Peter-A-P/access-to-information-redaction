@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from sever.context.directory import DirectoryMatch, StaffDirectory
 from sever.context.register import PublicRegister, RegisterMatch
 from sever.context.requester import RequestConfig, RequesterMatch, RequesterMatcher
 from sever.context.roles import RoleIndex, RoleMention
@@ -39,6 +40,9 @@ class ContextRecord:
 
     requester_match: RequesterMatch | None = None
     register_match: RegisterMatch | None = None
+    # A published staff directory listing this name or this work contact. Evidence about
+    # the string, not about its sentence; see sever.context.directory.
+    directory_match: DirectoryMatch | None = None
     # A title paired with this name anywhere in the document, and where the pairing was
     # found. This is the K2 signal.
     title: str | None = None
@@ -97,6 +101,7 @@ class ContextRecord:
             "title_source": None,
             "role_mentions": (),
             "register_match": None,
+            "directory_match": None,
             "requester_match": None,
             "cluster_id": None,
             "cluster_canonical": None,
@@ -116,9 +121,9 @@ class ContextRecord:
             for f in (
                 "detection", "doc_id", "doc_type", "page_number", "pages_in_document",
                 "block_kind", "sentence", "heading", "message_index", "requester_match",
-                "register_match", "title", "title_source", "role_mentions", "cluster_id",
-                "cluster_canonical", "cluster_surface_forms", "cluster_pages",
-                "cluster_ambiguous", "co_mentions_in_sentence",
+                "register_match", "directory_match", "title", "title_source",
+                "role_mentions", "cluster_id", "cluster_canonical", "cluster_surface_forms",
+                "cluster_pages", "cluster_ambiguous", "co_mentions_in_sentence",
             )
         }
         current.update(changes)
@@ -157,6 +162,7 @@ class ContextBuilder:
 
     config: RequestConfig
     register: PublicRegister = field(default_factory=PublicRegister)
+    directory: StaffDirectory | None = None
 
     def build(
         self, document: Document, detections: Sequence[Detection]
@@ -205,6 +211,13 @@ class ContextBuilder:
                 and sentence_offsets.contains(d.offsets)
             )
 
+            directory_match = None
+            if self.directory is not None:
+                if det.entity_type is EntityType.PERSON:
+                    directory_match = self.directory.lookup_name(name_for_role)
+                elif det.entity_type in (EntityType.EMAIL, EntityType.PHONE):
+                    directory_match = self.directory.lookup_contact(det.text)
+
             out.append(
                 ContextRecord(
                     detection=det,
@@ -218,6 +231,7 @@ class ContextBuilder:
                     message_index=block.message_index if block else None,
                     requester_match=match,
                     register_match=register.lookup(name_for_role) or register.lookup(det.text),
+                    directory_match=directory_match,
                     title=title,
                     title_source=title_source,
                     role_mentions=roles.for_name(name_for_role) or roles.for_name(det.text),

@@ -246,10 +246,40 @@ defence with every layer switched on measures the top layer. If a backstop has n
 observed doing anything, it has not been tested; it has been carried. Turn off the layer
 above it and see what it catches.
 
+## 6. Matching a staff directory on names
+
+Most of the over-redaction of officials is escalation: a name or a work contact the record
+never pairs with a title. A published staff directory is the obvious remedy, and the obvious
+way to use one is to look the name up. `sever eval-directory` measured it on 2026-10-01,
+rules only, with the directory listing the corpus's officials:
+
+| Directory | Leak rate | K2 over-redaction |
+|---|---|---|
+| none | 2.8% | 30.7% |
+| every employee, matched on name and work contacts | 32.9% | 4.2% |
+| every employee, matched on work email alone | 2.8% | 20.3% |
+
+Matching on names multiplied the leak rate by twelve. Some of that is the corpus: its name
+pool is small, so third parties share names with employees far more often than a province's
+would, and its 555 telephone block has only a thousand numbers. But 129 of the 422 leaks
+were the **listed employee themselves**, which no larger name pool would fix: an employee
+who files a grievance is in the directory and is a third party in their own complaint. A
+directory is evidence about a string, and the decision turns on the sentence.
+
+What survived is the work email address. It is on the public body's own domain, nobody
+outside the directory shares it, and matching on it alone took a third off the officials'
+over-redaction for no leak at all. That is the configuration the code now defaults to when a
+directory is given (`StaffDirectory.match_on`). It is not in the headline tables, which use
+no directory, because a directory is something a public body supplies; the full sweep, with
+coverage at 50, 80 and 100 percent, is [results/directory.md](../results/directory.md). The
+limit it carries: an employee writing from their work address about a personal matter would
+be released, and the corpus has no such message.
+
 ---
 
-All five entries are reproducible: `sever report` produces the first table,
+All six entries are reproducible: `sever report` produces the first table,
 `pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second,
-`sever eval-thresholds` produces the third from the committed answer cache, and
-`sever eval-sweep --profiles all` produces the fourth, and
-`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the fifth.
+`sever eval-thresholds` produces the third from the committed answer cache,
+`sever eval-sweep --profiles all` produces the fourth,
+`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the fifth, and
+`sever eval-directory` produces the sixth.

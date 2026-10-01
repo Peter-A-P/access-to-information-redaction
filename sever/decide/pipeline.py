@@ -18,6 +18,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
+from sever.context.directory import StaffDirectory
 from sever.context.record import SENTENCE_ONLY_BLANKS, ContextBuilder, ContextRecord
 from sever.context.register import PublicRegister
 from sever.context.requester import RequestConfig
@@ -161,6 +162,9 @@ class DecisionEngine:
     config: RequestConfig
     detector: Detector = field(default_factory=SeverDetector)
     register: PublicRegister = field(default_factory=PublicRegister)
+    # A published staff directory. None, the default, is what every published number
+    # without "directory" in its name uses.
+    directory: StaffDirectory | None = None
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     rules: Sequence[rules_mod.Rule] = rules_mod.DEFAULT_RULES
     model: ModelDecider | None = None
@@ -171,7 +175,9 @@ class DecisionEngine:
 
     def contexts_for(self, document: Document) -> tuple[ContextRecord, ...]:
         detections = tuple(self.detector.detect(document))
-        builder = ContextBuilder(config=self.config, register=self.register)
+        builder = ContextBuilder(
+            config=self.config, register=self.register, directory=self.directory
+        )
         contexts = builder.build(document, detections)
         if self.sentence_only:
             contexts = tuple(c.blanked(*SENTENCE_ONLY_BLANKS) for c in contexts)

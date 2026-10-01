@@ -1117,6 +1117,25 @@ def review(
     uvicorn.run(create_app(session), host=host, port=port, log_level="warning")
 
 
+@app.command("eval-directory")
+def eval_directory(
+    documents: Annotated[int, typer.Option()] = 210,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    out: Annotated[Path, typer.Option(help="Write the table here.")] = Path(
+        "results/directory.md"
+    ),
+) -> None:
+    """What a published staff directory buys in over-redaction, and costs in leaks.
+
+    Rules only, nothing spent: no directory, then 50, 80 and 100 percent of the corpus's
+    officials listed.
+    """
+    from sever.eval import directory
+
+    rows = directory.run(documents=documents, seed=seed)
+    typer.echo(directory.to_markdown(rows))
+    typer.echo(f"wrote {directory.write(rows, out)}")
+
 @app.command("gate-export")
 def gate_export(
     out: Annotated[Path, typer.Option(help="Where to write the spec and both sides.")] = Path(

@@ -204,6 +204,25 @@ def public_register(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def staff_directory(ctx: ContextRecord) -> RuleOutcome | None:
+    """K2 for a full name or a work contact the published staff directory lists.
+
+    Runs after every rule that can see the record say otherwise: the requester, an
+    inherently sensitive identifier, the mixed span, a title or signature in the record
+    itself. It never sees a span one of those settled. Its confidence is below the title
+    rule's because the evidence is about the name and not about the sentence: an employee
+    who is the complainant in their own grievance is in the directory too.
+    """
+    if ctx.directory_match is None or ctx.cluster_ambiguous:
+        return None
+    return RuleOutcome(
+        code="K2",
+        confidence=0.75,
+        reason=f"{ctx.directory_match.reason}, so this is an officer or employee.",
+        rule="staff_directory",
+    )
+
+
 def deceased_over_twenty_years(ctx: ContextRecord) -> RuleOutcome | None:
     """K4, and only where the record itself carries the date of death.
 
@@ -296,6 +315,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     official_capacity,
     official_capacity_contact,
     public_register,
+    staff_directory,
     deceased_over_twenty_years,
 )
 
