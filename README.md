@@ -17,7 +17,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-09-21 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-01 by `sever report`.
 
 **Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 9818 answers replayed from the cache, nothing spent, of which 2173 were the tool's own residual and 7645 the model-only baseline.
 
@@ -29,9 +29,9 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 |---|---:|---|---|---|
 | `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
 | `K2` | 2345 | n/a | 30.3% (28.1% to 32.5%), n=2345 | 20.6% (18.8% to 22.5%), n=2345 |
-| `K3` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
+| `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
-| `K6` | 280 | n/a | 0.0% (0.0% to 0.0%), n=280 | 0.0% (0.0% to 0.0%), n=280 |
+| `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
 | `R1` | 1400 | 5.3% (4.1% to 6.5%), n=1400 | n/a | 57.6% (54.8% to 60.6%), n=1400 |
 
 **Against the baselines**
@@ -41,7 +41,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 | sever, rules then the model on the residual | 5.3% (4.1% to 6.5%), n=1400 | 20.5% (19.1% to 21.9%), n=3955 | 25.7% (24.5% to 26.9%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | model-only, no rules | 4.8% (3.8% to 5.8%), n=1400 | 41.9% (39.4% to 44.4%), n=3955 | 42.3% (41.2% to 43.3%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | sever, rules only | 2.8% (1.8% to 4.0%), n=1400 | 23.2% (21.7% to 24.6%), n=3955 | 41.2% (40.0% to 42.4%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| blunt redact-all-PII | 1.1% (0.6% to 1.7%), n=1400 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 0.0%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| blunt redact-all-PII | 1.1% (0.6% to 1.7%), n=1400 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 1.1%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 | sentence-only, no document context | 2.8% (1.8% to 4.0%), n=1400 | 48.9% (46.7% to 50.8%), n=3955 | 60.2% (58.6% to 61.6%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
 
 **Where the leaks come from**

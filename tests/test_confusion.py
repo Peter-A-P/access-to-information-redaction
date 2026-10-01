@@ -23,9 +23,12 @@ lines of arithmetic.
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
+
+import pytest
 
 from sever.corpus.labels import LabelledSpan, LabelSource
-from sever.eval.confusion import UNDEFINED, Interval, SpanOutcome, _rate
+from sever.eval.confusion import UNDEFINED, Interval, SpanOutcome, _rate, clustered_rate
 from sever.ingest.document import Offsets
 from sever.taxonomy.loader import Decision
 
@@ -132,3 +135,39 @@ def test_clusters_are_counted_from_the_documents_present() -> None:
     result = _rate(pool, _positive, seed=1)
     assert result.clusters == 3
     assert result.n == 120
+
+
+# --- a share that came out at none or all of its spans ----------------------------------
+
+# 03's bootstrap_mean_by_cluster on 100 values in 20 clusters of 5, all 0 and then all 1,
+# run 2026-10-01 against 03 at 789358c. Both sides use Jeffreys over the clusters.
+JEFFREYS_ZERO_HIGH_03 = 0.11682522858500433
+JEFFREYS_ONE_LOW_03 = 0.8820988424362608
+
+
+@dataclass(frozen=True, slots=True)
+class _Unit:
+    doc_id: str
+    hit: bool
+
+
+def test_a_unanimous_share_gets_a_real_interval_and_agrees_with_03() -> None:
+    """0 of 100 does not mean exactly zero. The interval has to say so, rest on the 20
+    documents rather than the 100 spans, and match 03's independent implementation."""
+    zeros = [_Unit(f"d{i // 5}", False) for i in range(100)]
+    ones = [_Unit(f"d{i // 5}", True) for i in range(100)]
+    z = clustered_rate(zeros, lambda u: u.hit)
+    o = clustered_rate(ones, lambda u: u.hit)
+    assert (z.point, z.low) == (0.0, 0.0)
+    assert z.high == pytest.approx(JEFFREYS_ZERO_HIGH_03, abs=0.003)
+    assert (o.point, o.high) == (1.0, 1.0)
+    assert o.low == pytest.approx(JEFFREYS_ONE_LOW_03, abs=0.003)
+    assert "0.0% to 0.0%" not in str(z)
+
+
+def test_the_unanimous_interval_narrows_with_documents_not_with_spans() -> None:
+    few_docs = [_Unit(f"d{i // 50}", False) for i in range(100)]
+    many_docs = [_Unit(f"d{i}", False) for i in range(100)]
+    assert clustered_rate(few_docs, lambda u: u.hit).high > clustered_rate(
+        many_docs, lambda u: u.hit
+    ).high

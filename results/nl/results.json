@@ -1,5 +1,5 @@
 {
- "generated_on": "2026-09-21",
+ "generated_on": "2026-10-01",
  "corpus": {
   "documents": 210,
   "pages": 210,
@@ -73,8 +73,8 @@
    "spans": 5355,
    "documents": 210,
    "over_redaction_rate": "98.3% (97.7% to 98.9%), n=3605",
-   "unweighed_release_rate": "0.0% (0.0% to 0.0%), n=350",
-   "escalation_rate": "0.0% (0.0% to 0.0%), n=5355",
+   "unweighed_release_rate": "0.0% (0.0% to 2.3%), n=350",
+   "escalation_rate": "0.0% (0.0% to 1.1%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
    "unlabelled_detections": 2396,
    "unlabelled_detections_withheld": 2396,
@@ -86,7 +86,7 @@
    "decomposition_must_be_weighed_spans": 350,
    "decomposition_unweighed_releases": 0,
    "leak_rate": "1.1% (0.6% to 1.7%), n=1400",
-   "category_accuracy": "100.0% (100.0% to 100.0%), n=1384",
+   "category_accuracy": "100.0% (98.8% to 100.0%), n=1384",
    "per_code_over_redaction": {
     "K1": "95.0% (93.2% to 96.8%), n=980",
     "K2": "99.9% (99.7% to 100.0%), n=2345",
@@ -132,5 +132,11 @@
    }
   }
  ],
- "pdf_leak_test": null
+ "pdf_leak_test": {
+  "boxes_tested": 2280,
+  "recoverable": 0,
+  "documents": 210,
+  "ocr_channel_ran": true,
+  "note": ""
+ }
 }

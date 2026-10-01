@@ -1,5 +1,5 @@
 {
- "generated_on": "2026-09-21",
+ "generated_on": "2026-10-01",
  "corpus": {
   "documents": 210,
   "pages": 210,
@@ -58,9 +58,9 @@
    "per_code_over_redaction": {
     "K1": "6.9% (5.6% to 8.3%), n=980",
     "K2": "30.3% (28.1% to 32.5%), n=2345",
-    "K3": "0.0% (0.0% to 0.0%), n=280",
+    "K3": "0.0% (0.0% to 3.4%), n=280",
     "K4": "48.6% (45.7% to 50.0%), n=70",
-    "K6": "0.0% (0.0% to 0.0%), n=280"
+    "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
@@ -92,7 +92,7 @@
     "K2": "63.8% (60.6% to 67.0%), n=2345",
     "K3": "20.4% (15.7% to 25.0%), n=280",
     "K4": "50.0% (50.0% to 50.0%), n=70",
-    "K6": "0.0% (0.0% to 0.0%), n=280"
+    "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
@@ -138,7 +138,7 @@
    "documents": 210,
    "over_redaction_rate": "98.5% (97.9% to 99.0%), n=3955",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "0.0% (0.0% to 0.0%), n=5355",
+   "escalation_rate": "0.0% (0.0% to 1.1%), n=5355",
    "detector_recall": "98.6% (98.1% to 99.0%), n=5355",
    "unlabelled_detections": 2396,
    "unlabelled_detections_withheld": 2396,
@@ -150,12 +150,12 @@
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
    "leak_rate": "1.1% (0.6% to 1.7%), n=1400",
-   "category_accuracy": "100.0% (100.0% to 100.0%), n=1384",
+   "category_accuracy": "100.0% (98.8% to 100.0%), n=1384",
    "per_code_over_redaction": {
     "K1": "95.0% (93.2% to 96.8%), n=980",
     "K2": "99.9% (99.7% to 100.0%), n=2345",
-    "K3": "100.0% (100.0% to 100.0%), n=280",
-    "K4": "100.0% (100.0% to 100.0%), n=70",
+    "K3": "100.0% (96.5% to 100.0%), n=280",
+    "K4": "100.0% (93.2% to 100.0%), n=70",
     "K6": "97.1% (95.1% to 98.9%), n=280"
    },
    "documents_resampled": 210,

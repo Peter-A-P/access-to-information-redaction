@@ -369,6 +369,15 @@ def _rate[C: Clustered](
             point=point, low=float("nan"), high=float("nan"), n=len(pool), clusters=len(docs)
         )
 
+    if point in (0.0, 1.0):
+        # Every span went the same way. A bootstrap of identical values resamples to
+        # itself and prints "0.0% (0.0% to 0.0%)", a bare number wearing an interval:
+        # 0 leaks in 280 spans does not mean the rate is exactly zero. Project 03 fixed
+        # the same fault on 2026-09-27 and this follows it: the Jeffreys interval, over
+        # the documents rather than the spans, because the documents are the evidence.
+        low, high = jeffreys(0 if point == 0.0 else len(docs), len(docs), seed=seed)
+        return Interval(point=point, low=low, high=high, n=len(pool), clusters=len(docs))
+
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(docs), size=(resamples, len(docs)))
     draws = np.empty(resamples)
@@ -380,6 +389,25 @@ def _rate[C: Clustered](
     return Interval(
         point=point, low=float(low), high=float(high), n=len(pool), clusters=len(docs)
     )
+
+
+JEFFREYS_DRAWS = 20000
+
+
+def jeffreys(successes: int, n: int, *, seed: int = DEFAULT_SEED) -> tuple[float, float]:
+    """The 95 percent Jeffreys interval for `successes` of `n`, from Beta(x + 0.5, n - x + 0.5).
+
+    The bound on the side of an observed 0 or n is pinned at 0 or 1, the usual convention
+    and the one project 03's `jeffreys_proportion` uses. Drawn rather than computed from the
+    Beta quantile function so that this project needs no SciPy; at 20,000 draws the bounds
+    agree with 03's to the third decimal, which `tests/test_confusion.py` pins.
+    """
+    if not 0 <= successes <= n or n == 0:
+        raise ValueError(f"{successes} successes out of {n}")
+    sample = np.random.default_rng(seed).beta(successes + 0.5, n - successes + 0.5, JEFFREYS_DRAWS)
+    low = 0.0 if successes == 0 else float(np.percentile(sample, 2.5))
+    high = 1.0 if successes == n else float(np.percentile(sample, 97.5))
+    return low, high
 
 
 def clustered_rate[C: Clustered](
