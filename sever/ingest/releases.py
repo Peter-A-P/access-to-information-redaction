@@ -54,8 +54,11 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import re
+from collections import deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any
 
 from sever.ingest.document import Block, BlockKind, Document, DocumentType, Offsets, Page
 
@@ -245,6 +248,9 @@ def inspect_redaction(path: Path) -> RedactionCheck:
     finally:
         doc.close()
     if not boxes:
+        raster = inspect_raster(path)
+        if raster is not None:
+            return raster
         return RedactionCheck(
             boxes=0,
             boxes_with_text=0,
@@ -256,6 +262,122 @@ def inspect_redaction(path: Path) -> RedactionCheck:
             ),
         )
     return RedactionCheck(boxes=boxes, boxes_with_text=with_text)
+
+
+# A run of four letters. OCR of a textured grey fill produces short noise ("ee", "WOE",
+# "Cee..."); a name or a word read from under a box that hid nothing is longer. Chosen
+# after looking at the first six Library and Archives Canada packages, and said so in
+# PLAN.md 12.32, because a threshold set on the data it then passes is a weaker check
+# than one set in advance.
+_WORD = re.compile(r"[^\W\d_]{4,}")
+_CELL = 3
+
+
+def _raster_boxes(page: Any) -> list[Any]:
+    """Solid fills distinctly darker than the page, in the page image.
+
+    A redaction burned into a scan is a uniform grey or black rectangle. The page is
+    rendered at 72 dpi in grey, cut into 3-pixel cells, and a cell is solid when its pixels
+    are within 14 levels of each other and 25 darker than the page's median. Connected
+    solid cells whose bounding box is at least 20 by 8 points, at least 80 percent filled
+    and under a quarter of the page are a box.
+    """
+    import numpy as np
+    import pymupdf
+
+    pix = page.get_pixmap(dpi=72, colorspace=pymupdf.csGRAY)
+    a = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width)
+    a = a.astype(np.int16)
+    h, w = a.shape[0] // _CELL, a.shape[1] // _CELL
+    cells = a[: h * _CELL, : w * _CELL].reshape(h, _CELL, w, _CELL)
+    spread = cells.max(axis=(1, 3)) - cells.min(axis=(1, 3))
+    solid = (spread <= 14) & (cells.mean(axis=(1, 3)) < float(np.median(a)) - 25)
+    seen = np.zeros_like(solid, dtype=bool)
+    page_area = page.rect.width * page.rect.height
+    # Points per cell. At 72 dpi a pixel is a point, give or take the rounding of the
+    # page size to whole pixels.
+    scale = _CELL * page.rect.width / pix.width
+    found: list[Any] = []
+    for y, x in zip(*np.nonzero(solid), strict=True):
+        if seen[y, x]:
+            continue
+        queue = deque([(int(y), int(x))])
+        seen[y, x] = True
+        members: list[tuple[int, int]] = []
+        while queue:
+            cy, cx = queue.popleft()
+            members.append((cy, cx))
+            for ny, nx in ((cy + 1, cx), (cy - 1, cx), (cy, cx + 1), (cy, cx - 1)):
+                if 0 <= ny < h and 0 <= nx < w and solid[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    queue.append((ny, nx))
+        ys = [m[0] for m in members]
+        xs = [m[1] for m in members]
+        y0, y1, x0, x1 = min(ys), max(ys) + 1, min(xs), max(xs) + 1
+        width, height = (x1 - x0) * scale, (y1 - y0) * scale
+        filled = len(members) / ((y1 - y0) * (x1 - x0))
+        if width >= 20 and height >= 8 and filled >= 0.8 and width * height < page_area / 4:
+            found.append(pymupdf.Rect(x0 * scale, y0 * scale, x1 * scale, y1 * scale))
+    return found
+
+
+def inspect_raster(path: Path) -> RedactionCheck | None:
+    """The check for a package that is page images with an OCR text layer, or None.
+
+    Library and Archives Canada publishes its packages this way: one full-page image per
+    page, the boxes burned into the pixels, and an invisible text layer added by OCR. There
+    are no vector rectangles for `inspect_redaction` to read inside, which used to exclude
+    every such package as unchecked.
+
+    Two things make it checkable. Structurally, every page must be a single image covering
+    the page, with no vector drawings and no visible text, so the text layer can only be a
+    reading of the published image, and a reading of an image cannot contain what the image
+    does not show. And as a second line, against a text layer copied from an unredacted
+    original and laid over a redacted scan, which is a real failure, the boxes are found in
+    the pixels and the text layer is read inside each one: a word of four letters or more
+    under a box fails it. A package that is not of this kind returns None.
+    """
+    import pymupdf
+
+    doc = pymupdf.open(str(path))
+    try:
+        for page in doc:
+            if page.get_drawings():
+                return None
+            cover = max(
+                (pymupdf.Rect(i["bbox"]).get_area() for i in page.get_image_info()),
+                default=0.0,
+            )
+            if cover < 0.95 * page.rect.get_area():
+                return None
+            for block in page.get_text("dict")["blocks"]:
+                for line in block.get("lines", ()):
+                    for span in line["spans"]:
+                        if span.get("alpha", 255) != 0 and span["text"].strip():
+                            return None
+        boxes = 0
+        with_text = 0
+        for page in doc:
+            words = page.get_text("words")
+            for box in _raster_boxes(page):
+                boxes += 1
+                inner = pymupdf.Rect(box.x0 + 1, box.y0 + 1, box.x1 - 1, box.y1 - 1)
+                if any(
+                    _WORD.search(str(wd[4]))
+                    and inner.contains(pymupdf.Point((wd[0] + wd[2]) / 2, (wd[1] + wd[3]) / 2))
+                    for wd in words
+                ):
+                    with_text += 1
+    finally:
+        doc.close()
+    return RedactionCheck(
+        boxes=boxes,
+        boxes_with_text=with_text,
+        note=(
+            "page images with an invisible OCR text layer; boxes found in the pixels and "
+            "the text layer read inside each one"
+        ),
+    )
 
 
 def to_document(path: Path, doc_id: str) -> Document:

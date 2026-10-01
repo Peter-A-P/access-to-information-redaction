@@ -11,10 +11,10 @@ current in the same commit as any change to what the project reads.
 | Generated personas and documents | Invented people rendered into six document templates written for this project | 210 pages, 5,355 labelled spans | Written here. No real person |
 | Consolidated statute texts | Section numbers and quoted provisions in `sever/taxonomy/*.yaml` | 4 statutes, 36 provisions (18 federal, 18 NL), every one verified | Public legislation; each quote records the URL it was read from and the date |
 
-Nothing else. The scanned track renders and degrades the synthetic corpus itself, so it
-reads nothing from outside. The published-federal-releases track is built but no package
-has been added, so no third-party document has been fetched into this repository, and
-there is deliberately no fetcher (see below).
+The scanned track renders and degrades the synthetic corpus itself, so it reads nothing
+from outside. The published-federal-releases track reads six Library and Archives Canada
+packages, 82 pages, downloaded once on 2026-10-01 and named in the committed manifest; the
+PDFs themselves are not committed, and there is deliberately no fetcher (see below).
 
 ## The synthetic corpus
 
@@ -83,7 +83,7 @@ letter's letterhead is published by the department in the act of writing the let
 carrying it into the register for every other record in the request would be an inference
 rather than an observation.
 
-## Published federal releases: terms recorded, loader built, nothing fetched yet
+## Published federal releases: six packages, 82 pages
 
 The real-record over-redaction test. Everything still visible in a completed
 access-to-information release was judged releasable by a public body's reviewer, which makes
@@ -125,9 +125,31 @@ proposing to redact exactly what the reviewer redacted. `inspect_redaction` chec
 and excludes the package with a reason. It is the question `sever/eval/pdf_leak.py` asks of
 this project's own exports, turned around and asked of somebody else's.
 
-Status: loader, guard, measurement and `sever eval-releases` are built and tested against
-synthesised stand-ins. No real package has been downloaded, so `results/releases.md` says so
-instead of reporting a rate.
+**The packages, 2026-10-01.** Six, all released by Library and Archives Canada from
+Department of National Defence records (RG24), requests A-2025-03134 (four packages,
+disclosed in part under s.19(1), 2008 to 2010) and A-2014-00356 (two, all disclosed, 2001):
+82 pages. `data/releases/manifest.json` has each one's sha256, source URL, retrieval date
+and details page. They were downloaded once, by hand-equivalent requests about two seconds
+apart, with no fetcher written. LAC's own terms, read the same day at
+<https://www.canada.ca/en/library-archives/terms-conditions.html>, allow non-commercial
+reproduction without charge or permission with the title, author and source cited.
+
+**Three things a reproducer needs to know.** The download URL in the manifest is LAC's
+`sas-das` service, which answers with a staged link to the file; the file path alone
+returns 403, so the manifest records the service URL, which is what the details page calls.
+LAC re-OCRs its packages (these carry OCR dates of July and September 2026), so a later
+re-OCR changes the bytes, and a checksum failure is then the honest outcome rather than a
+fault. And no other federal institution was found serving release packages directly; the
+others ask for a request to be made.
+
+**The guard, extended for scans.** Every LAC package is one image per page with an
+invisible OCR text layer and the boxes burned into the pixels, so `inspect_redaction` found
+no vector rectangles and excluded all six as unchecked. `inspect_raster` now checks that
+kind of package: structurally (one full-page image per page, no drawings, no visible text,
+so the text layer can only be a reading of the image) and then in the pixels, finding the
+solid boxes and reading the text layer inside each one. 106 boxes across the six packages,
+none with a word under it. Its word threshold was chosen after looking at these packages,
+which PLAN.md 12.32 says.
 
 ## Planned, not present
 

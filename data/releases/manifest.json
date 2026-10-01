@@ -1,0 +1,59 @@
+{
+  "_comment": "Published federal access-to-information release packages, for the real-record over-redaction test. The PDFs are not committed; these checksums and URLs are, so the same packages can be downloaded and the same numbers reproduced. See sever/ingest/releases.py.",
+  "packages": [
+    {
+      "file_name": "A-2025-03134_07.pdf",
+      "sha256": "77d97f35bc5ffbb8ded383df43888dd5e13caf29d6605ee7b090c5c6ed6afdf5",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=92a54eb9-9a79-47cd-bfa9-29b220ee41ea",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2025-03134",
+      "note": "Disclosed in part, s.19(1). Task Force Kandahar, harassment case file, 2010. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-03134 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    },
+    {
+      "file_name": "A-2025-03134_10.pdf",
+      "sha256": "4beb3c5b9413e613ffb41287b7a29299b8af53c47eaf6f40dae3b1db63a20e3a",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=85f072b1-0a4d-4e09-a6b4-7c9913615ee9",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2025-03134",
+      "note": "Disclosed in part. Task Force Kandahar, duties and responsibilities, 2010. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-03134 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    },
+    {
+      "file_name": "A-2025-03134_11.pdf",
+      "sha256": "6789efdcc1dc81adb4c5377feeb4bb1ef8eb87feb53dd4a25e130a1437c5ae96",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=ad800a2a-31a0-47cd-92f6-d39faea73920",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2025-03134",
+      "note": "Disclosed in part. Chaplain services, 2008 to 2010. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-03134 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    },
+    {
+      "file_name": "A-2025-03134_05.pdf",
+      "sha256": "df1e27d20646d6e0cffe43f63cd57c82425dbfda2226f19abdf62cea93f67024",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=e18e790d-41a7-4d24-a801-c3308296d263",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2025-03134",
+      "note": "Disclosed in part. Briefing note and travel request, 2008 to 2010. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-03134 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    },
+    {
+      "file_name": "A-2014-00356_02.pdf",
+      "sha256": "e8e7870924d5d61d237a43e8a42dae26a14b82bdfd812f0f79375205a9a65e6b",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=8a772358-92b0-4bb3-a42f-85f7b7316e31",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2014-00356",
+      "note": "All disclosed. Briefing note for the Minister, alternative service delivery, 2001. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2014-00356 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    },
+    {
+      "file_name": "A-2014-00356_03.pdf",
+      "sha256": "d508acf7fe98a438d48df6aa741a5301c6a3d930bd8ebb6f1d464fedbfdce3fa",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=cc484d05-4463-4dce-9b42-6aa7dde5a6c1",
+      "retrieved_on": "2026-10-01",
+      "institution": "Library and Archives Canada (Department of National Defence records, RG24)",
+      "request_number": "A-2014-00356",
+      "note": "All disclosed. Briefing note for the Minister, contractor support in the Balkans, 2001. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2014-00356 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls."
+    }
+  ]
+}

@@ -141,10 +141,17 @@ Three more limitations, none of them small:
 
 - **The corpus is synthetic.** Labels are exact because roles were assigned before the
   documents were written, which is the only affordable way to get 5,355 labelled spans. It
-  also means the documents are template-shaped. The real-record test that would check this
+  also means the documents are template-shaped. The real-record test that checks this
   (published federal releases, where everything visible was judged releasable by a human)
-  is built and tested, and has not been run: no release package has been added yet, so
-  [`results/releases.md`](results/releases.md) reports no rate rather than a made-up one.
+  has now run, on six Library and Archives Canada packages, 82 pages of scanned Defence
+  records from 2001 to 2010, and it is unflattering: **the tool would have withheld every
+  one of the 533 spans that could be personal information**, all of them escalated rather
+  than decided ([`results/releases.md`](results/releases.md)). Most of the reason is
+  visible in the spans. The OCR is noisy, and the detector calls fragments of it and the
+  word "Kandahar" people. The flat text layer has no signature blocks. And military ranks
+  ("Major", "LCol") are not titles the rules know. It is a floor on six packages of one
+  kind, not a rate for real records, and it is the clearest pointer in the repository to
+  where the next work goes.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -475,8 +482,9 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: `sever study` runs and scores it; nobody has sat down yet | Hosted demo |
-| 210-page labelled corpus, labels by construction | Over-redaction on published federal releases: loader, guard and measurement tested; no package added yet | |
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: `sever study` runs and scores it; nobody has sat down yet | |
+| 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
+| Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
 | The model layer, through the gateway on placeholders | | |
 | All four baselines (blunt, rules-only, sentence-only, model-only), with intervals | | |

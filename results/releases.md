@@ -2,10 +2,19 @@
 
 # Over-redaction on records a public body actually released
 
-No release packages have been added yet.
+**Corpus:** 6 published release packages, 82 pages with visible text, from Library and Archives Canada (Department of National Defence records, RG24). Track: real releases.
 
-This is the only track whose ground truth nobody in this project chose: a span still visible in a completed access-to-information release was judged releasable by a public body's reviewer, so a box over it is an over-redaction against a real decision.
+| Denominator | Spans | Over-redaction |
+|---|---:|---|
+| Spans that could be personal information | 533 | 100.0% (67.3% to 100.0%), n=533 |
+| Every detected span, including the types the tool releases by design | 1792 | 29.7% (16.2% to 37.4%), n=1792 |
 
-There is no fetcher, deliberately. Library and Archives Canada serves completed release packages free of charge at <https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca>, behind an undocumented search endpoint. Reverse-engineering it was tried and abandoned: a track that depends on an undocumented endpoint staying stable is not reproducible in the way the rest of this repository is.
+**Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
-So: download packages, run `sever releases add <file> --source-url <url>` for each, and run `sever eval-releases`. The manifest with its checksums is committed and the PDFs are not, so anyone can obtain the same bytes from the same URLs and reproduce the number, or get a checksum failure naming the file that differs.
+**Read this as a floor rather than as the tool's performance on a real record.** A released PDF is a flat text layer: nothing in the file says which paragraph was a signature block, so every block is body text and the rules lose the evidence they lean on hardest. `results/scanned.md` measures what that costs where the truth is known, and it is about twenty points. There is also no configured requester on a downloaded package, so every span that would have been the requester's own information is something else here. Both effects push the same way.
+
+**What the tool would have withheld, by category**
+
+| Category | Spans withheld over text a reviewer released |
+|---|---:|
+| `E1` | 533 |

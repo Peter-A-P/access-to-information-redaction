@@ -273,7 +273,7 @@ published, not when the code for it exists.
 - [x] Leak rate and over-redaction rate per category with bootstrap CIs, on the README's first screen
 - [x] Category accuracy and error decomposition reported
 - [x] Blunt, model-only, rules-only and sentence-only baselines on the same corpus
-- [ ] Over-redaction measured on published federal releases
+- [x] Over-redaction measured on published federal releases (six packages, 82 pages; 12.32)
 - [x] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
 - [x] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
 - [x] PDF leak test published, out of N
@@ -1394,4 +1394,27 @@ Matched on the work email alone it took officials' over-redaction from 30.7 to 2
 percent and leaked nothing. That is the default for a configured directory now, and
 `docs/rejected.md` entry 6 records the name match as the rejected approach. The headline
 stays directory-free.
+
+### 12.32 The real-record track ran, after the guard learned to read a scan
+
+2026-10-01. Peter asked for the packages to be fetched. Six were downloaded once from
+Library and Archives Canada, 82 pages, with polite hand-equivalent requests and no fetcher
+committed; 12.28's reasons against a fetcher stand. Every one of them is page images with
+an invisible OCR layer, so the vector guard found no boxes and excluded all six.
+
+`inspect_raster` checks that kind of package in two layers. The structural one is the
+argument: a text layer that is invisible OCR over a full-page image can only contain what
+the image shows. The second guards against a text layer copied from an unredacted original:
+it finds solid boxes in the pixels and refuses a package with a word of four letters or more
+read inside one. That threshold was chosen after seeing OCR noise inside the boxes of these
+very packages ("ee", "WOE"), which is weaker than a threshold set in advance, and a test
+holds the failing case (a name in the invisible layer under a grey box) so it is at least
+known to bite.
+
+The result: 100 percent of the 533 spans that could be personal information would have been
+withheld, every one escalated. It is a floor, from six packages of OCR'd 2001 to 2010 Defence
+records with no layout and no requester, and the spans say why: OCR fragments and "Kandahar"
+detected as people, no signature blocks in a flat text layer, and military ranks that are
+not titles the rules know. The obvious next work is ranks as titles and layout recovery from
+the OCR word boxes, which `results/scanned.md` already pointed at.
 
