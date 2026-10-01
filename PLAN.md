@@ -176,7 +176,7 @@ sever/
   eval/        confusion.py (per category, bootstrap CIs), decomposition.py (detector against decision),
                baselines.py (blunt, model-only, rules-only, sentence-only), releases_eval.py (over-redaction
                on real records), placeholders_eval.py (paired), pdf_leak.py, timing.py (reviewer study),
-               gate/ (eval spec and item loader for the 03 gate)
+               gate/ (eval spec and side files for the 03 gate; see 12.30)
   cli.py       sever corpus build | verify | ingest | propose | review | export | eval | report
 docs/          taxonomy.md, data.md, escalation.md (where the tool declines to decide), reviewer-study.md
 ```
@@ -1355,3 +1355,25 @@ proposals together, the export and the schedule apply its answer, and
 related fault that a span moved from R1 to R2 dropped out of its schedule, because
 `CHANGE_CATEGORY` withholds or releases depending on the code, which only the taxonomy
 knows.
+
+### 12.30 Through the gate at last, and it blocks the model layer
+
+2026-10-01. Section 4 promised `eval/gate/` and the README said "measured with the AI
+Release Gate"; until today only the estimator was shared. 03 built its adapter for
+downstream projects on 2026-09-30 and `sever gate-export` now writes a spec and one side
+file per configuration. The comparison is rules only against rules then the model,
+replayed from the committed answers.
+
+The item is the document. The gate has no cluster awareness and treats every item as
+independent, so span ids would hand it 5,355 items that are really 210. One suite per
+question: no leak in the document, none of the requester's information withheld, nothing
+public withheld, nothing impersonal withheld. K2 and K4 were suites in the first export
+and were dropped on evidence: one document in 210, and one in 35, had every such span
+right under either configuration, so a document verdict could not separate them. Their
+span-level rates stay the measurement for those two.
+
+The gate blocks, on `no_leak`: 35 documents worse with the model and none better. That is
+the README's "35 wrongly released" seen through a different test, and it moves the
+recommendation from "rules only is defensible" to "rules only is what the release gate
+allows".
+

@@ -106,6 +106,17 @@ tool does with no flags: the model layer is opt-in, costs money, and now has to 
 2.7 points of over-redaction against 2.5 points of leak. Which to run is a public body's
 decision and this repository does not make it.
 
+**Project 03's release gate, asked the same question, blocks the model layer.** Its
+paired non-inferiority test, with the document as the item and a three-point margin, finds
+turning the model on worse on documents with no leak: 84.3 percent of documents clean with
+the rules alone against 67.6 with the model, **35 documents worse and none better**. It
+passes the model on the requester's own information (+7.6 points) and on what is not
+personal information (+40.0), and cannot decide the publicly-available category on 70
+documents. One block is enough for the gate, and it is the right one: the gains are a
+requester receiving their own record sooner, the loss is a stranger's information that
+cannot be recalled. [`gate/decision.md`](gate/decision.md) is the gate's own output and
+`sever gate-export` writes what it was run on, for nothing.
+
 **Read the leak decomposition above before deciding the rules are the weak part.** Every
 one of the 39 leaks in the rules-only row is the detector's fault: 16 spans it never found
 and 23 it found and called a place or an organisation, which is not personal information,
@@ -357,6 +368,7 @@ sever study report                    # score it: minutes per page and accuracy,
 sever report --readme README.md       # every number above
 sever report --jurisdiction nl        # the same corpus under the NL statute
 sever eval-scanned --documents 50     # render, scan, read back, and score it (needs Tesseract)
+sever gate-export                     # the files project 03's release gate decides on
 ```
 
 `sever report` is the one command behind every published figure. With no flags it runs
