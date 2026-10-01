@@ -88,6 +88,7 @@
   .study { max-width: 44rem; }
   .study li { margin-bottom: .35rem; }
   .big { font-size: 1.05rem; padding: .5rem 1.2rem; }
+  .demo-banner { background: #fff4d6; border-bottom: 1px solid var(--rule); padding: .5rem 1.2rem; font-size: .88rem; }
 </style>
 </head>
 <body>
@@ -104,6 +105,13 @@
     {% endif %}
   </nav>
 </header>
+{% if demo %}
+<div class="demo-banner">
+  A demonstration. Every person and record here is invented, the tool runs its rules only
+  and calls no model, and nothing you do is kept: your session is forgotten after two
+  hours.
+</div>
+{% endif %}
 <main id="main">
 {% block content %}{% endblock %}
 </main>

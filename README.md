@@ -376,6 +376,7 @@ sever propose --documents 3           # proposals with the reason for each one
 sever export --documents 3            # redacted PDFs, schedules, and the leak test
 sever review --documents 3            # the reviewer's screen, on 127.0.0.1:8000
 sever study                           # the reviewer time study, one person at a time
+sever demo --insecure-cookie          # the public demonstration, locally; docs/deploy.md
 sever study report                    # score it: minutes per page and accuracy, per arm
 sever report --readme README.md       # every number above
 sever report --jurisdiction nl        # the same corpus under the NL statute

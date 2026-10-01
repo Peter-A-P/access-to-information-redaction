@@ -6,6 +6,13 @@
   Every page of this record has a completion action in the audit log. {{ count }} severance{{ '' if count == 1 else 's' }}
   were approved by a person, and the schedule below is generated from those rows and nothing else.
 </div>
+{% if demo %}
+<p>
+  <a href="/doc/{{ item.doc_id }}/released.pdf"><strong>Download the released PDF</strong></a>,
+  built from your decisions. The text under every box is removed, not covered, and the leak
+  test checked that before it was sent: try selecting the text under a box.
+</p>
+{% endif %}
 <p class="note">
   This screen authorises the export; it does not perform it. `sever export` applies the
   redactions and removes the text under every box, and the leak test runs on the result.

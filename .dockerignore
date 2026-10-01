@@ -1,0 +1,14 @@
+.venv
+.git
+.cache
+.mypy_cache
+.ruff_cache
+.pytest_cache
+**/__pycache__
+corpus/generated
+data
+review
+results
+.env
+.env.*
+CLAUDE.local.md

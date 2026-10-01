@@ -1211,6 +1211,30 @@ def gate_export(
     typer.echo(f"wrote {out}/spec.yaml, rules-only.json, rules-then-model.json")
 
 
+@app.command()
+def demo(
+    host: Annotated[str, typer.Option(help="Bind address. 0.0.0.0 inside a container.")] = (
+        "127.0.0.1"
+    ),
+    port: Annotated[int, typer.Option()] = 8000,
+    insecure_cookie: Annotated[
+        bool, typer.Option(help="Drop the cookie's Secure flag, for a local run over http.")
+    ] = False,
+) -> None:
+    """The public demonstration: one private, forgotten session per visitor.
+
+    Six synthetic records, rules only, no model and no spend. Meant to run behind a TLS
+    proxy; see docs/deploy.md.
+    """
+    import uvicorn
+
+    from sever.review.demo import DemoServer, demo_items
+
+    typer.echo("preparing the demonstration records...")
+    server = DemoServer(items=demo_items(), secure_cookie=not insecure_cookie)
+    typer.echo(f"http://{host}:{port}/")
+    uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
+
 study_app = typer.Typer(help="The reviewer time study: one command per reviewer.")
 app.add_typer(study_app, name="study")
 

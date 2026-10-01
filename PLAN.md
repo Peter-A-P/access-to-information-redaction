@@ -1418,3 +1418,16 @@ detected as people, no signature blocks in a flat text layer, and military ranks
 not titles the rules know. The obvious next work is ranks as titles and layout recovery from
 the OCR word boxes, which `results/scanned.md` already pointed at.
 
+### 12.33 The demonstration is built and waits on the host
+
+2026-10-01. Peter decided to build the hosted demo now, on the shared VPS, rules only.
+`sever demo` is the reviewer application with exactly two additions: a private session per
+visitor behind a random cookie, deleted after two hours idle or when 200 are live, and a
+download of the released PDF built from the visitor's own decisions and leak-tested before
+it is served. No model, so no spend and no key. The image (`deploy/Dockerfile`) runs
+read-only with every capability dropped and was probed that way locally.
+
+It is not deployed, for three reasons that are not code: the DNS record, a site block in
+04's Caddyfile, and 04's deploy note that the host "runs nothing else", which 04's published
+load test relies on. `docs/deploy.md` has all three and the commands.
+

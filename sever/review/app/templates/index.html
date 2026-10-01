@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Request {{ session.request_id }}</h2>
+{% if demo %}
+<p>
+  Six invented records responsive to one access-to-information request. Open one: the tool
+  has proposed, for every piece of personal information, whether to withhold it or release
+  it, and why. Accept or overrule each proposal, select anything it missed, mark the page
+  complete, and release the record. The tool proposes; you decide.
+</p>
+{% endif %}
 <p class="note">
   {{ rows|length }} document{{ '' if rows|length == 1 else 's' }}.
   {% if session.mode.shows_proposals %}

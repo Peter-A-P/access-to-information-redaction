@@ -148,18 +148,25 @@ def fragments(
     return tuple(out)
 
 
-def create_app(session: Session, study: StudyRun | None = None) -> FastAPI:
+def create_app(
+    session: Session, study: StudyRun | None = None, *, demo: bool = False
+) -> FastAPI:
     """The application, over one session. A session per process, deliberately.
 
     With `study`, the same screens run the reviewer time study: a welcome page, one record
     after another in the order the study chose, a pause where the arm changes, and no index
     or audit-log links to wander off through. See `sever.review.study`.
+
+    With `demo`, it is one visitor's session in the public demonstration: a banner says the
+    records are invented and nothing is kept, and a released record offers its redacted
+    PDF. See `sever.review.demo`.
     """
     app = FastAPI(title="sever review", docs_url=None, redoc_url=None)
     templates = Jinja2Templates(directory=str(TEMPLATES))
     templates.env.globals["session"] = session
     templates.env.globals["span_actions"] = SPAN_ACTIONS
     templates.env.globals["study"] = study
+    templates.env.globals["demo"] = demo
     if study is not None:
         _study_routes(app, templates, study)
 
