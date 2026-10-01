@@ -1,8 +1,9 @@
 """Where `boundary` comes from, and which version of it will do.
 
 `boundary` is project 04's library. It is not a declared dependency of this project and
-cannot become one: it is a private repository, and the name `boundary` on PyPI belongs to
-an unrelated package that stops at 0.3.4. A dependency line here does not fetch project
+cannot become one: it is not published to PyPI, and the name `boundary` on PyPI belongs to
+an unrelated package that stops at 0.3.4. The source is public at
+https://github.com/Peter-A-P/compliant-ai-gateway. A dependency line here does not fetch project
 04; it fetches a stranger's package that happens to share the name. That is what the
 `gateway` extra used to do, and CI resolving it is how it was found.
 
@@ -11,7 +12,7 @@ So the library is installed by path:
     uv pip install -e ../04-compliant-ai-gateway
 
 and the version floor a dependency line would have bought is enforced here instead, at the
-point of use. The floor is 0.6.4, and each release named below is a correctness fix this
+point of use. The floor is 0.23.0, and each release named below is a correctness fix this
 project depends on rather than a preference for the newest thing:
 
   * **0.5.1** resolves an overlap by containment before score. Before it, Presidio's
@@ -52,9 +53,18 @@ project depends on rather than a preference for the newest thing:
     resolved to nothing and were listed in `unresolved`. `LayeredPolicy.rehydrate` passes
     straight through to this, and nothing here rehydrates model output today; the floor
     is set so that the first thing that does gets the values back.
+  * **0.9.0** masks initials and surname particles with the name they belong to. Before
+    it, `Mr M. Trznadel` went out as `Mr M. <NAME_LIKE_1>`, and `van der` sat in clear
+    between two masked halves of a name. 04 found it on court judgments; the corpus here
+    has no initials, which is a reason to take the fix rather than a reason to skip it.
+  * **0.23.0** masks the rest of a value glued to a placeholder by `-`, `/` or `_` when
+    it carries a digit. Before it, a file number half typed as an organisation sent its
+    tail (`-1749`) to the wire. File numbers are the identifiers this project's own
+    recognisers exist for, so this one reaches it directly. Nothing after 0.23.0 changes
+    what `boundary.redact` masks (0.24 to 0.30 are measurement, caching and hosting).
 
-Checked against 0.12.0, the version installed when the floor was raised: the full suite
-passes. The 0.5.3 behaviour change 04 flagged (`Policy.outbound` refuses text carrying a
+Checked against 0.32.0, the version installed when the floor was raised on 2026-10-01:
+the full suite passes, and `sever eval-detector --compare` was rerun on it. The 0.5.3 behaviour change 04 flagged (`Policy.outbound` refuses text carrying a
 placeholder it minted) does not reach this project, because `LayeredPolicy` hands it source
 text once and applies its own scrub afterwards; `tests/test_boundary_adapter.py` pins that.
 
@@ -69,14 +79,15 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-MINIMUM_BOUNDARY: Final = (0, 6, 4)
+MINIMUM_BOUNDARY: Final = (0, 23, 0)
 
 INSTALL: Final = "uv pip install -e ../04-compliant-ai-gateway"
 
 BOUNDARY_MISSING: Final = (
-    f"boundary, project 04's library, is not installed. It is a private repository and "
-    f"not on PyPI, so install it by path: `{INSTALL}`. The `boundary` package on PyPI is "
-    f"an unrelated project and is not this one."
+    f"boundary, project 04's library, is not installed. It is not on PyPI, so clone "
+    f"https://github.com/Peter-A-P/compliant-ai-gateway beside this repository and install "
+    f"it by path: `{INSTALL}`. The `boundary` package on PyPI is an unrelated project and "
+    f"is not this one."
 )
 
 

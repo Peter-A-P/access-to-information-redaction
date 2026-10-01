@@ -44,7 +44,7 @@ def test_nothing_declares_a_dependency_named_boundary() -> None:
         declared.extend(extra)
     offending = [d for d in declared if d.split("[")[0].split(">")[0].strip() == "boundary"]
     assert offending == [], (
-        f"boundary is a private repository installed by path, not a resolvable "
+        f"boundary is installed by path from project 04, not a resolvable "
         f"dependency; PyPI's `boundary` is an unrelated package. Found: {offending}"
     )
 
@@ -52,23 +52,27 @@ def test_nothing_declares_a_dependency_named_boundary() -> None:
 def test_a_boundary_below_the_floor_raises_rather_than_running(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """0.6.1 masks `555-0199` and sends the area code of `(709) 555-0199` in clear beside
-    its own placeholder."""
+    """0.22.0 sends the tail of a file number glued to a placeholder (`-1749`) to the
+    wire, and 0.6.1 the area code of `(709) 555-0199` beside its own placeholder."""
+    for old in ("0.6.1", "0.22.0"):
+        monkeypatch.setitem(sys.modules, "boundary", _fake_boundary(old))
+        with pytest.raises(BoundaryUnavailable, match=r"0\.23\.0 or newer"):
+            require_boundary()
     monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.6.1"))
-    with pytest.raises(BoundaryUnavailable, match=r"0\.6\.4 or newer"):
+    with pytest.raises(BoundaryUnavailable):
         require_boundary()
     assert available() is False
 
 
 def test_the_floor_itself_is_enough(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.6.4"))
-    assert require_boundary().__version__ == "0.6.4"
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.23.0"))
+    assert require_boundary().__version__ == "0.23.0"
     assert available() is True
 
 
 def test_a_newer_boundary_is_not_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     """There is no upper bound: a break in 04 should fail a test, not a version check."""
-    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.12.0"))
+    monkeypatch.setitem(sys.modules, "boundary", _fake_boundary("0.30.0"))
     assert available() is True
 
 

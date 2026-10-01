@@ -1,9 +1,10 @@
 # Plan: Hundreds of Pages, Redacted in an Afternoon
 
 **Written:** 2026-09-07. **Status:** building. Started 2026-09-13, about eleven months
-ahead of the Aug 2027 slot, because nothing in the portfolio blocks it. Week 1 and most
-of week 2 are built and measured; section 12 records every place the build departed
-from this plan and why.
+ahead of the Aug 2027 slot, because nothing in the portfolio blocks it. As of 2026-10-01
+everything in section 10 is built; what is not yet measured is the reviewer study (waiting
+for people), the real-release track (waiting for downloaded packages) and the hosted demo.
+Section 12 records every place the build departed from this plan and why.
 
 **Build:** three weeks, Aug 2 to Aug 22 2027, slack to Aug 31 (the last month of the
 twelve). **Package:** `sever`, after the access-law term for redacting part of a record and
@@ -1354,4 +1355,3 @@ proposals together, the export and the schedule apply its answer, and
 related fault that a span moved from R1 to R2 dropped out of its schedule, because
 `CHANGE_CATEGORY` withholds or releases depending on the code, which only the taxonomy
 knows.
-
