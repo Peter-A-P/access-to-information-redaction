@@ -46,7 +46,7 @@ Three things only Peter can do, in this order:
    }
    ```
 
-   The reviewer screen's thirty lines of script and its stylesheet are inline. That is
+   The reviewer screen's hundred lines of script and its stylesheet are inline. That is
    why the policy allows inline script and style, and allows nothing from another host.
 3. **The note in 04's deploy doc** that says the host "runs nothing else" has to change,
    because 04's published load test names this machine. The demonstration is idle almost

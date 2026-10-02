@@ -6,7 +6,7 @@
 <title>{% block title %}sever review{% endblock %}</title>
 {#
   No script tag pointing anywhere. PLAN.md said htmx over Jinja and the swap below is what
-  htmx would have done, in about thirty lines, because a tool for reading government records
+  htmx would have done, plus the decision popups, in about a hundred lines, because a tool for reading government records
   that fetches a script from a CDN on every page is asking a public body to trust a third
   party it did not choose. This way the application runs with the network cable out, which
   is where records like these are usually read. See PLAN 12.16.
@@ -80,8 +80,26 @@
   .pager { display: flex; gap: .8rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
   .pill { font-size: .78rem; padding: .1rem .5rem; border: 1px solid var(--rule); border-radius: 10px; color: var(--muted); }
   .pill.done { border-color: var(--release); color: var(--release); }
-  #addbar { margin: .8rem 0; padding: .6rem .8rem; border: 1px dashed var(--rule); background: #fff; }
-  #addbar[hidden] { display: none; }
+  .pop {
+    position: absolute; z-index: 20; width: min(30rem, calc(100vw - 16px));
+    background: #fff; border: 1px solid #b9b4a8; border-radius: 6px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: .7rem .85rem; font-size: .9rem;
+  }
+  .pop[hidden] { display: none; }
+  .pop-head { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; margin-bottom: .35rem; }
+  .pop .close { border: none; background: none; font-size: 1.3rem; line-height: 1; padding: 0 .2rem; }
+  .pop .proposal { margin: .2rem 0 .3rem; }
+  .pop .decided { margin: .4rem 0; color: var(--release); }
+  .pop .actions { margin: .5rem 0; }
+  .pop .actions form { display: inline; }
+  .pop .recode { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+  .pop .recode select, #addbar select { max-width: 100%; }
+  .pop-foot { margin-top: .5rem; text-align: right; }
+  #addbar label { display: block; margin: .3rem 0; }
+  #addbar input[type=text] { margin: .3rem 0; width: 100%; }
+  .how { margin: .2rem 0 .6rem; }
+  details.spans { margin-top: 1rem; }
+  details.spans summary { cursor: pointer; color: var(--muted); }
   .requester { border-left: 3px solid var(--pending); background: #eef2ff; padding: .5rem .8rem; margin: 0 0 .8rem; }
   details.reference { margin: .6rem 0 1rem; font-size: .88rem; }
   details.reference summary { cursor: pointer; color: var(--muted); }
@@ -116,53 +134,114 @@
 {% block content %}{% endblock %}
 </main>
 <script>
-// Post a form and replace the part of the page the server re-rendered. Every action a
-// reviewer takes is one request and one audit row, so there is no client-side state to
-// keep in step with the server: the server's answer is the state.
+// Every action a reviewer takes is one form post and one audit row. The server answers with
+// the part of the page that changed, and that answer is the state: there is nothing on
+// this side to keep in step with it.
+//
+// `form.getAttribute('action')`, not `form.action`. These forms carry an input named
+// "action", and on a form with such an input `form.action` is the input element, not the
+// URL. Posting to it sent every decision to "/doc/.../page/[object HTMLInputElement]", which
+// the server answered with 405 Method Not Allowed. That is the bug a reviewer found on
+// 2026-10-02 and no test could, because the tests post forms without a browser.
 document.addEventListener('submit', async (ev) => {
   const form = ev.target;
   if (!form.matches('form[data-swap]')) return;
   ev.preventDefault();
+  if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;
   const target = document.querySelector(form.dataset.swap);
-  const res = await fetch(form.action, {method: 'POST', body: new FormData(form)});
+  const keep = window.scrollY;
+  const res = await fetch(form.getAttribute('action'), {method: 'POST', body: new FormData(form)});
+  const text = await res.text();
   if (!res.ok) {
-    target.insertAdjacentHTML('afterbegin',
-      '<div class="error">' + (await res.text()).slice(0, 500) + '</div>');
+    let detail = text;
+    try { detail = JSON.parse(text).detail || text; } catch (e) {}
+    closePops();
+    target.insertAdjacentHTML('afterbegin', '<div class="error"></div>');
+    target.querySelector('.error').textContent = String(detail).slice(0, 500);
     return;
   }
-  target.outerHTML = await res.text();
+  target.outerHTML = text;
+  // The page is re-rendered in place; put the reader back exactly where they were.
+  window.scrollTo(0, keep);
 });
 
-// Clicking a highlighted span scrolls to its controls, and selecting unmarked text offers
-// to add a severance the tool did not propose. Detector recall is 98.6 percent, so a
-// reviewer who can only answer the tool's list inherits its misses.
+function closePops() {
+  document.querySelectorAll('.pop').forEach((p) => { p.hidden = true; });
+  document.querySelectorAll('mark.focus').forEach((m) => m.classList.remove('focus'));
+}
+
+// Put a panel next to the text it is about: under it if there is room, above it if not,
+// and never off the side of the screen.
+function place(pop, rect) {
+  pop.hidden = false;
+  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 6;
+  let left = rect.left + window.scrollX;
+  left = Math.max(window.scrollX + 8, Math.min(left, window.scrollX + window.innerWidth - w - 8));
+  let top = rect.bottom + window.scrollY + gap;
+  if (rect.bottom + gap + h > window.innerHeight && rect.top - gap - h > 0) {
+    top = rect.top + window.scrollY - h - gap;
+  }
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+
+function openSpan(id) {
+  const mark = document.querySelector('mark[data-span="' + id + '"]');
+  const pop = document.getElementById('pop-' + id);
+  if (!mark || !pop) return;
+  closePops();
+  mark.scrollIntoView({block: 'nearest'});
+  mark.classList.add('focus');
+  place(pop, mark.getBoundingClientRect());
+  pop.querySelector('button.primary, button[type=submit]')?.focus({preventScroll: true});
+}
+
 document.addEventListener('click', (ev) => {
-  const m = ev.target.closest('mark[data-span]');
-  if (!m) return;
-  const row = document.getElementById('row-' + m.dataset.span);
-  if (row) { row.scrollIntoView({block: 'center'}); row.querySelector('button')?.focus(); }
-});
-
-document.addEventListener('mouseup', () => {
-  const bar = document.getElementById('addbar');
-  if (!bar) return;
-  const sel = window.getSelection();
-  const record = document.getElementById('record');
-  if (!sel || sel.isCollapsed || !record || !record.contains(sel.anchorNode)) {
-    bar.hidden = true;
+  const mark = ev.target.closest('mark[data-span]');
+  if (mark) { ev.preventDefault(); openSpan(mark.dataset.span); return; }
+  const link = ev.target.closest('[data-open]');
+  if (link) { ev.preventDefault(); openSpan(link.dataset.open); return; }
+  if (ev.target.closest('[data-close]')) { closePops(); return; }
+  if (ev.target.closest('[data-next]')) {
+    const current = document.querySelector('mark.focus');
+    const all = [...document.querySelectorAll('mark.pending[data-span]')];
+    const next = all.find((m) => current && (current.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING)) || all[0];
+    if (next) openSpan(next.dataset.span); else closePops();
     return;
   }
+  if (!ev.target.closest('.pop')) {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) closePops();
+  }
+});
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') { closePops(); return; }
+  const mark = ev.target.closest && ev.target.closest('mark[data-span]');
+  if (mark && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); openSpan(mark.dataset.span); }
+});
+
+// Selecting text the tool did not propose offers to withhold it, in a panel beside the
+// selection. Detector recall is 98.6 percent, so a reviewer who can only answer the tool's
+// list inherits its misses.
+document.addEventListener('mouseup', (ev) => {
+  if (ev.target.closest('.pop') || ev.target.closest('mark[data-span]')) return;
+  const bar = document.getElementById('addbar');
+  const record = document.getElementById('record');
+  const sel = window.getSelection();
+  if (!bar || !record || !sel || sel.isCollapsed || !record.contains(sel.anchorNode)) return;
   const range = sel.getRangeAt(0);
+  const text = sel.toString();
+  if (!text.trim()) return;
   const before = document.createRange();
   before.setStart(record, 0);
   before.setEnd(range.startContainer, range.startOffset);
   const start = before.toString().length;
-  const text = sel.toString();
-  if (!text.trim()) { bar.hidden = true; return; }
   bar.querySelector('[name=start]').value = start;
   bar.querySelector('[name=end]').value = start + text.length;
   bar.querySelector('#addquote').textContent = text.length > 60 ? text.slice(0, 60) + '...' : text;
-  bar.hidden = false;
+  closePops();
+  place(bar, range.getBoundingClientRect());
 });
 </script>
 </body>

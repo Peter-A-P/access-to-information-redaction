@@ -25,7 +25,8 @@
     <tr>
       <td>{{ r.page }}</td>
       <td>{{ (r.span_end - r.span_start) if r.span_start is not none else '' }} characters</td>
-      <td><span class="code">{{ r.final_code or r.proposed_code or '' }}</span></td>
+      {% set c = r.final_code or r.proposed_code %}
+      <td>{% if c %}{{ session.taxonomy[c].name }} <span class="code">{{ c }}</span>{% endif %}</td>
       <td>{{ r.action.value }} by {{ r.actor }}</td>
       <td>{{ r.reason or '' }}</td>
     </tr>

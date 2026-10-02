@@ -8,7 +8,7 @@ there is one the claim is about code that nobody can drive.
 
 Server-rendered HTML. No build step, no bundler, no client framework, no JSON API and no
 script fetched from anywhere: the reviewer's actions are form posts, the server answers with
-the piece of the page that changed, and about thirty lines of hand-written JavaScript in
+the piece of the page that changed, and about a hundred lines of hand-written JavaScript in
 `base.html` do the swap. That is not nostalgia. The audit log is the point of this
 application, and every state change here is a row in it, so an architecture where the server
 sees each action individually is the one that matches what has to be recorded. PLAN.md said
@@ -148,6 +148,24 @@ def fragments(
     return tuple(out)
 
 
+BULK_RELEASE_REASON = "released with every other undecided span on the page, in one action"
+
+_GROUPS = (("redact", "Withhold"), ("keep", "Release"), ("escalate", "Withhold and escalate"))
+
+
+def _code_groups(session: Session) -> list[tuple[str, list[str]]]:
+    out: list[tuple[str, list[str]]] = []
+    for decision, label in _GROUPS:
+        codes = [
+            c.code
+            for c in session.taxonomy.categories
+            if session.taxonomy.decision(c.code, session.jurisdiction).value == decision
+        ]
+        if codes:
+            out.append((label, codes))
+    return out
+
+
 def create_app(
     session: Session, study: StudyRun | None = None, *, demo: bool = False
 ) -> FastAPI:
@@ -196,6 +214,10 @@ def create_app(
             # withhold a span as "the requester's own information", which means nothing.
             # R1 first, because it is what an added span almost always is.
             "add_codes": sorted(withholding, key=lambda c: (c != "R1", c)),
+            # Every code a reviewer may move a span to, grouped by what it does to the
+            # span, so the choice reads "Release: an official acting in their capacity"
+            # rather than "K2". Flag-only codes are left out: they make no decision.
+            "code_groups": _code_groups(session),
             "fragments": fragments(page, proposals, acted, added),
             "proposals": proposals,
             "acted": acted,
@@ -284,6 +306,34 @@ def create_app(
             final_code=final if chosen is not Action.REJECT else None,
             reason=reason or None,
         )
+        return templates.TemplateResponse(request, "_page_body.html", _page_context(doc_id, number))
+
+    @app.post("/doc/{doc_id}/page/{number}/release-rest", response_class=HTMLResponse)
+    def release_rest(request: Request, doc_id: str, number: int) -> Any:
+        """Release every span on the page the reviewer has not decided yet.
+
+        Asked for by the first reviewer, because a page can carry thirty spans and most of
+        what is left after the third parties are withheld is officials, places and dates.
+        It is still a person's decision about every span: one REJECT row per span, each
+        with the same reason, so the log says these were released in one action rather
+        than one at a time, and the reviewer study can tell the two apart. The button asks
+        first and says how many of the spans the tool had proposed to withhold.
+        """
+        item = session.item(doc_id)
+        page = item.document.page(number)
+        for p in session.outstanding(doc_id, number):
+            o = p.detection.offsets
+            session.record(
+                doc_id=doc_id,
+                page=number,
+                action=Action.REJECT,
+                span_start=o.start,
+                span_end=o.end,
+                span_text=page.text[o.start : o.end],
+                proposed_code=p.code,
+                final_code=None,
+                reason=BULK_RELEASE_REASON,
+            )
         return templates.TemplateResponse(request, "_page_body.html", _page_context(doc_id, number))
 
     @app.post("/doc/{doc_id}/page/{number}/complete", response_class=HTMLResponse)

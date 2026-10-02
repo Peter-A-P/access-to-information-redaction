@@ -332,7 +332,22 @@ in recovering structure from the word geometry Tesseract already returns.
 
 `sever review` opens the reviewer's screen on loopback: one page at a time, the record
 rendered as the characters the redaction will actually be applied to, every proposed
-severance highlighted with its category, its provision and the reason the tool gives for it.
+severance highlighted. Clicking a highlighted name opens the decision beside it, in words
+rather than codes ("The tool proposes: Release, as an officer or employee acting in an
+official capacity"), with the reason, the question the category asks, and Withhold,
+Release and Escalate; the page does not move. Selecting any other text offers to withhold
+it in the same way.
+
+The first person to use it found that none of that had ever worked in a browser: every
+decision answered "Method Not Allowed", because the script posted to `form.action`, which
+on a form with an input named "action" is that input rather than the URL. Every test passed,
+because the tests post forms without a browser. One now checks the script itself. A check in a real
+browser has not run yet, because the browser download keeps failing on this network.
+
+At the foot of each page, **Release everything still undecided** releases every span the
+reviewer has not acted on, in one action. It asks first, and names any of those spans the
+tool had proposed to withhold. Each span still gets its own row in the audit log, marked as
+released in bulk, and the page still has to be marked complete separately.
 
 Two rules are enforced in code rather than promised in prose, and
 [`tests/test_review_app.py`](tests/test_review_app.py) holds both:
@@ -350,7 +365,7 @@ proposed and sever it themselves: a reviewer who can only answer the tool's list
 the tool's misses.
 
 The application fetches nothing from anywhere. No CDN, no bundler, no client framework:
-server-rendered HTML, form posts, and about thirty lines of hand-written JavaScript. A tool
+server-rendered HTML, form posts, and about a hundred lines of hand-written JavaScript. A tool
 for reading government records should run with the network cable out.
 
 `sever export --audit review/audit.duckdb` applies the redactions the reviewer decided:

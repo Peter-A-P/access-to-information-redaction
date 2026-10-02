@@ -41,110 +41,137 @@
 </details>
 {% endif %}
 
-<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="{{ f.proposal.code }}: {{ f.proposal.reason }}">{{ f.text }}</mark>{% elif f.is_added %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" title="you withheld this: {{ f.added.code }}">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
+{# A word for what a proposal or a decision does to the span, for people rather than codes. #}
+{% macro does(code) -%}
+  {%- set d = taxonomy.decision(code, session.jurisdiction).value -%}
+  {{ {'redact': 'Withhold', 'keep': 'Release', 'escalate': 'Withhold and escalate', 'flag': 'Flag only'}[d] }}
+{%- endmacro %}
+{% macro category(code) -%}
+  {{ taxonomy[code].name }} <span class="code">{{ code }}</span>
+{%- endmacro %}
 
-<form id="addbar" hidden method="post"
-      action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
-      data-swap="#body">
-  <input type="hidden" name="start" value="">
-  <input type="hidden" name="end" value="">
-  <input type="hidden" name="action" value="add">
-  <strong>Withhold this text the tool did not propose:</strong>
-  <span class="quote" id="addquote"></span>
-  <select name="code">
-    {% for c in add_codes %}
-      <option value="{{ c }}">{{ c }} - {{ taxonomy[c].name }}</option>
-    {% endfor %}
-  </select>
-  <input type="text" name="reason" placeholder="why (optional)" size="28">
-  <button class="primary" type="submit">Add severance</button>
-</form>
+<p class="note how">
+  {% if mode.shows_proposals %}
+    Click a highlighted name or number to decide it. Select any other text with the mouse to
+    withhold something the tool missed.
+  {% else %}
+    Select any text that must be withheld with the mouse, and choose why.
+  {% endif %}
+</p>
 
-{% if added %}
-<div class="spans">
-  <p class="note"><strong>Withheld by you</strong> ({{ added|length }}). Undo puts the text back in the record.</p>
-  {% for a in added %}
-  <div class="span-row" id="row-s{{ a.start }}-{{ a.end }}">
-    <div class="span-head">
-      <span class="quote">{{ page.text[a.start:a.end] }}</span>
-      <span class="code">{{ a.code }}</span>
-      <span class="note">{{ taxonomy[a.code].name if a.code else '' }}</span>
-      <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
-            data-swap="#body" style="display:inline; margin-left:auto">
-        <input type="hidden" name="start" value="{{ a.start }}">
-        <input type="hidden" name="end" value="{{ a.end }}">
-        <input type="hidden" name="action" value="reject">
-        <button type="submit">Undo</button>
-      </form>
-    </div>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" tabindex="0" title="Click to decide">{{ f.text }}</mark>{% elif f.is_added %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" tabindex="0" title="You withheld this. Click to change">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
 
-<div class="spans">
+{# One decision panel per span, hidden until its text is clicked, then shown beside it. #}
 {% for p in proposals %}
   {% set key = (p.detection.offsets.start, p.detection.offsets.end) %}
   {% set done = acted.get(key) %}
-  <div class="span-row {{ 'done' if done else '' }}" id="row-s{{ p.detection.offsets.start }}-{{ p.detection.offsets.end }}">
-    <div class="span-head">
+  {% set proposed = 'escalate' if p.is_escalation else ('approve' if p.withholds else 'reject') %}
+  <div class="pop" id="pop-s{{ p.detection.offsets.start }}-{{ p.detection.offsets.end }}" hidden role="dialog">
+    <div class="pop-head">
       <span class="quote">{{ p.detection.text }}</span>
-      <span class="code">{{ p.code }}</span>
-      <span class="note">{{ taxonomy[p.code].name }}</span>
-      {% if p.citation %}<span class="note">{{ p.citation }}</span>{% endif %}
-      <span class="note">{{ p.source.value }}, confidence {{ '%.2f'|format(p.confidence) }}</span>
-      <span class="note"><strong>proposes: {{ 'escalate' if p.is_escalation else ('withhold' if p.withholds else 'release') }}</strong></span>
-      {% if done %}<span class="pill done">{{ done.value }}</span>{% endif %}
+      <button type="button" class="close" data-close aria-label="Close">&times;</button>
     </div>
-    <div class="why">
-      {{ p.reason }}
-      {% if p.disagreement %}<br><strong>The rules and the model disagreed:</strong> {{ p.disagreement }}{% endif %}
+    <div class="proposal">
+      The tool proposes: <strong>{{ does(p.code) }}</strong>, as {{ category(p.code) }}
     </div>
-    {% if taxonomy[p.code].reviewer_question %}
-      <div class="why"><em>{{ taxonomy[p.code].reviewer_question }}</em></div>
-    {% endif %}
+    <div class="why">{{ p.reason }}</div>
+    {% if p.disagreement %}<div class="why"><strong>The rules and the model disagreed:</strong> {{ p.disagreement }}</div>{% endif %}
+    {% if taxonomy[p.code].reviewer_question %}<div class="why"><em>{{ taxonomy[p.code].reviewer_question }}</em></div>{% endif %}
+    {% if done %}<div class="decided">You decided: <strong>{{ {'approve': 'Withhold', 'reject': 'Release', 'escalate': 'Withhold and escalate', 'change_category': 'Changed the category', 'add': 'Withhold'}[done.value] }}</strong>. You can change it.</div>{% endif %}
     <div class="actions">
       {% for action, label, tip in span_actions %}
-        <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
-              data-swap="#body" style="display:inline">
+        <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span" data-swap="#body">
           <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
           <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
           <input type="hidden" name="action" value="{{ action.value }}">
-          {# The highlighted button is what the tool proposes, so that agreeing with it is
-             one obvious click whichever way it went. Highlighting Withhold on every span
-             nudged a reviewer towards withholding the officials the tool had proposed to
-             release, which is the over-redaction this project exists to measure. #}
-          {% set proposed = 'escalate' if p.is_escalation else ('approve' if p.withholds else 'reject') %}
-          <button type="submit" title="{{ tip }}"
-                  class="{{ 'primary' if action.value == proposed and not done else '' }}">{{ label }}</button>
+          <button type="submit" title="{{ tip }}" class="{{ 'primary' if action.value == proposed else '' }}">{{ label }}{% if action.value == proposed %} (proposed){% endif %}</button>
         </form>
       {% endfor %}
-      <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
-            data-swap="#body" style="display:inline">
-        <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
-        <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
-        <input type="hidden" name="action" value="change_category">
+    </div>
+    <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span" data-swap="#body" class="recode">
+      <input type="hidden" name="start" value="{{ p.detection.offsets.start }}">
+      <input type="hidden" name="end" value="{{ p.detection.offsets.end }}">
+      <input type="hidden" name="action" value="change_category">
+      <label>Or decide it under another reason:
         <select name="code">
-          {% for c in codes %}
-            <option value="{{ c }}" {{ 'selected' if c == p.code else '' }}>{{ c }}</option>
+          {% for label, codes in code_groups %}
+            <optgroup label="{{ label }}">
+              {% for c in codes %}
+                <option value="{{ c }}" {{ 'selected' if c == p.code else '' }}>{{ label }}: {{ taxonomy[c].name }} ({{ c }})</option>
+              {% endfor %}
+            </optgroup>
           {% endfor %}
         </select>
-        <button type="submit" title="Withhold or release it, but under a different category">Change category</button>
-      </form>
-    </div>
+      </label>
+      <button type="submit">Use this reason</button>
+    </form>
+    <div class="pop-foot"><button type="button" data-next>Next undecided</button></div>
   </div>
-{% else %}
-  <p class="note">
-    {% if mode.shows_proposals %}
-      The tool proposes nothing on this page. Read it, add anything it missed, and complete
-      the page.
-    {% else %}
-      Select any text above that must be withheld, choose a category and press Add
-      severance. When nothing else on the page must go, mark it complete.
-    {% endif %}
-  </p>
 {% endfor %}
-</div>
+
+{% for a in added %}
+  <div class="pop" id="pop-s{{ a.start }}-{{ a.end }}" hidden role="dialog">
+    <div class="pop-head">
+      <span class="quote">{{ page.text[a.start:a.end] }}</span>
+      <button type="button" class="close" data-close aria-label="Close">&times;</button>
+    </div>
+    <div class="proposal">You withheld this as {{ category(a.code) if a.code else 'no category' }}</div>
+    {% if a.code %}<div class="why">{{ taxonomy[a.code].definition }}</div>{% endif %}
+    <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span" data-swap="#body">
+      <input type="hidden" name="start" value="{{ a.start }}">
+      <input type="hidden" name="end" value="{{ a.end }}">
+      <input type="hidden" name="action" value="reject">
+      <button type="submit">Undo: put it back in the record</button>
+    </form>
+  </div>
+{% endfor %}
+
+<form id="addbar" class="pop" hidden method="post"
+      action="/doc/{{ item.doc_id }}/page/{{ page.number }}/span"
+      data-swap="#body" role="dialog">
+  <input type="hidden" name="start" value="">
+  <input type="hidden" name="end" value="">
+  <input type="hidden" name="action" value="add">
+  <div class="pop-head">
+    <span>Withhold <span class="quote" id="addquote"></span></span>
+    <button type="button" class="close" data-close aria-label="Close">&times;</button>
+  </div>
+  <label>Why:
+    <select name="code">
+      {% for c in add_codes %}
+        <option value="{{ c }}">{{ taxonomy[c].name }} ({{ c }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <input type="text" name="reason" placeholder="a note, if you want one" size="28">
+  <button class="primary" type="submit">Withhold it</button>
+</form>
+
+{% if added %}
+<details class="spans">
+  <summary>Withheld by you ({{ added|length }})</summary>
+  {% for a in added %}
+    <div class="span-row"><span class="quote">{{ page.text[a.start:a.end] }}</span>
+      <span class="note">{{ taxonomy[a.code].name if a.code else '' }}</span></div>
+  {% endfor %}
+</details>
+{% endif %}
+
+{% if proposals %}
+<details class="spans">
+  <summary>Every proposal on this page, as a list ({{ acted|length }} of {{ proposals|length }} decided)</summary>
+  {% for p in proposals %}
+    {% set done = acted.get((p.detection.offsets.start, p.detection.offsets.end)) %}
+    <div class="span-row {{ 'done' if done else '' }}">
+      <a href="#" data-open="s{{ p.detection.offsets.start }}-{{ p.detection.offsets.end }}" class="quote">{{ p.detection.text }}</a>
+      <span class="note">proposed: {{ does(p.code) }}, {{ taxonomy[p.code].name }}</span>
+      {% if done %}<span class="pill done">decided</span>{% endif %}
+    </div>
+  {% endfor %}
+</details>
+{% elif mode.shows_proposals %}
+  <p class="note">The tool proposes nothing on this page. Read it, withhold anything it missed, and complete the page.</p>
+{% endif %}
 
 <div class="pager">
   <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/complete"
@@ -153,6 +180,14 @@
       {{ 'Page complete' if complete else 'Mark page ' ~ page.number ~ ' complete' }}
     </button>
   </form>
+  {% if outstanding and not complete %}
+    {% set risky = outstanding|selectattr('withholds')|list %}
+    <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/release-rest"
+          data-swap="#body"
+          data-confirm="Release all {{ outstanding|length }} undecided item(s) on this page?{% if risky %} {{ risky|length }} of them the tool proposed to WITHHOLD: {{ risky|map(attribute='detection.text')|join(', ')|truncate(200) }}.{% endif %}">
+      <button type="submit" title="Everything you have not decided on this page is released">Release everything still undecided ({{ outstanding|length }})</button>
+    </form>
+  {% endif %}
   {% if outstanding %}
     <span class="note">{{ outstanding|length }} span(s) still undecided on this page.</span>
   {% endif %}

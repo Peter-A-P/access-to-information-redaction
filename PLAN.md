@@ -1431,3 +1431,28 @@ It is not deployed, for three reasons that are not code: the DNS record, a site 
 04's Caddyfile, and 04's deploy note that the host "runs nothing else", which 04's published
 load test relies on. `docs/deploy.md` has all three and the commands.
 
+### 12.34 The reviewer screen had never worked in a browser
+
+2026-10-02. Peter opened it and every decision answered `{"detail":"Method Not Allowed"}`.
+The script posted to `form.action`, and every decision form has an input named `action`,
+which the DOM returns in place of the URL; the post went to `.../page/[object
+HTMLInputElement]`, a GET-only route. Since 12.16 every test had posted forms directly, so
+none could see it. A test now reads the script. Driving the screen in a headless browser
+is the check that would have caught it; it has not run yet, because the browser downloads
+keep failing on this network, and the next change to the screen should not be called done
+without it.
+
+Two changes he asked for in the same report. Clicking a name used to scroll down to its
+controls below the record and leave the reader there; the decision now opens in a panel
+beside the name, the page stays put, and a re-render after a decision restores the scroll
+position. And the codes meant nothing to him and would mean little to staff: every choice
+now leads with what it does and the category's name ("Release: an officer or employee
+acting in an official capacity (K2)"), with the code kept small beside it for the
+schedule.
+
+The same day he asked for a way to release everything left on a page at once. `Release
+everything still undecided` records one REJECT row per undecided span with a shared reason,
+so the log and the reviewer study can tell a bulk release from individual ones. It asks
+before acting and names the spans the tool had proposed to withhold, because releasing one
+of those is a third party's information in the record. It does not complete the page.
+

@@ -442,3 +442,45 @@ def test_the_index_lists_what_is_left_to_review(
     decide_page(client, session, item.doc_id, 1)
     client.post(f"/doc/{item.doc_id}/page/1/complete")
     assert "1 page" in client.get("/").text
+
+
+def test_the_script_posts_to_the_form_url_and_not_to_its_action_input() -> None:
+    """Every decision form carries an input named "action", and on such a form the DOM's
+    `form.action` is that input, not the URL. The script once posted to it, so every click
+    was a 405 in a browser while every test here, which posts without one, passed."""
+    from sever.review.app.main import TEMPLATES
+
+    script = (TEMPLATES / "base.html").read_text(encoding="utf-8")
+    assert "form.getAttribute('action')" in script
+    assert "fetch(form.action" not in script
+
+
+def test_a_proposal_is_described_in_words_not_only_a_code(
+    client: TestClient, session: Session, item: Item
+) -> None:
+    body = client.get(f"/doc/{item.doc_id}/page/1").text
+    span = spans_on(session, item.doc_id, 1)[0]
+    from markupsafe import escape
+
+    assert str(escape(session.taxonomy[span.code].name)) in body
+    assert "The tool proposes:" in body
+
+
+def test_release_everything_undecided_records_a_release_per_span_and_spares_decided_ones(
+    client: TestClient, session: Session, item: Item
+) -> None:
+    from sever.review.app.main import BULK_RELEASE_REASON
+
+    spans = spans_on(session, item.doc_id, 1)
+    act(client, item.doc_id, 1, spans[0], "approve")
+    r = client.post(f"/doc/{item.doc_id}/page/1/release-rest")
+    assert r.status_code == 200
+    assert session.outstanding(item.doc_id, 1) == ()
+    acted = session.acted_spans(item.doc_id, 1)
+    first = (spans[0].detection.offsets.start, spans[0].detection.offsets.end)
+    assert acted[first] is Action.APPROVE
+    bulk = [x for x in session.log.rows(request_id=REQUEST) if x.reason == BULK_RELEASE_REASON]
+    assert len(bulk) == len(spans) - 1
+    assert all(x.action is Action.REJECT for x in bulk)
+    # It releases; it does not complete the page. That is still its own action.
+    assert not session.page_complete(item.doc_id, 1)
