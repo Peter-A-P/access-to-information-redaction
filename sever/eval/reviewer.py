@@ -399,6 +399,11 @@ def paired_speedup(
     )
 
 
+def _mean(rows: Sequence[dict[str, object]], key: str) -> str:
+    values = [float(str(r.get(key, 0) or 0)) for r in rows]
+    return f"{np.mean(values):.0f}" if values else ""
+
+
 def study_markdown(rows: Sequence[dict[str, object]]) -> str:
     """Accuracy per arm, the paired comparison, and each reviewer, from the study file.
 
@@ -419,26 +424,36 @@ def study_markdown(rows: Sequence[dict[str, object]]) -> str:
         "leaked unless every letter and digit of it was withheld; a must-keep span is "
         "over-redacted if any of it was.",
         "",
-        "| What was released | Leak rate | Over-redaction rate | Pages |",
-        "|---|---|---|---:|",
+        "| What was released | Leak rate | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |",
+        "|---|---|---|---:|---:|",
     ]
     for arm, label in (("proposals", "reviewer, with proposals"), ("unaided", "reviewer, unaided")):
         arm_rows = [r for r in counted if r["mode"] == arm]
         if not arm_rows:
-            lines.append(f"| {label} | not collected | | 0 |")
+            lines.append(f"| {label} | not collected | | | 0 |")
             continue
         leak = clustered_rate(_expand(arm_rows, "leaked", "must_redact"), lambda h: h.hit)
         over = clustered_rate(_expand(arm_rows, "over_redacted", "must_keep"), lambda h: h.hit)
-        lines.append(f"| {label} | {leak} | {over} | {len(arm_rows)} |")
+        lines.append(
+            f"| {label} | {leak} | {over} | {_mean(arm_rows, 'unlabelled_chars')} | "
+            f"{len(arm_rows)} |"
+        )
     # Once per record: the tool's proposals do not change with who is reviewing them.
     once = list({str(r["doc_id"]): r for r in counted}.values())
     tool_leak = clustered_rate(_expand(once, "tool_leaked", "must_redact"), lambda h: h.hit)
     tool_over = clustered_rate(_expand(once, "tool_over_redacted", "must_keep"), lambda h: h.hit)
     lines.append(
         f"| the tool's proposals, nobody reviewing, same records | {tool_leak} | {tool_over} | "
-        f"{len(once)} |"
+        f"{_mean(once, 'tool_unlabelled_chars')} | {len(once)} |"
     )
-    lines.append("")
+    lines += [
+        "",
+        "The fourth column is text withheld outside every labelled span, such as the word "
+        "\"sibling\" beside a severed name. The labels cannot say whether withholding it "
+        "was right, so it is in neither rate; it is counted because it costs the reviewer "
+        "time and the requester text, and would otherwise appear nowhere.",
+        "",
+    ]
 
     paired = paired_speedup(rows)
     lines += ["## Record by record", ""]

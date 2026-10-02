@@ -339,6 +339,15 @@ class PageResult:
     # same page, so the table can say whether the reviewer improved on the tool.
     tool_leaked: int
     tool_over_redacted: int
+    # Withheld text that no label covers: letters and digits under a box that sit outside
+    # every labelled span, such as the word "sibling" beside a severed name. The labels
+    # cannot say whether that was right, so it is neither a leak nor an over-redaction; but
+    # a reviewer who blacks out a great deal of it is slower and the requester gets less,
+    # and without this column that cost would not appear anywhere. Counted in characters
+    # and in severances that touch no label at all.
+    unlabelled_chars: int = 0
+    unlabelled_severances: int = 0
+    tool_unlabelled_chars: int = 0
 
     def as_json(self) -> dict[str, object]:
         return {
@@ -355,6 +364,9 @@ class PageResult:
             "added": self.added,
             "tool_leaked": self.tool_leaked,
             "tool_over_redacted": self.tool_over_redacted,
+            "unlabelled_chars": self.unlabelled_chars,
+            "unlabelled_severances": self.unlabelled_severances,
+            "tool_unlabelled_chars": self.tool_unlabelled_chars,
         }
 
 
@@ -365,6 +377,20 @@ def _covered(text: str, start: int, end: int, spans: Sequence[tuple[int, int]]) 
         return (True, False)
     hit = [any(s <= i < e for s, e in spans) for i in positions]
     return (all(hit), any(hit))
+
+
+def _unlabelled(
+    text: str, labels: Sequence[LabelledSpan], spans: Sequence[tuple[int, int]]
+) -> tuple[int, int]:
+    """(letters and digits withheld outside every label, severances touching no label)."""
+    labelled = {i for lab in labels for i in range(lab.offsets.start, lab.offsets.end)}
+    withheld = {i for s, e in spans for i in range(s, e) if text[i].isalnum()}
+    loose = sum(
+        1
+        for s, e in spans
+        if not any(i in labelled for i in range(s, e)) and any(text[i].isalnum() for i in range(s, e))
+    )
+    return len(withheld - labelled), loose
 
 
 def _count(
@@ -438,6 +464,8 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
             ]
             mr, lk, mk, ov = _count(text, labels, reviewed, taxonomy)
             _, tlk, _, tov = _count(text, labels, unreviewed, taxonomy)
+            loose_chars, loose_cuts = _unlabelled(text, labels, reviewed)
+            tool_loose, _ = _unlabelled(text, labels, unreviewed)
             out.append(
                 PageResult(
                     reviewer=reviewer_name(number),
@@ -452,6 +480,9 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
                     added=sum(1 for s in final if s.origin is Origin.REVIEWER and s.withholds),
                     tool_leaked=tlk,
                     tool_over_redacted=tov,
+                    unlabelled_chars=loose_chars,
+                    unlabelled_severances=loose_cuts,
+                    tool_unlabelled_chars=tool_loose,
                 )
             )
     return tuple(out)

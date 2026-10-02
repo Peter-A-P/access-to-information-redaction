@@ -55,6 +55,11 @@ from the same facts.
   everything unread is measuring trust, not help. The table also shows the tool's
   unreviewed proposals on the same records, so it says whether reviewers improved on the
   tool or only rubber-stamped it.
+- **Withholding text no label covers is counted separately.** The labels mark names,
+  contacts and identifiers, not words like "sibling" beside a severed name, so
+  withholding those is neither a leak nor an over-redaction. It still costs the reviewer
+  time and the requester text, so the report shows it per page, for each arm and for the
+  tool. Added after the first reviewer asked whether to withhold "sibling" as well.
 - **Reviewers are numbers.** No name is written to any file.
 
 The records come from the corpus test split, chosen by a fixed seed and balanced across

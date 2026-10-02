@@ -336,3 +336,26 @@ def test_a_busy_port_is_skipped_rather_than_failing_after_printing_its_address()
         busy.listen()
         taken = busy.getsockname()[1]
         assert _free_port(taken) != taken
+
+
+def test_withholding_unlabelled_text_is_counted_in_its_own_column_and_nowhere_else() -> None:
+    """The word "sibling" beside a severed name is no label's business, so withholding it
+    is neither a leak nor an over-redaction. It still costs time and text, so it is
+    counted, and it must not leak into the two rates."""
+    from sever.corpus.labels import LabelledSpan
+    from sever.ingest.document import Offsets
+
+    text = "Client's sibling, Siobhan Whelan, telephoned."
+    start = text.index("Siobhan Whelan")
+    label = LabelledSpan(
+        page=1, offsets=Offsets(start, start + 14), text="Siobhan Whelan", code="R1"
+    )
+    sibling = text.index("sibling")
+    name_only = [(start, start + 14)]
+    with_role = [*name_only, (sibling, sibling + 7)]
+
+    assert st._unlabelled(text, [label], name_only) == (0, 0)
+    assert st._unlabelled(text, [label], with_role) == (7, 1)
+    assert st._count(text, [label], with_role, TAXONOMY) == st._count(
+        text, [label], name_only, TAXONOMY
+    )
