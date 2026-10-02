@@ -210,6 +210,10 @@ def create_app(
             "mode": session.mode_of(doc_id),
             "task": study.task(doc_id) if study is not None else None,
             "added": added,
+            # What each span ends up as after the reviewer's latest action, so a decided
+            # span is drawn as withheld or released by what it does, not by which button
+            # was pressed: a span moved to a keep category is released.
+            "final": {(f.start, f.end): f for f in session.final_spans(doc_id) if f.page == number},
             # What a reviewer can sever a span under. A keep code here would offer to
             # withhold a span as "the requester's own information", which means nothing.
             # R1 first, because it is what an added span almost always is.

@@ -419,7 +419,7 @@ def test_the_screen_is_rendered_from_the_log_and_not_from_the_request(
 
     body = client.get(f"/doc/{item.doc_id}/page/1").text
 
-    assert 'class="reject"' in body
+    assert 'class="decided d-release"' in body
 
 
 def test_the_log_page_reports_the_chain(client: TestClient, session: Session, item: Item) -> None:
@@ -484,3 +484,24 @@ def test_release_everything_undecided_records_a_release_per_span_and_spares_deci
     assert all(x.action is Action.REJECT for x in bulk)
     # It releases; it does not complete the page. That is still its own action.
     assert not session.page_complete(item.doc_id, 1)
+
+
+def test_every_highlight_says_what_is_proposed_without_being_opened(
+    client: TestClient, session: Session, item: Item
+) -> None:
+    """Asked for by the first reviewer: the proposal as a letter and a colour on the
+    highlight itself. The letter is a data attribute drawn by CSS, never record text, so
+    selecting text to add a severance measures the same offsets as before."""
+    import re
+
+    body = client.get(f"/doc/{item.doc_id}/page/1").text
+    marks = re.findall(r'<mark class="pending p-(\w+)"[^>]*data-badge="(\w)"', body)
+    spans = spans_on(session, item.doc_id, 1)
+    assert len(marks) == len(spans)
+    letters = {"withhold": "W", "release": "R", "escalate": "E"}
+    assert all(letters[kind] == letter for kind, letter in marks)
+    record = body[body.index('id="record">') : body.index("</div>", body.index('id="record">'))]
+    text = re.sub(r"<[^>]+>", "", record.removeprefix('id="record">'))
+    from markupsafe import Markup
+
+    assert Markup(text).unescape() == item.document.page(1).text

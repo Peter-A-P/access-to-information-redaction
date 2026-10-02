@@ -59,7 +59,29 @@
   {% endif %}
 </p>
 
-<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" tabindex="0" title="Click to decide">{{ f.text }}</mark>{% elif f.is_added %}<mark class="{{ f.state }}" data-span="{{ f.span_id }}" tabindex="0" title="You withheld this. Click to change">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
+{# What each highlight means, without opening it. The letter is drawn by CSS (::after)
+   rather than written into the record, so it is not part of the text a selection measures
+   and cannot shift an offset. #}
+{% macro kind_of(p) -%}{{ 'escalate' if p.is_escalation else ('withhold' if p.withholds else 'release') }}{%- endmacro %}
+{% macro final_kind(f, done) -%}
+  {%- if done and done.value == 'escalate' -%}escalate
+  {%- elif f -%}{{ 'withhold' if f.withholds else 'release' }}
+  {%- elif done and done.value == 'reject' -%}release
+  {%- else -%}withhold{%- endif -%}
+{%- endmacro %}
+{% set final = final or {} %}
+{% set letters = {'withhold': 'W', 'release': 'R', 'escalate': 'E'} %}
+{% set words = {'withhold': 'Withhold', 'release': 'Release', 'escalate': 'Withhold and escalate'} %}
+{% if proposals or added %}
+<p class="legend note">
+  <span class="key p-withhold">W</span> withhold
+  <span class="key p-release">R</span> release
+  <span class="key p-escalate">E</span> withhold and escalate.
+  An outlined letter is what the tool proposes; a filled one is what you decided.
+</p>
+{% endif %}
+
+<div class="record" id="record">{% for f in fragments %}{% if f.is_span %}{% set key = (f.proposal.detection.offsets.start, f.proposal.detection.offsets.end) %}{% if f.acted %}{% set k = final_kind(final.get(key), f.acted) %}<mark class="decided d-{{ k }}" data-span="{{ f.span_id }}" data-badge="{{ letters[k] }}" tabindex="0" title="You decided: {{ words[k] }}. Click to change">{{ f.text }}</mark>{% else %}{% set k = kind_of(f.proposal) %}<mark class="pending p-{{ k }}" data-span="{{ f.span_id }}" data-badge="{{ letters[k] }}" tabindex="0" title="Proposed: {{ words[k] }}, {{ taxonomy[f.proposal.code].name }}. Click to decide">{{ f.text }}</mark>{% endif %}{% elif f.is_added %}<mark class="decided d-withhold" data-span="{{ f.span_id }}" data-badge="W" tabindex="0" title="You withheld this. Click to change">{{ f.text }}</mark>{% else %}{{ f.text }}{% endif %}{% endfor %}</div>
 
 {# One decision panel per span, hidden until its text is clicked, then shown beside it. #}
 {% for p in proposals %}

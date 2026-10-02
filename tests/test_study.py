@@ -250,7 +250,7 @@ def test_a_reviewer_sees_and_can_undo_their_own_severance(
     doc = run.tasks[0].doc_id
     assert post(client, doc, (0, 6), "add", code="R1") == 200
     body = client.get(f"/doc/{doc}/page/1").text
-    assert "Withheld by you" in body and 'mark class="add"' in body
+    assert "Withheld by you" in body and 'mark class="decided d-withhold"' in body
     assert post(client, doc, (0, 6), "reject") == 200
     assert run.session.added_spans(doc, 1) == ()
     assert "Withheld by you" not in client.get(f"/doc/{doc}/page/1").text

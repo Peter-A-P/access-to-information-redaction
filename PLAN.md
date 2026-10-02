@@ -1455,3 +1455,10 @@ so the log and the reviewer study can tell a bulk release from individual ones. 
 before acting and names the spans the tool had proposed to withhold, because releasing one
 of those is a third party's information in the record. It does not complete the page.
 
+He then asked to see the proposal without opening it. Every highlight now carries it: a
+tinted, dashed highlight with an outlined letter (W withhold, R release, E escalate) while
+undecided, and a solid one with a filled letter once decided, coloured by what the latest
+action does rather than which button was pressed. The letter is drawn by CSS from a data
+attribute, never written into the record, so a text selection measures the same offsets
+as before; a test checks that the record's text is unchanged.
+
