@@ -341,8 +341,8 @@ it in the same way.
 The first person to use it found that none of that had ever worked in a browser: every
 decision answered "Method Not Allowed", because the script posted to `form.action`, which
 on a form with an input named "action" is that input rather than the URL. Every test passed,
-because the tests post forms without a browser. One now checks the script itself. A check in a real
-browser has not run yet, because the browser download keeps failing on this network.
+because the tests post forms without a browser. One now checks the script itself, and the fixed screen
+was checked by hand in a browser on 2026-10-02. An automated browser check is not in CI.
 
 At the foot of each page, **Release everything still undecided** releases every span the
 reviewer has not acted on, in one action. It asks first, and names any of those spans the

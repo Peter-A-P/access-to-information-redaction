@@ -1437,10 +1437,9 @@ load test relies on. `docs/deploy.md` has all three and the commands.
 The script posted to `form.action`, and every decision form has an input named `action`,
 which the DOM returns in place of the URL; the post went to `.../page/[object
 HTMLInputElement]`, a GET-only route. Since 12.16 every test had posted forms directly, so
-none could see it. A test now reads the script. Driving the screen in a headless browser
-is the check that would have caught it; it has not run yet, because the browser downloads
-keep failing on this network, and the next change to the screen should not be called done
-without it.
+none could see it. A test now reads the script. Peter checked the fixed screen by hand in a
+browser the same day. An automated headless-browser check is the one that would have caught
+this; it could not be installed on this network, and is not in CI.
 
 Two changes he asked for in the same report. Clicking a name used to scroll down to its
 controls below the record and leave the reader there; the decision now opens in a panel
