@@ -324,3 +324,15 @@ def test_an_untouched_proposal_keeps_the_tool_decision(
     item = run.session.item(doc)
     final = final_spans((), item.proposals, doc_id=doc, taxonomy=TAXONOMY)
     assert [f.withholds for f in final] == [p.withholds for p in sorted(item.proposals, key=lambda p: p.key)]
+
+
+def test_a_busy_port_is_skipped_rather_than_failing_after_printing_its_address() -> None:
+    import socket
+
+    from sever.cli import _free_port
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as busy:
+        busy.bind(("127.0.0.1", 0))
+        busy.listen()
+        taken = busy.getsockname()[1]
+        assert _free_port(taken) != taken

@@ -1113,6 +1113,11 @@ def review(
         f"mode {mode}"
     )
     typer.echo(f"audit log {log}; timings {timings}")
+    if host == "127.0.0.1":
+        chosen = _free_port(port)
+        if chosen != port:
+            typer.echo(f"port {port} is in use, so using {chosen}")
+        port = chosen
     typer.echo(f"http://{host}:{port}")
     uvicorn.run(create_app(session), host=host, port=port, log_level="warning")
 
@@ -1235,6 +1240,24 @@ def demo(
     typer.echo(f"http://{host}:{port}/")
     uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
 
+def _free_port(start: int, tries: int = 20) -> int:
+    """`start` if nothing is listening on it, otherwise the next free port above it.
+
+    The person running the study should not have to know what a port is. The first time
+    `sever study` met a `sever review` left running from earlier, it printed the address,
+    then failed to bind it, which looks exactly like a tool that does not work.
+    """
+    import socket
+
+    for candidate in range(start, start + tries):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind(("127.0.0.1", candidate))
+            except OSError:
+                continue
+            return candidate
+    raise typer.BadParameter(f"no free port between {start} and {start + tries - 1}")
+
 study_app = typer.Typer(help="The reviewer time study: one command per reviewer.")
 app.add_typer(study_app, name="study")
 
@@ -1277,6 +1300,13 @@ def study(
             f"the results."
         )
         return
+    chosen = _free_port(port)
+    if chosen != port:
+        typer.echo(
+            f"port {port} is in use (another `sever review` or `sever study` still running?), "
+            f"so using {chosen}"
+        )
+    port = chosen
     url = f"http://127.0.0.1:{port}/"
     typer.echo(
         f"reviewer {number}: {run.completed} of {len(run.tasks)} records done. "
