@@ -1,4 +1,4 @@
-<!-- Output of project 03's release gate at commit 789358c, run on the files in this folder: uv run gate compare --spec spec.yaml --baseline rules-only.json --candidate rules-then-model.json --ledger ledger.jsonl. Do not hand-edit. -->
+<!-- Output of project 03's release gate at commit efcc1df, run on the files in this folder: uv run gate compare --spec spec.yaml --baseline rules-only.json --candidate rules-then-model.json --ledger ledger.jsonl. Do not hand-edit. -->
 
 ## Gate: BLOCK
 

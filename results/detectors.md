@@ -2,7 +2,7 @@
 
 # Detector recall, measured against labels known by construction
 
-**Detector:** `sever-detector`, over 210 documents and 5355 inserted values whose type the generator recorded.
+**Detector:** `sever-detector`, over 210 documents and 5460 inserted values whose type the generator recorded.
 
 | Entity type | Values | Recall | Fully covered | Typed correctly |
 |---|---:|---|---|---|
@@ -14,19 +14,20 @@
 | `file_number` | 210 | 100.0% (98.8% to 100.0%), n=210 | 100.0% (98.8% to 100.0%), n=210 | 100.0% (98.8% to 100.0%), n=210 |
 | `health_number` | 105 | 100.0% (96.5% to 100.0%), n=105 | 66.7% (55.7% to 76.1%), n=105 | 66.7% (55.7% to 76.1%), n=105 |
 | `job_title` | 840 | 100.0% (98.8% to 100.0%), n=840 | 64.0% (59.8% to 68.1%), n=840 | 76.9% (73.1% to 80.5%), n=840 |
+| `kinship` | 105 | 100.0% (93.2% to 100.0%), n=105 | 100.0% (93.2% to 100.0%), n=105 | 100.0% (93.2% to 100.0%), n=105 |
 | `location` | 105 | 62.9% (54.3% to 71.4%), n=105 | 50.5% (41.0% to 60.0%), n=105 | 80.3% (69.7% to 89.4%), n=66 |
 | `organisation` | 210 | 96.2% (93.5% to 98.6%), n=210 | 40.0% (32.7% to 46.8%), n=210 | 100.0% (98.6% to 100.0%), n=202 |
 | `person` | 2380 | 98.8% (98.0% to 99.5%), n=2380 | 97.9% (97.0% to 98.7%), n=2380 | 98.4% (97.7% to 99.1%), n=2351 |
 | `phone` | 560 | 100.0% (98.8% to 100.0%), n=560 | 100.0% (98.8% to 100.0%), n=560 | 100.0% (98.8% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (96.5% to 100.0%), n=70 | 100.0% (96.5% to 100.0%), n=70 | 100.0% (96.5% to 100.0%), n=70 |
-| **all** | **5355** | **98.6% (98.1% to 99.0%), n=5355** | **88.8% (87.8% to 89.7%), n=5355** | **94.1% (93.2% to 94.9%), n=5279** |
+| **all** | **5460** | **98.6% (98.2% to 99.0%), n=5460** | **89.0% (88.0% to 90.0%), n=5460** | **94.2% (93.4% to 95.0%), n=5384** |
 
 Of the 29 person spans missed, **23 belong to someone this detector never found as a person anywhere in that record** (79%). That is the part a document-wide name sweep cannot reach: it seeds itself from detected person spans, so finding someone's email address licenses nothing. The other 6 are people the record does name successfully elsewhere, and are the sweep's own remaining misses.
 
 Unlabelled detections: 2396. These are mostly correct detections of literal template text (real organisations, places and dates) that carries no label, not false positives; precision is not claimed.
 
 
-**Detector:** `boundary.redact`, over 210 documents and 5355 inserted values whose type the generator recorded.
+**Detector:** `boundary.redact`, over 210 documents and 5460 inserted values whose type the generator recorded.
 
 | Entity type | Values | Recall | Fully covered | Typed correctly |
 |---|---:|---|---|---|
@@ -38,12 +39,13 @@ Unlabelled detections: 2396. These are mostly correct detections of literal temp
 | `file_number` | 210 | 83.8% (78.6% to 88.6%), n=210 | 83.8% (78.6% to 88.6%), n=210 | 99.4% (98.3% to 100.0%), n=176 |
 | `health_number` | 105 | 100.0% (96.5% to 100.0%), n=105 | 100.0% (96.5% to 100.0%), n=105 | 99.0% (96.9% to 100.0%), n=105 |
 | `job_title` | 840 | 100.0% (98.8% to 100.0%), n=840 | 67.5% (63.5% to 71.3%), n=840 | 71.0% (67.1% to 74.7%), n=840 |
+| `kinship` | 105 | 0.0% (0.0% to 6.7%), n=105 | 0.0% (0.0% to 6.7%), n=105 | n/a (0) |
 | `location` | 105 | 63.8% (54.3% to 72.4%), n=105 | 55.2% (45.7% to 64.8%), n=105 | 86.6% (77.6% to 94.0%), n=67 |
 | `organisation` | 210 | 96.2% (93.5% to 98.6%), n=210 | 40.0% (32.7% to 46.8%), n=210 | 100.0% (98.6% to 100.0%), n=202 |
 | `person` | 2380 | 96.5% (95.4% to 97.4%), n=2380 | 95.9% (94.8% to 96.9%), n=2380 | 95.9% (95.0% to 96.9%), n=2296 |
 | `phone` | 560 | 100.0% (98.8% to 100.0%), n=560 | 100.0% (98.8% to 100.0%), n=560 | 100.0% (98.8% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (96.5% to 100.0%), n=70 | 100.0% (96.5% to 100.0%), n=70 | 95.7% (90.0% to 100.0%), n=70 |
-| **all** | **5355** | **96.3% (95.7% to 96.9%), n=5355** | **87.9% (86.7% to 89.0%), n=5355** | **92.3% (91.3% to 93.2%), n=5156** |
+| **all** | **5460** | **94.4% (93.8% to 95.1%), n=5460** | **86.2% (85.2% to 87.2%), n=5460** | **92.3% (91.3% to 93.2%), n=5156** |
 
 Of the 84 person spans missed, **28 belong to someone this detector never found as a person anywhere in that record** (33%). That is the part a document-wide name sweep cannot reach: it seeds itself from detected person spans, so finding someone's email address licenses nothing. The other 56 are people the record does name successfully elsewhere, and are the sweep's own remaining misses.
 
@@ -62,9 +64,10 @@ Unlabelled detections: 1245. These are mostly correct detections of literal temp
 | `file_number` | 210 | 100.0% (98.8% to 100.0%), n=210 | 83.8% (78.6% to 88.6%), n=210 |
 | `health_number` | 105 | 100.0% (96.5% to 100.0%), n=105 | 100.0% (96.5% to 100.0%), n=105 |
 | `job_title` | 840 | 100.0% (98.8% to 100.0%), n=840 | 100.0% (98.8% to 100.0%), n=840 |
+| `kinship` | 105 | 100.0% (93.2% to 100.0%), n=105 | 0.0% (0.0% to 6.7%), n=105 |
 | `location` | 105 | 62.9% (54.3% to 71.4%), n=105 | 63.8% (54.3% to 72.4%), n=105 |
 | `organisation` | 210 | 96.2% (93.5% to 98.6%), n=210 | 96.2% (93.5% to 98.6%), n=210 |
 | `person` | 2380 | 98.8% (98.0% to 99.5%), n=2380 | 96.5% (95.4% to 97.4%), n=2380 |
 | `phone` | 560 | 100.0% (98.8% to 100.0%), n=560 | 100.0% (98.8% to 100.0%), n=560 |
 | `postal_code` | 70 | 100.0% (96.5% to 100.0%), n=70 | 100.0% (96.5% to 100.0%), n=70 |
-| **all** | **5355** | **98.6% (98.1% to 99.0%), n=5355** | **96.3% (95.7% to 96.9%), n=5355** |
+| **all** | **5460** | **98.6% (98.2% to 99.0%), n=5460** | **94.4% (93.8% to 95.1%), n=5460** |

@@ -61,9 +61,12 @@ def test_two_consecutive_reviewers_cover_every_record_in_both_arms(pool: st.Pool
     assert all(a == {Mode.PROPOSALS, Mode.UNAIDED} for a in arms.values())
 
 
-def test_the_order_of_the_arms_swaps_every_two_reviewers(pool: st.Pool) -> None:
-    first = [st.plan_for(r, pool)[0].arm for r in (1, 2, 3, 4)]
-    assert first == [Mode.PROPOSALS, Mode.PROPOSALS, Mode.UNAIDED, Mode.UNAIDED]
+def test_every_reviewer_starts_unaided_and_then_has_proposals(pool: st.Pool) -> None:
+    """The baseline is a reviewer's ordinary work, so it comes first for everyone."""
+    for r in (1, 2, 3, 4):
+        tasks = st.plan_for(r, pool)
+        assert [t.arm for t in tasks if t.block == 1] == [Mode.UNAIDED] * len(tasks[: len(tasks) // 2])
+        assert all(t.arm is Mode.PROPOSALS for t in tasks if t.block == 2)
 
 
 def test_each_arm_opens_with_one_practice_page_and_has_ten_counted(pool: st.Pool) -> None:
@@ -359,3 +362,41 @@ def test_withholding_unlabelled_text_is_counted_in_its_own_column_and_nowhere_el
     assert st._count(text, [label], with_role, TAXONOMY) == st._count(
         text, [label], name_only, TAXONOMY
     )
+
+
+def test_the_trial_is_two_records_outside_the_study_unaided_first_and_never_scored(
+    tmp_path: Path, pool: st.Pool
+) -> None:
+    trial = st.open_trial(root=tmp_path / "trial")
+    try:
+        assert [t.arm for t in trial.tasks] == [Mode.UNAIDED, Mode.PROPOSALS]
+        assert all(t.practice for t in trial.tasks)
+        assert not {t.doc_id for t in trial.tasks} & set(pool.all)
+        client = TestClient(create_app(trial.session, study=trial))
+        assert "This is the trial" in client.get("/").text
+        body = client.get(f"/doc/{trial.tasks[1].doc_id}/page/1").text
+        assert "<kbd>W</kbd> withhold" in body
+    finally:
+        trial.session.log.close()
+    # The trial's folder is not one the study's scoring reads.
+    assert st.enrolled(tmp_path / "trial") == ()
+
+
+def test_a_family_relationship_is_labelled_and_proposed_for_withholding(
+    corpus: dict[str, CorpusItem],
+) -> None:
+    """The first reviewer's ruling: "the client's sibling" identifies the sibling to a
+    requester who knows their family, so it is a must-redact label and the tool withholds it."""
+    from sever.decide.pipeline import DecisionEngine
+    from sever.detect.engine import SeverDetector
+    from sever.eval.report import config_for
+
+    item = next(i for i in corpus.values() if i.template == "case_note.tmpl")
+    kin = [lab for lab in item.rendered.labels if lab.field_name == "sibling.relationship"]
+    assert kin and all(lab.code == "R1" and lab.text == "sibling" for lab in kin)
+    proposals = DecisionEngine(config=config_for(item), detector=SeverDetector()).propose(
+        item.rendered.document
+    )
+    kin_keys = {lab.key for lab in kin}
+    assert all(p.code == "R1" for p in proposals if p.key in kin_keys)
+    assert kin_keys <= {p.key for p in proposals}

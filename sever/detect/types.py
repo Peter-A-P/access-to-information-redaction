@@ -44,6 +44,10 @@ class EntityType(StrEnum):
     JOB_TITLE = "job_title"
     URL = "url"
     IP_ADDRESS = "ip_address"
+    # A family relationship that points at a person: "the client's sibling". Not a name,
+    # but to anyone who knows the family it identifies someone as surely as one. Added
+    # 2026-10-08 on the first reviewer's ruling; see PLAN 12.35.
+    KINSHIP = "kinship"
     OTHER = "other"
 
     @property

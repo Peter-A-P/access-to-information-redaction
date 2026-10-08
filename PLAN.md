@@ -1462,3 +1462,34 @@ action does rather than which button was pressed. The letter is drawn by CSS fro
 attribute, never written into the record, so a text selection measures the same offsets
 as before; a test checks that the record's text is unchanged.
 
+### 12.35 The first study run was a trial, and what it settled
+
+2026-10-08. Peter completed the study once and ruled it unusable: he was learning the rules
+and the application, troubleshooting it at the start, and the screen changed under him
+twice. The run is moved to `review/discarded/` and is in no table. What it was used for
+instead:
+
+- **Unaided first, for everyone.** A reviewer's baseline is their ordinary work, so the
+  half with nothing the tool provides comes first, and the proposals half second. That
+  replaces the order counterbalancing in 12.29 and biases the comparison slightly towards
+  the tool, since the second half benefits from familiarity. `sever study --trial`, two
+  records outside the study and never scored, is where the screen is learned instead.
+- **Keyboard decisions.** W, R and E withhold, release or escalate the open or focused
+  item and open the next undecided one; N skips and Esc closes. Not tested in a browser
+  here (12.34's network problem); Peter tries them in the trial.
+- **The official-capacity exclusion is the public body's own people.** The reference
+  card and the R1 and K2 texts now say that a physician, lawyer or counsellor writing about
+  a client is a third party in their professional role. The labels already said so.
+- **A family relationship is withheld with the name.** "The client's sibling" identifies
+  the sibling to a requester who knows their family. The case-note template now labels
+  each "sibling" R1 through a new literal-label form, `[[text|CODE|role]]`; a `KINSHIP`
+  recogniser and a `family_relationship` rule, placed after the requester rules, propose
+  withholding it; and kinship words stay in clear to the model, like job titles, so the
+  committed answer cache still replays for the tool itself. Regenerated: the NL table, the
+  detector comparison, names, sweep, directory, thresholds, and the gate (unchanged: it
+  still blocks the model layer on the same 35 documents). Not yet: the headline table,
+  because its model-only baseline sends every span to the model, the 105 new "sibling"
+  spans included, and the cache has no answer for them (about US$0.02 to buy); the scanned
+  track (Tesseract is not installed here); and the placeholders ablation (it needs the
+  local model). Those three still carry the old labels and say so by their dates.
+

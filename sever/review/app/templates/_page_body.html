@@ -97,6 +97,7 @@
       The tool proposes: <strong>{{ does(p.code) }}</strong>, as {{ category(p.code) }}
     </div>
     <div class="why">{{ p.reason }}</div>
+    <details class="meaning"><summary>What "{{ taxonomy[p.code].name }}" means</summary>{{ taxonomy[p.code].definition }}</details>
     {% if p.disagreement %}<div class="why"><strong>The rules and the model disagreed:</strong> {{ p.disagreement }}</div>{% endif %}
     {% if taxonomy[p.code].reviewer_question %}<div class="why"><em>{{ taxonomy[p.code].reviewer_question }}</em></div>{% endif %}
     {% if done %}<div class="decided">You decided: <strong>{{ {'approve': 'Withhold', 'reject': 'Release', 'escalate': 'Withhold and escalate', 'change_category': 'Changed the category', 'add': 'Withhold'}[done.value] }}</strong>. You can change it.</div>{% endif %}
@@ -127,7 +128,10 @@
       </label>
       <button type="submit">Use this reason</button>
     </form>
-    <div class="pop-foot"><button type="button" data-next>Next undecided</button></div>
+    <div class="pop-foot">
+      <span class="note keys">Keys: <kbd>W</kbd> withhold, <kbd>R</kbd> release, <kbd>E</kbd> escalate, <kbd>N</kbd> next, <kbd>Esc</kbd> close</span>
+      <button type="button" data-next>Next undecided</button>
+    </div>
   </div>
 {% endfor %}
 

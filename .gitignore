@@ -56,3 +56,6 @@ review/study/
 # file) and its timings. The study keeps its own under review/study/.
 *.duckdb.wal
 review/timings.jsonl
+# Runs set aside rather than scored, kept on this machine only.
+review/discarded/
+review/trial/

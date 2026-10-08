@@ -130,24 +130,24 @@ was wrong" and pointed the next fix at the wrong module.
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**One person has reviewed, and that is not yet a result.** Reviewer 1 finished the study
-on 2026-10-08: twenty counted pages, ten with proposals and ten without. They were *slower*
-with the proposals, 4.0 minutes a page against 3.1, and the intervals overlap. But one reviewer is
-not a comparison. Their proposals half came first, so it carried the learning. The screen
-changed twice while they worked, at their request. And no record has yet been seen in both
-arms, so the record-by-record figure the study exists for does not exist yet
-([`results/reviewer.md`](results/reviewer.md)). The "days of reading become hours of
-review" line at the top is still the goal, not a result.
+**Nobody has reviewed anything that counts yet.** The page-by-page interface exists and
+the release gate is enforced in code. The reviewer study has been run once, on 2026-10-08,
+as a trial: the reviewer was learning the rules and the application while it was still
+being changed at their request. That run is discarded and is in no table. The "days of
+reading become hours of review" line at the top is the goal of the project, not a result.
+`sever study --trial` now exists so that learning happens outside the study, and
+[docs/reviewer-study.md](docs/reviewer-study.md) is how to run the real thing.
 
-What the one reviewer did show is more useful than the timing. Almost every span they
-released that the labels say to withhold falls in two groups. The first is a physician
-named in a client's file, with the practice address, which the corpus labels as a third
-party's personal information. The second is an official's employee number, which it labels
-the same way (PLAN 12.6). The reviewer released both groups consistently, in both arms.
-That is a disagreement with the corpus's conventions, not a set of slips. And it exposed a
-generator defect: the template prints the physician's practice address from a field named
-`home_address`. Only one leak was a plain miss, a health card number the detector never
-found and the reviewer did not catch.
+The trial did settle two rules, and both changed the labels behind every number here.
+First, a family relationship that points at a third party ("the client's sibling") is
+withheld with the name, because with the name gone it still identifies the person to a
+requester who knows their own family. The corpus now labels it R1 and the tool withholds
+it. The headline table above predates that change, because regenerating its model-only
+row needs about two cents of new model answers; the NL table and the other results
+already carry it. Second, the exclusion for officials covers the public body's own employees and
+contractors and nobody else: a physician writing about a client is a third party even in
+their professional role. That was always the label; the reference card and the category
+text now say so.
 
 Three more limitations, none of them small:
 
@@ -345,9 +345,9 @@ in recovering structure from the word geometry Tesseract already returns.
 `sever review` opens the reviewer's screen on loopback: one page at a time, the record
 rendered as the characters the redaction will actually be applied to, every proposed
 severance highlighted. Clicking a highlighted name opens the decision beside it, in words
-rather than codes ("The tool proposes: Release, as an officer or employee acting in an
-official capacity"), with the reason, the question the category asks, and Withhold,
-Release and Escalate; the page does not move. Selecting any other text offers to withhold
+rather than codes ("The tool proposes: Release, as an official of a public body acting in
+that capacity"), with the reason, what the category means, and Withhold, Release and
+Escalate, which the keys W, R and E also do; the page does not move. Selecting any other text offers to withhold
 it in the same way.
 
 The first person to use it found that none of that had ever worked in a browser: every

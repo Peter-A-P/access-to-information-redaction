@@ -100,6 +100,27 @@ def inherently_sensitive(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def family_relationship(ctx: ContextRecord) -> RuleOutcome | None:
+    """R1 for a family relationship pointing at a third party: "the client's sibling".
+
+    The first reviewer's ruling, 2026-10-08: once the name is severed, the relationship
+    still identifies the person to a requester who knows their own family, so it goes too.
+    Runs after the requester rules, so a relationship term the requester uses about
+    themselves is not reached, and before anything that could release it.
+    """
+    if ctx.entity_type is not EntityType.KINSHIP:
+        return None
+    return RuleOutcome(
+        code="R1",
+        confidence=0.9,
+        reason=(
+            f"{ctx.text!r} is a family relationship. With the name severed it still "
+            f"identifies the person to anyone who knows the family."
+        ),
+        rule="family_relationship",
+    )
+
+
 def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
     """K6. An organisation, a place, a bare date or a job title with no person attached.
 
@@ -310,6 +331,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     requester_ambiguous,
     requester_own_information,
     inherently_sensitive,
+    family_relationship,
     not_personal_information,
     mixed_span,
     official_capacity,

@@ -11,7 +11,7 @@ escalation code rather than on a guess.
 proposal a reviewer applies. A public body brings its own interpretation, and the
 mapping is a YAML file precisely so that it can.
 
-Generated 2026-09-13 from `sever/taxonomy/`, the date of its last update.
+Generated 2026-10-08 from `sever/taxonomy/`, the date of its last update.
 
 ## How much of this has been checked
 
@@ -35,7 +35,7 @@ the reason it has not been checked. Nothing defaults to verified.
 | `R1` | Redact | Third-party personal information |
 | `R2` | Redact | Mixed span, third-party information entangled with the requester's |
 | `K1` | Keep | The requester's own personal information |
-| `K2` | Keep | An officer or employee acting in an official capacity |
+| `K2` | Keep | An official of a public body acting in that capacity |
 | `K3` | Keep | Already publicly available |
 | `K4` | Keep | An individual dead more than twenty years |
 | `K5` | Keep | Consent given, or a discretionary benefit of a financial nature |
@@ -51,7 +51,7 @@ the reviewer, never released on the assumption that it was probably fine.
 
 ### `R1`: Third-party personal information
 
-**Redact.** Personal information about an identifiable individual who is not the requester and who is not acting in an official capacity: identity, contact details, identifiers, health, financial, educational, criminal or employment history, and the views or opinions of others about them.
+**Redact.** Personal information about an identifiable individual who is not the requester and who is not an officer, employee or contractor of a public body acting in that capacity. A professional who does not work for the public body, such as a physician, lawyer or counsellor writing about a client, is a third party even in their professional role: the exclusion for officials covers public bodies' own people and nobody else. Identity, contact details, identifiers, health, financial, educational, criminal or employment history, and the views or opinions of others about them.
 
 *The question behind it:* Is this individual a third party, and is the information about them personal rather than about the functions of a position they hold?
 
@@ -144,7 +144,7 @@ Traps:
 
 > Cleaner than the federal position: the NL right of access expressly includes the applicant's own personal information in the same section, and section 40 protects a third party's privacy rather than personal information at large. K1 needs no configuration switch under this jurisdiction.
 
-### `K2`: An officer or employee acting in an official capacity
+### `K2`: An official of a public body acting in that capacity
 
 **Keep.** Information about an officer or employee of a public body, or an individual performing services under contract, that relates to the position or the functions of the position: the fact of employment, name, title, business address and telephone number, classification and salary range, the name on a document they prepared in the course of employment, and opinions or views they gave in the course of employment.
 

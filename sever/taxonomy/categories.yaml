@@ -7,7 +7,7 @@
 # reviewer approves or rejects. See the README's first screen.
 
 version: 1
-updated: 2026-09-13
+updated: 2026-10-08
 
 # Every code carries one of these decisions. The set is closed: sever.decide may not
 # invent a decision that is not here, and the loader rejects a code that uses another.
@@ -40,7 +40,11 @@ codes:
     name: Third-party personal information
     definition: >
       Personal information about an identifiable individual who is not the requester and
-      who is not acting in an official capacity: identity, contact details, identifiers,
+      who is not an officer, employee or contractor of a public body acting in that
+      capacity. A professional who does not work for the public body, such as a physician,
+      lawyer or counsellor writing about a client, is a third party even in their
+      professional role: the exclusion for officials covers public bodies' own people and
+      nobody else. Identity, contact details, identifiers,
       health, financial, educational, criminal or employment history, and the views or
       opinions of others about them.
     reviewer_question: >
@@ -94,7 +98,7 @@ codes:
 
   - code: K2
     decision: keep
-    name: An officer or employee acting in an official capacity
+    name: An official of a public body acting in that capacity
     definition: >
       Information about an officer or employee of a public body, or an individual
       performing services under contract, that relates to the position or the functions

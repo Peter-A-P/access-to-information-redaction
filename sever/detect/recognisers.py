@@ -197,6 +197,21 @@ JOB_TITLE = PatternRecogniser(
     score=0.7,
 )
 
+# Family relationships. "Partner" and "child" are left out: both are ordinary words in
+# government prose (partner organisations, child care) far more often than they point at
+# one person, and a term that withholds by default should not fire on the generic sense.
+KINSHIP = PatternRecogniser(
+    name="kinship",
+    entity_type=EntityType.KINSHIP,
+    pattern=_ci(
+        r"\b(?:siblings?|brothers?|sisters?|mother|father|parents?|sons?|daughters?|"
+        r"spouse|husband|wife|grand(?:mother|father|parent|son|daughter)s?|aunt|uncle|"
+        r"nieces?|nephews?|cousins?|(?:mother|father|brother|sister|son|daughter)-in-law|"
+        r"step(?:mother|father|son|daughter|brother|sister)s?)\b"
+    ),
+    score=0.6,
+)
+
 DEFAULT_RECOGNISERS: tuple[PatternRecogniser, ...] = (
     EMAIL,
     SIN_LABELLED,
@@ -210,6 +225,7 @@ DEFAULT_RECOGNISERS: tuple[PatternRecogniser, ...] = (
     DATE_OF_BIRTH,
     BANK_ACCOUNT,
     JOB_TITLE,
+    KINSHIP,
 )
 
 

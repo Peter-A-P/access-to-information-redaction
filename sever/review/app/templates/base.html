@@ -107,7 +107,10 @@
   .pop .actions form { display: inline; }
   .pop .recode { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
   .pop .recode select, #addbar select { max-width: 100%; }
-  .pop-foot { margin-top: .5rem; text-align: right; }
+  .pop-foot { margin-top: .5rem; display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  kbd { font: 600 .75rem/1 "SFMono-Regular", Consolas, monospace; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: .05rem .3rem; background: #f7f6f2; }
+  .pop details.meaning { margin: .3rem 0; color: var(--muted); font-size: .85rem; }
+  .pop details.meaning summary { cursor: pointer; }
   #addbar label { display: block; margin: .3rem 0; }
   #addbar input[type=text] { margin: .3rem 0; width: 100%; }
   .how { margin: .2rem 0 .6rem; }
@@ -128,7 +131,7 @@
   <span class="proposes">The tool proposes; a person decides.</span>
   <nav>
     {% if study %}
-      <span class="note">reviewer {{ study.reviewer }}{% if task %}, record {{ task.position }} of {{ study.tasks|length }}{% endif %}</span>
+      <span class="note">{{ 'trial run, not scored' if study.reviewer == 0 else 'reviewer ' ~ study.reviewer }}{% if task %}, record {{ task.position }} of {{ study.tasks|length }}{% endif %}</span>
       {% if task %}<span class="pill">{{ 'with proposals' if task.arm.shows_proposals else 'unaided' }}{{ ', practice' if task.practice else '' }}</span>{% endif %}
     {% else %}
       <span class="pill">{{ (mode or session.mode).value }}</span>
@@ -173,10 +176,40 @@ document.addEventListener('submit', async (ev) => {
     target.querySelector('.error').textContent = String(detail).slice(0, 500);
     return;
   }
+  const advanceFrom = form.dataset.advanceFrom;
   target.outerHTML = text;
   // The page is re-rendered in place; put the reader back exactly where they were.
   window.scrollTo(0, keep);
+  // A decision made from the keyboard moves on to the next undecided span, so a page can
+  // be worked through without the mouse. One made with the mouse does not move anything.
+  if (advanceFrom) openNextAfter(advanceFrom);
 });
+
+function openNextAfter(id) {
+  const all = [...document.querySelectorAll('mark[data-span]')];
+  const at = all.findIndex((m) => m.dataset.span === id);
+  const after = all.slice(at + 1).concat(all.slice(0, Math.max(at, 0)));
+  const next = after.find((m) => m.classList.contains('pending'));
+  if (next) openSpan(next.dataset.span);
+}
+
+// W, R and E decide the span whose panel is open, or the highlight that has the keyboard
+// focus: withhold, release, escalate. N moves to the next undecided span. Never while
+// typing in a field, and never with a modifier held, so the browser's own shortcuts work.
+const KEYS = {w: 'approve', r: 'reject', e: 'escalate'};
+function decideByKey(key) {
+  const pop = document.querySelector('.pop:not([hidden])[id^="pop-s"]');
+  const focused = document.activeElement && document.activeElement.closest && document.activeElement.closest('mark[data-span]');
+  const id = pop ? pop.id.slice(4) : (focused ? focused.dataset.span : null);
+  if (!id) return false;
+  if (key === 'n') { openNextAfter(id); return true; }
+  const panel = document.getElementById('pop-' + id);
+  const form = panel && panel.querySelector('form [name=action][value="' + KEYS[key] + '"]')?.form;
+  if (!form) return false;
+  form.dataset.advanceFrom = id;
+  form.requestSubmit();
+  return true;
+}
 
 function closePops() {
   document.querySelectorAll('.pop').forEach((p) => { p.hidden = true; });
@@ -230,6 +263,11 @@ document.addEventListener('click', (ev) => {
 
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') { closePops(); return; }
+  const typing = ev.target.closest && ev.target.closest('input, select, textarea');
+  const k = ev.key.toLowerCase();
+  if (!typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && (k in KEYS || k === 'n')) {
+    if (decideByKey(k)) { ev.preventDefault(); return; }
+  }
   const mark = ev.target.closest && ev.target.closest('mark[data-span]');
   if (mark && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); openSpan(mark.dataset.span); }
 });

@@ -53,6 +53,7 @@ FIELD_TYPES: dict[str, EntityType] = {
     "title": EntityType.JOB_TITLE,
     "organisation": EntityType.ORGANISATION,
     "town": EntityType.LOCATION,
+    "relationship": EntityType.KINSHIP,
 }
 
 

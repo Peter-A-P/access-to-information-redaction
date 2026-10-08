@@ -2,6 +2,11 @@
 {% block title %}Done{% endblock %}
 {% block content %}
 <div class="study">
+{% if study.reviewer == 0 %}
+<h2>That is the trial.</h2>
+<p>Nothing from it is scored. Run <code>sever study --trial</code> again to repeat it, or
+<code>sever study</code> to start the real thing.</p>
+{% else %}
 <h2>That is everything. Thank you.</h2>
 <p>
   All {{ study.tasks|length }} records are complete and your work has been saved. You can
@@ -11,5 +16,6 @@
   For whoever is running the study: stop the server with Ctrl+C. The next person starts
   with <code>sever study</code>, and <code>sever study report</code> updates the results.
 </p>
+{% endif %}
 </div>
 {% endblock %}

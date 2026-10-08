@@ -16,6 +16,9 @@ cannot produce. This page is everything the person running it needs.
 
 ## For each person
 
+0. Run `sever study --trial` first. Two records outside the study, one without proposals
+   and one with, to learn the screen and the keys. Nothing from it is kept or scored, and
+   it can be repeated.
 1. Run `sever study`. The browser opens on a welcome page that explains the task.
 2. Hand them the laptop. They read the welcome page and press Start.
 3. When they finish, the screen says so. Press Ctrl+C in the terminal.
@@ -37,10 +40,11 @@ committed.
 
 ## What each person does
 
-Twenty-two one-page records in two halves. One half shows the tool's proposals, and the
+Twenty-two one-page records in two halves, the half without proposals first. One half shows the tool's proposals, and the
 reviewer accepts or overrules each one and adds anything it missed. The other half has no
 proposals, and the reviewer selects everything that must be withheld themselves. Each half
-starts with a practice page that is not counted. Every page shows who made the request,
+starts with a practice page that is not counted. In the proposals half, W, R and E
+withhold, release or escalate the open item and move to the next undecided one. Every page shows who made the request,
 and a folded reference lists the release rules and the public register, so both arms work
 from the same facts.
 
@@ -49,8 +53,10 @@ from the same facts.
 - **Nobody sees a record twice.** Reviewing the same letter twice measures memory.
 - **The halves swap between reviewers 1 and 2**, so every record is reviewed in both arms
   by someone, and the comparison can hold the documents fixed.
-- **The order swaps between reviewers 1 and 2 and reviewers 3 and 4**, because the first
-  half is always slower while people learn the screen.
+- **Everyone does the unaided half first.** A reviewer's baseline is their ordinary work,
+  so it comes first. That favours the tool a little, because the second half benefits from
+  knowing the screen and the documents. The trial and the practice pages exist to shrink
+  that, and the report says it.
 - **Accuracy sits beside speed.** An arm that is fast because the reviewer accepted
   everything unread is measuring trust, not help. The table also shows the tool's
   unreviewed proposals on the same records, so it says whether reviewers improved on the

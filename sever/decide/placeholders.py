@@ -48,7 +48,9 @@ _MIN_GUARDED_LENGTH = 4
 # Everything else is substituted, including places and dates, because a town plus a date
 # plus a role identifies a person in a small province even though none of the three is a
 # name.
-NOT_SUBSTITUTED = frozenset({EntityType.JOB_TITLE, EntityType.ORGANISATION})
+# KINSHIP stays in clear for the same reason a job title does: "sibling" names nobody to a
+# vendor who does not know the family, and the model needs it to read the sentence.
+NOT_SUBSTITUTED = frozenset({EntityType.JOB_TITLE, EntityType.ORGANISATION, EntityType.KINSHIP})
 
 # A name part shorter than this is not distinctive enough to substitute on: replacing
 # every "de" or "Le" in a document would mangle ordinary prose.

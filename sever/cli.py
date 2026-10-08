@@ -1270,6 +1270,13 @@ def study(
         typer.Option(help="Resume this reviewer. Default: resume the last one, or start the next."),
     ] = None,
     new: Annotated[bool, typer.Option("--new", help="Start the next reviewer now.")] = False,
+    trial: Annotated[
+        bool,
+        typer.Option(
+            "--trial",
+            help="Two records outside the study to learn the screen and keys. Never scored.",
+        ),
+    ] = False,
     port: Annotated[int, typer.Option()] = 8000,
     browser: Annotated[bool, typer.Option(help="Open the browser.")] = True,
 ) -> None:
@@ -1290,10 +1297,15 @@ def study(
     from sever.review import study as st
     from sever.review.app import create_app
 
-    number = reviewer if reviewer is not None else st.pick_reviewer(new=new)
-    typer.echo(f"preparing reviewer {number}'s records...")
-    run = st.open_run(number)
-    if run.finished:
+    if trial:
+        typer.echo("preparing the trial: two records, nothing kept or scored...")
+        run = st.open_trial()
+        number = 0
+    else:
+        number = reviewer if reviewer is not None else st.pick_reviewer(new=new)
+        typer.echo(f"preparing reviewer {number}'s records...")
+        run = st.open_run(number)
+    if run.finished and not trial:
         typer.echo(
             f"reviewer {number} has finished all {len(run.tasks)} records. "
             f"`sever study --new` starts the next reviewer; `sever study report` updates "

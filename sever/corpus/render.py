@@ -18,6 +18,11 @@ occurrence, which is how a trap is written: an official who appears as the compl
 their own grievance is `{official_a.full_name!R1}`, correctly labelled R1 even though the
 persona is an official.
 
+`[[sibling|R1|sibling]]` writes the literal text `sibling` and labels it with a code and
+the persona it is about, for words that identify someone without being one of their
+fields: a family relationship, once the name beside it is severed, still points at the
+person (PLAN 12.35). The label's field is `role.relationship`.
+
 `{{` and `}}` are literal braces. `@page` starts a new page. `@literal` marks a block whose
 braces are not substituted at all.
 
@@ -51,6 +56,7 @@ from sever.ingest.document import (
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 _PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)(?:!([A-Z]\d))?\}")
+_LITERAL_LABEL = re.compile(r"\[\[([^\]|]+)\|([A-Z]\d)\|([a-z_][a-z0-9_]*)\]\]")
 _DIRECTIVE = re.compile(r"^@(doc|cast|block|page|literal|meta)\b\s*(.*)$")
 
 
@@ -208,6 +214,20 @@ def _render_block(
     pos = 0
     while True:
         m = _PLACEHOLDER.search(body, pos)
+        lit = _LITERAL_LABEL.search(body, pos)
+        if lit is not None and (m is None or lit.start() < m.start()):
+            literal_before = body[pos : lit.start()].replace("{{", "{").replace("}}", "}")
+            out.append(literal_before)
+            cursor += len(literal_before)
+            text, code, role = lit.group(1), lit.group(2), lit.group(3)
+            persona = personas.get(role)
+            if persona is None:
+                raise TemplateError(f"{where}: literal label names role {role!r}, not in the cast")
+            spans.append((cursor, cursor + len(text), text, code, f"{persona.persona_id}|{role}.relationship"))
+            out.append(text)
+            cursor += len(text)
+            pos = lit.end()
+            continue
         if m is None:
             break
         literal_before = body[pos : m.start()].replace("{{", "{").replace("}}", "}")

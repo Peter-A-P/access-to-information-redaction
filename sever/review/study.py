@@ -19,10 +19,14 @@ unaided; reviewer 2 the reverse. Over any two reviewers every record has been re
 both arms, which is what lets the comparison be made record by record rather than only
 between two different sets of documents.
 
-**The order swaps too.** Whichever arm comes first, the reviewer is slower in it, because
-they are learning the interface and the documents' structure. Reviewers 1 and 2 start with
-proposals and reviewers 3 and 4 start unaided, so four reviewers balance both the halves
-and the order.
+**Everyone starts unaided.** Changed on 2026-10-08 at Peter's direction: a reviewer's
+baseline is the work they already do, with nothing the tool provides, so every reviewer
+does the unaided half first and the proposals half second. The cost is stated rather than
+hidden: the second half benefits from familiarity with the screen and the six document
+types, and that is a bias *in the tool's favour*. It used to be balanced by swapping the
+order between reviewer pairs. To shrink it, every reviewer does the trial first
+(`sever study --trial`), which teaches the screen on two records outside the study, and
+each half still opens with an uncounted practice page.
 
 **Each arm starts with a practice page that is not counted.** The first page in a new
 interface measures the interface. It is timed and recorded, flagged `practice`, and the
@@ -129,15 +133,14 @@ def choose_pool(
 def plan_for(reviewer: int, pool: Pool, *, seed: int = STUDY_SEED) -> tuple[Task, ...]:
     """The queue for reviewer `reviewer` (numbered from 1).
 
-    Odd and even reviewers swap which half gets proposals; reviewers 3 and 4 of every four
-    start unaided. See the module docstring for why each of those is there.
+    Odd and even reviewers swap which half gets proposals, and everyone does the unaided
+    half first. See the module docstring for why, and what that costs.
     """
     if reviewer < 1:
         raise ValueError("reviewers are numbered from 1")
     k = reviewer - 1
     aided, unaided = (pool.half_a, pool.half_b) if k % 2 == 0 else (pool.half_b, pool.half_a)
-    first = Mode.PROPOSALS if (k // 2) % 2 == 0 else Mode.UNAIDED
-    order = (first, Mode.UNAIDED if first is Mode.PROPOSALS else Mode.PROPOSALS)
+    order = (Mode.UNAIDED, Mode.PROPOSALS)
     rng = random.Random(seed * 1000 + reviewer)
     tasks: list[Task] = []
     for block, arm in enumerate(order, start=1):
@@ -235,21 +238,31 @@ def open_run(reviewer: int, *, root: Path = STUDY_DIR, seed: int = STUDY_SEED) -
     Proposals come from the default configuration, rules only, which is what the tool does
     with no flags and so is what a public body would be timing.
     """
+    tasks = plan_for(reviewer, study_pool(seed=seed), seed=seed)
+    return _run_for(
+        tasks,
+        folder=reviewer_dir(reviewer, root),
+        request=request_id(reviewer),
+        actor=reviewer_name(reviewer),
+        reviewer=reviewer,
+    )
+
+
+def _run_for(
+    tasks: tuple[Task, ...], *, folder: Path, request: str, actor: str, reviewer: int
+) -> StudyRun:
     from sever.context.register import load_register
-    from sever.context.requester import RequestConfig
     from sever.corpus.generate import build
     from sever.decide.pipeline import DecisionEngine
     from sever.detect.engine import SeverDetector
     from sever.eval.report import config_for
 
-    pool = study_pool(seed=seed)
-    tasks = plan_for(reviewer, pool, seed=seed)
     by_id = {i.doc_id: i for i in build(documents=CORPUS_DOCUMENTS)}
     detector = SeverDetector()
     items: list[Item] = []
     for t in tasks:
         corpus_item = by_id[t.doc_id]
-        config: RequestConfig = config_for(corpus_item)
+        config = config_for(corpus_item)
         doc = corpus_item.rendered.document
         proposals = DecisionEngine(config=config, detector=detector).propose(doc)
         items.append(
@@ -261,14 +274,13 @@ def open_run(reviewer: int, *, root: Path = STUDY_DIR, seed: int = STUDY_SEED) -
                 requester=config.requester_name,
             )
         )
-    folder = reviewer_dir(reviewer, root)
     folder.mkdir(parents=True, exist_ok=True)
     session = build_session(
-        request_id=request_id(reviewer),
+        request_id=request,
         items=items,
         log_path=folder / "audit.duckdb",
         timings_path=folder / "timings.jsonl",
-        actor=reviewer_name(reviewer),
+        actor=actor,
     )
     return StudyRun(
         reviewer=reviewer,
@@ -495,3 +507,44 @@ def write_results(results: Sequence[PageResult], path: Path = STUDY_RESULTS) -> 
         encoding="utf-8",
     )
     return path
+
+
+# --- the trial: learning the screen, outside the study ---------------------------------
+
+TRIAL_DIR = Path("review/trial")
+
+
+def trial_records(*, seed: int = STUDY_SEED) -> tuple[str, str]:
+    """Two test-split records the study never uses, of two different document types."""
+    from sever.corpus.generate import build
+
+    corpus = build(documents=CORPUS_DOCUMENTS)
+    used = set(study_pool(seed=seed).all)
+    picked: list[str] = []
+    templates: set[str] = set()
+    for item in corpus.of_split("test"):
+        if item.doc_id in used or item.template in templates:
+            continue
+        picked.append(item.doc_id)
+        templates.add(item.template)
+        if len(picked) == 2:
+            return (picked[0], picked[1])
+    raise ValueError("the test split has no two unused records of different types")
+
+
+def open_trial(root: Path = TRIAL_DIR) -> StudyRun:
+    """A fresh trial run: one record without proposals, then one with, never scored.
+
+    Asked for after the first reviewer's run had to be discarded because it was spent
+    learning the screen. The trial is where that learning goes. It starts clean every
+    time, its folder is not one `collect` reads, and its actor is "trial".
+    """
+    import shutil
+
+    shutil.rmtree(root, ignore_errors=True)
+    unaided, aided = trial_records()
+    tasks = (
+        Task(position=1, doc_id=unaided, arm=Mode.UNAIDED, block=1, practice=True),
+        Task(position=2, doc_id=aided, arm=Mode.PROPOSALS, block=2, practice=True),
+    )
+    return _run_for(tasks, folder=root, request="TRIAL", actor="trial", reviewer=0)

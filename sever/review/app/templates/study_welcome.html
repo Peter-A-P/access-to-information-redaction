@@ -2,6 +2,13 @@
 {% block title %}Reviewer study{% endblock %}
 {% block content %}
 <div class="study">
+{% if study.reviewer == 0 %}
+<div class="ok">
+  <strong>This is the trial.</strong> Two records: one without proposals, then one with.
+  It is for learning the screen and the keys. Nothing you do here is scored or kept, and
+  you can run it again as often as you like.
+</div>
+{% endif %}
 <h2>Thank you for taking part</h2>
 <p>
   You are about to review {{ study.tasks|length }} short records the way an
@@ -15,14 +22,15 @@
 
 <h3>How it works</h3>
 <ol>
-  <li>The records come in two halves. In one half the tool has already proposed what to
-    withhold and why, and you accept or overrule each proposal. In the other half there
-    are no proposals and you find everything yourself. Each half starts with a practice
-    page that is not counted.</li>
-  <li><strong>With proposals:</strong> every highlighted span has three buttons. Withhold
-    accepts the proposal, Release leaves the text in the record, and Escalate withholds it
-    and marks it for a second opinion. If the tool missed something, select the text with
-    your mouse and press Add severance.</li>
+  <li>The records come in two halves. In the first there are no proposals and you find
+    everything yourself, as you would today. In the second the tool has already proposed
+    what to withhold and why, and you accept or overrule each proposal. Each half starts
+    with a practice page that is not counted.</li>
+  <li><strong>With proposals:</strong> each highlight shows the tool's proposal as a letter:
+    W withhold, R release, E withhold and escalate. Click it, or move to it, and press
+    <kbd>W</kbd>, <kbd>R</kbd> or <kbd>E</kbd> to decide; the next undecided item opens by
+    itself. <kbd>N</kbd> skips to the next one and <kbd>Esc</kbd> closes. The buttons do the
+    same. If the tool missed something, select the text with the mouse.</li>
   <li><strong>Without proposals:</strong> select each piece of text that must be withheld,
     check the category, and press Add severance. If you make a mistake, press Undo
     beside it.</li>
