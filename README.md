@@ -17,11 +17,11 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5355 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-01 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-08 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 9818 answers replayed from the cache, nothing spent, of which 2173 were the tool's own residual and 7645 the model-only baseline.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 9923 answers replayed from the cache, nothing spent, of which 2173 were the tool's own residual and 7750 the model-only baseline.
 
-**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2173 times and paid 871 of them, because 60% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01137 each, which is the figure to read if your documents are not generated from templates. A further US$1.4616 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2173 times and paid 871 of them, because 60% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01137 each, which is the figure to read if your documents are not generated from templates. A further US$1.4744 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
@@ -32,24 +32,24 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 | `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
-| `R1` | 1400 | 5.3% (4.1% to 6.5%), n=1400 | n/a | 57.6% (54.8% to 60.6%), n=1400 |
+| `R1` | 1505 | 4.9% (3.8% to 6.1%), n=1505 | n/a | 53.6% (51.4% to 56.0%), n=1505 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 5.3% (4.1% to 6.5%), n=1400 | 20.5% (19.1% to 21.9%), n=3955 | 25.7% (24.5% to 26.9%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| model-only, no rules | 4.8% (3.8% to 5.8%), n=1400 | 41.9% (39.4% to 44.4%), n=3955 | 42.3% (41.2% to 43.3%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sever, rules only | 2.8% (1.8% to 4.0%), n=1400 | 23.2% (21.7% to 24.6%), n=3955 | 41.2% (40.0% to 42.4%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| blunt redact-all-PII | 1.1% (0.6% to 1.7%), n=1400 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 1.1%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
-| sentence-only, no document context | 2.8% (1.8% to 4.0%), n=1400 | 48.9% (46.7% to 50.8%), n=3955 | 60.2% (58.6% to 61.6%), n=5355 | 98.6% (98.1% to 99.0%), n=5355 |
+| sever, rules then the model on the residual | 4.9% (3.8% to 6.1%), n=1505 | 20.5% (19.1% to 21.9%), n=3955 | 25.2% (24.1% to 26.4%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| model-only, no rules | 11.4% (9.8% to 13.0%), n=1505 | 41.9% (39.4% to 44.4%), n=3955 | 41.4% (40.4% to 42.5%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules only | 2.6% (1.7% to 3.7%), n=1505 | 23.2% (21.7% to 24.6%), n=3955 | 40.4% (39.2% to 41.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| blunt redact-all-PII | 1.1% (0.6% to 1.6%), n=1505 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sentence-only, no document context | 2.6% (1.7% to 3.7%), n=1505 | 48.9% (46.7% to 50.8%), n=3955 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 
 **Where the leaks come from**
 
 | System | Leaks | Never found | Found, called impersonal | The decision was wrong |
 |---|---:|---:|---:|---:|
 | sever, rules then the model on the residual | 74 | 16 | 23 | 35 |
-| model-only, no rules | 67 | 16 | 16 | 35 |
+| model-only, no rules | 172 | 16 | 16 | 140 |
 | sever, rules only | 39 | 16 | 23 | 0 |
 | blunt redact-all-PII | 16 | 16 | 0 | 0 |
 | sentence-only, no document context | 39 | 16 | 23 | 0 |
@@ -60,7 +60,7 @@ The middle column is the one worth knowing about. A span typed as a place or an 
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2141 | 0 | text layer and OCR |
+| 2246 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -81,10 +81,10 @@ what nobody publishes.
 
 **The case for the model layer is much weaker than it was, because the rules got better.**
 
-With the rules alone the tool leaks 2.8 percent and withholds 23.2 percent of what must be
+With the rules alone the tool leaks 2.6 percent and withholds 23.2 percent of what must be
 released. With the model deciding what the rules could not, at the confidence threshold
-measured in [`results/thresholds.md`](results/thresholds.md), it leaks 5.3 percent and
-withholds 20.5 percent. In counts, over 5,355 labelled spans: turning the model on
+measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.9 percent and
+withholds 20.5 percent. In counts, over 5,460 labelled spans: turning the model on
 correctly releases **107 spans the rules had withheld** and wrongly releases **35 that had
 to go**. Both rows are in the table above and neither is hidden behind the other.
 
@@ -103,7 +103,7 @@ Three to one is thin. The three are a requester receiving their own record; the 
 third party's personal information in a stranger's hands, and it cannot be recalled. On
 these numbers the rules-only configuration is the defensible default, and it is what the
 tool does with no flags: the model layer is opt-in, costs money, and now has to argue for
-2.7 points of over-redaction against 2.5 points of leak. Which to run is a public body's
+2.7 points of over-redaction against 2.3 points of leak. Which to run is a public body's
 decision and this repository does not make it.
 
 **Project 03's release gate, asked the same question, blocks the model layer.** Its
@@ -142,9 +142,8 @@ The trial did settle two rules, and both changed the labels behind every number 
 First, a family relationship that points at a third party ("the client's sibling") is
 withheld with the name, because with the name gone it still identifies the person to a
 requester who knows their own family. The corpus now labels it R1 and the tool withholds
-it. The headline table above predates that change, because regenerating its model-only
-row needs about two cents of new model answers; the NL table and the other results
-already carry it. Second, the exclusion for officials covers the public body's own employees and
+it. Every table above carries the change, and it reversed a finding: see "What the
+deterministic rules are worth". Second, the exclusion for officials covers the public body's own employees and
 contractors and nobody else: a physician writing about a client is a third party even in
 their professional role. That was always the label; the reference card and the category
 text now say so.
@@ -223,12 +222,18 @@ the same threshold, with the rules removed so every span is sent rather than onl
 residual. The difference between it and the full configuration is the deterministic layer
 and nothing else.
 
-It leaks about the same, **4.8% against 5.3%, intervals overlapping**. It over-redacts
-twice as much, **41.9% against 20.5%**.
+It leaks more than twice as much, **11.4% against 4.9%**, and over-redacts twice as much,
+**41.9% against 20.5%**.
 
-So the rules are not the safety net under the model, which is how this architecture is
-usually justified. The model is roughly as safe on its own. The rules earn their place by
-being decisive: they settle the cases that have a settled answer, the model is asked only
+The leak half of that is new, and the reason is a single word. Until 2026-10-08 the two
+leaked about the same (4.8% against 5.3%), and this section said the rules were not the
+safety net under the model. Then a reviewer ruled that "the client's sibling" identifies
+the sibling and must be withheld with the name. A rule withholds it every time. Asked on
+its own, the model releases it almost every time, because a family word with no name
+beside it reads as harmless: 140 of the model-only row's 172 leaks are its decisions,
+against 35 when it only sees what the rules leave. So the rules *are* a safety net, for
+exactly the kind of judgement a public body writes down once and expects applied every
+time. They also earn their place by being decisive: they settle the cases that have a settled answer, the model is asked only
 the genuinely ambiguous ones, and a model asked only hard questions escalates far less than
 a model asked everything.
 

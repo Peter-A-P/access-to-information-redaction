@@ -1487,9 +1487,14 @@ instead:
   withholding it; and kinship words stay in clear to the model, like job titles, so the
   committed answer cache still replays for the tool itself. Regenerated: the NL table, the
   detector comparison, names, sweep, directory, thresholds, and the gate (unchanged: it
-  still blocks the model layer on the same 35 documents). Not yet: the headline table,
-  because its model-only baseline sends every span to the model, the 105 new "sibling"
-  spans included, and the cache has no answer for them (about US$0.02 to buy); the scanned
-  track (Tesseract is not installed here); and the placeholders ablation (it needs the
-  local model). Those three still carry the old labels and say so by their dates.
+  still blocks the model layer on the same 35 documents), and, with Peter's approval, the
+  headline table: its model-only baseline sends every span to the model, the 105 new
+  "sibling" spans included, and those answers were bought in run
+  `sever-modelonly-kinship`, 12 paid calls for US$0.0128 because the rest repeated
+  byte for byte. It reversed a published finding. The model-only row now leaks 11.4
+  percent against the full configuration's 4.9, where they had been level: asked alone, the
+  model releases "sibling" almost every time, and a rule never does. "The rules are not the
+  safety net" was true of the conventions the corpus had, not of the one a reviewer added.
+  Still on the old labels: the scanned track (Tesseract is not installed here) and the
+  placeholders ablation (it needs the local model), which say so by their dates.
 
