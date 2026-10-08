@@ -130,12 +130,24 @@ was wrong" and pointed the next fix at the wrong module.
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**Nobody has actually reviewed anything.** The page-by-page interface exists and the
-release gate is enforced in code, but the reviewer time study has not been run, so there is
-no measured support for any claim about hours saved. The "days of reading become hours of
-review" line at the top is the goal of the project, not a result. The study itself is one
-command, `sever study`, and [docs/reviewer-study.md](docs/reviewer-study.md) is how to run
-it; what it is waiting for is people.
+**One person has reviewed, and that is not yet a result.** Reviewer 1 finished the study
+on 2026-10-08: twenty counted pages, ten with proposals and ten without. They were *slower*
+with the proposals, 4.0 minutes a page against 3.1, and the intervals overlap. But one reviewer is
+not a comparison. Their proposals half came first, so it carried the learning. The screen
+changed twice while they worked, at their request. And no record has yet been seen in both
+arms, so the record-by-record figure the study exists for does not exist yet
+([`results/reviewer.md`](results/reviewer.md)). The "days of reading become hours of
+review" line at the top is still the goal, not a result.
+
+What the one reviewer did show is more useful than the timing. Almost every span they
+released that the labels say to withhold falls in two groups. The first is a physician
+named in a client's file, with the practice address, which the corpus labels as a third
+party's personal information. The second is an official's employee number, which it labels
+the same way (PLAN 12.6). The reviewer released both groups consistently, in both arms.
+That is a disagreement with the corpus's conventions, not a set of slips. And it exposed a
+generator defect: the template prints the physician's practice address from a field named
+`home_address`. Only one leak was a plain miss, a health card number the detector never
+found and the reviewer did not catch.
 
 Three more limitations, none of them small:
 

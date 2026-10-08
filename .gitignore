@@ -51,3 +51,8 @@ results/*.tmp
 # The reviewer study's working folders: audit logs and raw timings, on the machine that ran it.
 # What is committed is results/reviewer-study.jsonl, scored and carrying reviewer numbers only.
 review/study/
+
+# What `sever review` writes when run by hand: its audit log (with DuckDB's write-ahead
+# file) and its timings. The study keeps its own under review/study/.
+*.duckdb.wal
+review/timings.jsonl
