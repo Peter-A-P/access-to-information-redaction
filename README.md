@@ -130,13 +130,31 @@ was wrong" and pointed the next fix at the wrong module.
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**Nobody has reviewed anything that counts yet.** The page-by-page interface exists and
-the release gate is enforced in code. The reviewer study has been run once, on 2026-10-08,
-as a trial: the reviewer was learning the rules and the application while it was still
-being changed at their request. That run is discarded and is in no table. The "days of
-reading become hours of review" line at the top is the goal of the project, not a result.
-`sever study --trial` now exists so that learning happens outside the study, and
-[docs/reviewer-study.md](docs/reviewer-study.md) is how to run the real thing.
+**One reviewer has done the study, and with proposals they were about twice as fast.**
+On 2026-10-10 one reviewer, eight years in access-to-information work, reviewed twenty
+test records, ten unaided and then ten with proposals, after a practice page in each half
+([results/reviewer.md](results/reviewer.md)). Unaided took 130 seconds a page (103 to 159);
+with proposals, 67 (61 to 73). Read that as one person, not a population: the intervals
+resample documents and say nothing about how a second reviewer would differ, and the
+proposals half came second, so some of the gain is familiarity with the templates. The
+study needs at least two more reviewers before it is the time claim at the top of this page.
+
+Accuracy was about the same in both halves. Over-redaction was 5.4 percent with proposals
+and 5.2 unaided, against 24.1 for the unreviewed proposals on the same records; leaks were
+2.6 and 1.5 percent against 3.5, intervals overlapping. Two things in the detail matter more than the rates. **Both
+leaks in the proposals half were the tool's own misses, passed through.** Each was a
+twelve-digit MCP number whose first nine digits the SIN recogniser claimed, so the last
+three were proposed for release and the reviewer, reading a highlighted number, approved
+it; unaided, the one leak was a first name the tool would have caught. And **every
+over-redaction in both halves is the same disagreement with the labels**: in a workplace
+complaint the reviewer withholds the respondent's name and title, and the grievant's job
+title, where the corpus labels them as officials acting in their role. That is consistent
+across all four such records and is a question about the labels, not about the reviewer.
+
+The first run, on 2026-10-08, was a trial: the reviewer was learning the rules and the
+application while it was still being changed at their request. It is discarded and is in
+no table. `sever study --trial` now exists so that learning happens outside the study, and
+[docs/reviewer-study.md](docs/reviewer-study.md) is how to run it.
 
 The trial did settle two rules, and both changed the labels behind every number here.
 First, a family relationship that points at a third party ("the client's sibling") is
@@ -515,7 +533,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: `sever study` runs and scores it; nobody has sat down yet | |
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: one reviewer of the three it needs (1.9 times faster with proposals) | |
 | 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |

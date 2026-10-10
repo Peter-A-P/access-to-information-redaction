@@ -279,7 +279,7 @@ published, not when the code for it exists.
 - [x] PDF leak test published, out of N
 - [ ] Reviewer minutes per page with and without proposals, with CI
       (`sever study` runs the whole study and `sever study report` scores it; see 12.29.
-      Nobody has sat down yet)
+      One reviewer of three done, 2026-10-10; see 12.36)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -1497,4 +1497,27 @@ instead:
   safety net" was true of the conventions the corpus had, not of the one a reviewer added.
   Still on the old labels: the scanned track (Tesseract is not installed here) and the
   placeholders ablation (it needs the local model), which say so by their dates.
+
+### 12.36 The first real study run: one reviewer, and what the detail showed
+
+2026-10-10. Reviewer 1 completed the study after the trial (12.35): ten test records
+unaided, then ten with proposals, a practice page before each half. With proposals, 67
+seconds a page (61 to 73); unaided, 130 (103 to 159); 1.9 times. One reviewer and a fixed
+order, so this is not yet the time claim; the box in section 10 stays open until at least
+two more reviewers have done it.
+
+Two findings came from the spans rather than the rates, and both are open:
+
+- **A leak the tool hands the reviewer.** Both leaks in the proposals half are twelve-digit
+  MCP numbers in the incident report. The SIN recogniser matches the first nine digits of
+  `404 474 556 704`, wins the overlap, and the last three digits are proposed for release.
+  The reviewer approved both. It is a detector defect and it is in the headline leak rate
+  too. Fixing it changes the proposals, and `collect` recomputes proposals from the current
+  code, so the fix has to freeze what reviewer 1 was shown first, or this run would be
+  rescored against proposals they never saw.
+- **The workplace complaint's labels.** All twenty over-redacted spans across both halves
+  are in the four HR memoranda: the reviewer withholds the respondent's name and title and
+  the grievant's title, which the corpus labels K2. A respondent named in a harassment
+  complaint is arguably a third party whose employment history is at stake, and the
+  grievant's title identifies the grievant. Whether the labels change is Peter's ruling.
 
