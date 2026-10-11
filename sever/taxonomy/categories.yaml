@@ -56,9 +56,11 @@ codes:
       - A named neighbour's account of what they saw.
     traps:
       - >
-        An official who is also a complainant in the same record is a third party in that
-        capacity: their complaint is personal information even though their job title is
-        not.
+        Both parties to a confidential workplace complaint, the employee who complained
+        and the employee complained about, are third parties: a complaint by or against
+        someone is about them, not about the functions of their position. Their job titles
+        go with their names, because in a unit with one Regional Director the title
+        identifies the person.
 
   - code: R2
     decision: redact

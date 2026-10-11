@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import pytest
 
+from sever.detect.engine import SeverDetector
 from sever.detect.recognisers import (
     CASE_NUMBER,
     EMAIL,
@@ -28,9 +29,14 @@ from sever.detect.recognisers import (
     MCP_NUMBER,
     POSTAL_CODE,
     SIN_LABELLED,
+    SIN_NUMBER,
     STREET_ADDRESS,
     PatternRecogniser,
 )
+from sever.detect.types import EntityType
+from sever.ingest.document import BlockKind
+
+from .conftest import make_document
 
 
 def matches(recogniser: PatternRecogniser, text: str) -> list[str]:
@@ -121,6 +127,38 @@ def test_twelve_grouped_digits_need_the_health_context() -> None:
     oddly. Without the label this recogniser would redact both."""
     assert matches(MCP_NUMBER, "purchase order 551 456 120 783") == []
     assert matches(MCP_NUMBER, "MCP 551 456 120 783") == ["551 456 120 783"]
+
+
+def test_a_label_a_sentence_away_still_counts_for_an_mcp_number() -> None:
+    """The incident report's sentence, which reviewer 1 approved twice with the last
+    three digits proposed for release."""
+    text = "Aaron's MCP number, taken\nfor the ambulance service, is 404 474 556 704 and"
+    assert matches(MCP_NUMBER, text) == ["404 474 556 704"]
+
+
+def test_a_sin_is_never_nine_digits_out_of_a_longer_number() -> None:
+    """A span that cuts a number releases the rest of it."""
+    assert matches(SIN_NUMBER, "the number is 404 474 556 704 and") == []
+    assert matches(SIN_NUMBER, "the number is 404 474 556-704 and") == []
+    assert matches(SIN_NUMBER, "ref 12 404 474 556") == []
+    assert matches(SIN_NUMBER, "SIN 046 454 286, on file") == ["046 454 286"]
+
+
+def test_the_whole_mcp_number_is_detected_and_none_of_it_as_a_sin(
+    detector: SeverDetector,
+) -> None:
+    doc = make_document(
+        [
+            (
+                BlockKind.BODY,
+                "Gerald's MCP number, taken\nfor the ambulance service, is 404 474 556 704 "
+                "and the contact number given was 709-555-1755.",
+            )
+        ]
+    )
+    found = [(d.text, d.entity_type) for d in detector.detect(doc) if d.text[0].isdigit()]
+    assert ("404 474 556 704", EntityType.HEALTH_NUMBER) in found
+    assert not any(t is EntityType.SIN for _, t in found)
 
 
 def test_a_labelled_social_insurance_number_matches_without_its_label() -> None:

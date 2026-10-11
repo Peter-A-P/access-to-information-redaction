@@ -400,3 +400,27 @@ def test_a_family_relationship_is_labelled_and_proposed_for_withholding(
     kin_keys = {lab.key for lab in kin}
     assert all(p.code == "R1" for p in proposals if p.key in kin_keys)
     assert kin_keys <= {p.key for p in proposals}
+
+
+def test_the_frozen_proposals_cover_every_study_record_and_round_trip() -> None:
+    """The screen and the scoring both read data/study/proposals.jsonl, so a detector fix
+    cannot rescore a reviewer against proposals they never saw."""
+    from sever.review.study import _proposal_from, _proposal_json, shown_proposals
+
+    shown = shown_proposals()
+    assert set(shown) == set(st.study_pool().all)
+    first = next(iter(shown.values()))[0]
+    assert _proposal_from(_proposal_json("x", first)) == first
+
+
+def test_reviewer_one_was_shown_the_mcp_defect() -> None:
+    """The frozen file is the tool as it was, defect included: nine digits of the MCP
+    number in incident_report-154 proposed as a SIN."""
+    from sever.detect.types import EntityType
+    from sever.review.study import shown_proposals
+
+    texts = {
+        (p.detection.text, p.detection.entity_type)
+        for p in shown_proposals()["incident_report-154"]
+    }
+    assert ("404 474 556", EntityType.SIN) in texts

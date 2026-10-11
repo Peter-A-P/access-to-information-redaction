@@ -10,14 +10,17 @@ change and it provably removes the information.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from sever.context.complaint import ComplaintParties, is_party_sentence
 from sever.context.directory import DirectoryMatch, StaffDirectory
 from sever.context.register import PublicRegister, RegisterMatch
 from sever.context.requester import RequestConfig, RequesterMatch, RequesterMatcher
 from sever.context.roles import RoleIndex, RoleMention
 from sever.detect import coref
+from sever.detect.recognisers import JOB_TITLE
 from sever.detect.types import Detection, EntityType
 from sever.ingest.document import BlockKind, Document, DocumentType, Page
 
@@ -58,6 +61,11 @@ class ContextRecord:
     # Other people named in the same sentence. A span with a third party beside it in one
     # sentence is the R2 case, and this is how the rule sees it.
     co_mentions_in_sentence: tuple[str, ...] = ()
+
+    # Set when the record is a confidential workplace complaint and this span is one of its
+    # parties, or a job title in a sentence about one. Says which; see
+    # sever.context.complaint.
+    complaint_party: str | None = None
 
     @property
     def entity_type(self) -> EntityType:
@@ -110,6 +118,7 @@ class ContextRecord:
             "cluster_ambiguous": False,
             "co_mentions_in_sentence": (),
             "message_index": None,
+            "complaint_party": None,
         }
         changes = {}
         for name in fields_to_blank:
@@ -124,6 +133,7 @@ class ContextRecord:
                 "register_match", "directory_match", "title", "title_source",
                 "role_mentions", "cluster_id", "cluster_canonical", "cluster_surface_forms",
                 "cluster_pages", "cluster_ambiguous", "co_mentions_in_sentence",
+                "complaint_party",
             )
         }
         current.update(changes)
@@ -145,7 +155,34 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "cluster_pages",
     "cluster_ambiguous",
     "message_index",
+    "complaint_party",
 )
+
+
+def _sentence_up_to(page: Page, start: int, end: int) -> str:
+    """The text from the last full stop before `start` to `end`.
+
+    The page's sentence splitter breaks at a line end, so "employed in this Department
+    as / Director of Operations." comes back as "Director of Operations." alone. For the
+    question "is this title in a sentence about a complaint party", reading back to the
+    previous full stop is the sentence a person would read.
+    """
+    origin = max(0, start - 300)
+    window = page.text[origin:end]
+    at = start - origin
+    cut = max(window.rfind(". ", 0, at), window.rfind(".\n", 0, at))
+    return window[cut + 1 :] if cut >= 0 else window
+
+
+def _completes_a_title(page: Page, start: int) -> bool:
+    """True for the unit in "Manager, Corporate Services": an organisation written straight
+    after a job title and a comma is part of the title, and withholding "Manager" while
+    releasing "Corporate Services" releases most of what identifies the person."""
+    before = page.text[max(0, start - 60) : start]
+    return bool(_TITLE_THEN_COMMA.search(before))
+
+
+_TITLE_THEN_COMMA = re.compile(rf"(?:{JOB_TITLE.pattern.pattern}),\s*$", JOB_TITLE.pattern.flags)
 
 
 def _heading_before(page: Page, offset: int) -> str | None:
@@ -178,6 +215,19 @@ class ContextBuilder:
         clusters = coref.build(detections, extra_names=roles.all_names())
 
         by_page = {p.number: p for p in document}
+
+        def sentence_of(det: Detection) -> str:
+            page = by_page[det.page]
+            return page.slice(page.sentence_at(det.offsets)).strip()
+
+        parties = ComplaintParties.find(
+            document,
+            [
+                (sentence_of(d), c.cluster_id if (c := clusters.cluster_for(d)) else None)
+                for d in detections
+                if d.entity_type is EntityType.PERSON
+            ],
+        )
         out: list[ContextRecord] = []
         for det in detections:
             page = by_page[det.page]
@@ -218,6 +268,19 @@ class ContextBuilder:
                 elif det.entity_type in (EntityType.EMAIL, EntityType.PHONE):
                     directory_match = self.directory.lookup_contact(det.text)
 
+            complaint_party = None
+            if parties.clusters:
+                if cluster is not None and cluster.cluster_id in parties.clusters:
+                    complaint_party = "a party to the complaint"
+                elif (
+                    det.entity_type is EntityType.JOB_TITLE
+                    or (
+                        det.entity_type is EntityType.ORGANISATION
+                        and _completes_a_title(page, det.offsets.start)
+                    )
+                ) and is_party_sentence(_sentence_up_to(page, det.offsets.start, det.offsets.end)):
+                    complaint_party = "the job title of a party to the complaint"
+
             out.append(
                 ContextRecord(
                     detection=det,
@@ -241,6 +304,7 @@ class ContextBuilder:
                     cluster_pages=cluster.pages if cluster else (),
                     cluster_ambiguous=cluster.ambiguous if cluster else False,
                     co_mentions_in_sentence=co_mentions,
+                    complaint_party=complaint_party,
                 )
             )
         return tuple(out)

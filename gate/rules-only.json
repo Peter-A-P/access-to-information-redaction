@@ -1,7 +1,7 @@
 {
  "label": "sever, rules only",
  "source": {
-  "commit": "bf9fd9b",
+  "commit": "516e60b",
   "corpus": "210 documents, seed 20270802",
   "repository": "access-to-information-redaction"
  },
@@ -605,7 +605,7 @@
     "hr_memorandum-009": true,
     "hr_memorandum-015": true,
     "hr_memorandum-021": true,
-    "hr_memorandum-027": true,
+    "hr_memorandum-027": false,
     "hr_memorandum-033": true,
     "hr_memorandum-039": true,
     "hr_memorandum-045": true,

@@ -2,7 +2,7 @@
  "label": "sever, rules then the model on the residual",
  "source": {
   "answers": "results/model-answers.jsonl",
-  "commit": "bf9fd9b",
+  "commit": "516e60b",
   "corpus": "210 documents, seed 20270802",
   "model": "anthropic/claude-haiku-4-5-20251001",
   "repository": "access-to-information-redaction"
@@ -607,7 +607,7 @@
     "hr_memorandum-009": true,
     "hr_memorandum-015": true,
     "hr_memorandum-021": true,
-    "hr_memorandum-027": true,
+    "hr_memorandum-027": false,
     "hr_memorandum-033": true,
     "hr_memorandum-039": true,
     "hr_memorandum-045": true,

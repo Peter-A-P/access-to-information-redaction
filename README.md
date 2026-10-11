@@ -17,42 +17,42 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-08 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-10 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 9923 answers replayed from the cache, nothing spent, of which 2173 were the tool's own residual and 7750 the model-only baseline.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 1 model calls, US$0.0010, US$0.00104 per call, 754 in / 58 out tokens, 9751 replayed from the answer cache, free, of which 2002 were the tool's own residual and 7750 the model-only baseline.
 
-**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2173 times and paid 871 of them, because 60% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01137 each, which is the figure to read if your documents are not generated from templates. A further US$1.4744 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2002 times and paid 871 of them, because 56% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01048 each, which is the figure to read if your documents are not generated from templates. A further US$1.4744 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
 | `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
-| `K2` | 2345 | n/a | 30.3% (28.1% to 32.5%), n=2345 | 20.6% (18.8% to 22.5%), n=2345 |
+| `K2` | 2170 | n/a | 29.6% (27.1% to 32.1%), n=2170 | 19.1% (17.3% to 21.1%), n=2170 |
 | `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
-| `R1` | 1505 | 4.9% (3.8% to 6.1%), n=1505 | n/a | 53.6% (51.4% to 56.0%), n=1505 |
+| `R1` | 1680 | 4.5% (3.5% to 5.7%), n=1680 | n/a | 43.9% (41.4% to 46.3%), n=1680 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 4.9% (3.8% to 6.1%), n=1505 | 20.5% (19.1% to 21.9%), n=3955 | 25.2% (24.1% to 26.4%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| model-only, no rules | 11.4% (9.8% to 13.0%), n=1505 | 41.9% (39.4% to 44.4%), n=3955 | 41.4% (40.4% to 42.5%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sever, rules only | 2.6% (1.7% to 3.7%), n=1505 | 23.2% (21.7% to 24.6%), n=3955 | 40.4% (39.2% to 41.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| blunt redact-all-PII | 1.1% (0.6% to 1.6%), n=1505 | 98.5% (97.9% to 99.0%), n=3955 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sentence-only, no document context | 2.6% (1.7% to 3.7%), n=1505 | 48.9% (46.7% to 50.8%), n=3955 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules then the model on the residual | 4.5% (3.5% to 5.7%), n=1680 | 19.7% (18.1% to 21.2%), n=3780 | 22.7% (21.6% to 23.8%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| model-only, no rules | 15.5% (13.9% to 17.1%), n=1680 | 41.6% (38.9% to 44.1%), n=3780 | 41.4% (40.4% to 42.5%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules only | 2.4% (1.6% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 37.3% (35.8% to 38.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| blunt redact-all-PII | 1.0% (0.6% to 1.5%), n=1680 | 98.4% (97.9% to 99.0%), n=3780 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sentence-only, no document context | 8.7% (6.8% to 10.7%), n=1680 | 49.3% (47.1% to 51.4%), n=3780 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 
 **Where the leaks come from**
 
 | System | Leaks | Never found | Found, called impersonal | The decision was wrong |
 |---|---:|---:|---:|---:|
-| sever, rules then the model on the residual | 74 | 16 | 23 | 35 |
-| model-only, no rules | 172 | 16 | 16 | 140 |
-| sever, rules only | 39 | 16 | 23 | 0 |
-| blunt redact-all-PII | 16 | 16 | 0 | 0 |
-| sentence-only, no document context | 39 | 16 | 23 | 0 |
+| sever, rules then the model on the residual | 76 | 17 | 24 | 35 |
+| model-only, no rules | 261 | 17 | 104 | 140 |
+| sever, rules only | 41 | 17 | 24 | 0 |
+| blunt redact-all-PII | 17 | 17 | 0 | 0 |
+| sentence-only, no document context | 146 | 17 | 129 | 0 |
 
 The middle column is the one worth knowing about. A span typed as a place or an organisation is not personal information, so the rule releases it and says why, and recall counts it as found the whole time. It is a wrong label rather than a wrong decision, and a two-column decomposition blamed the decision layer for it.
 
@@ -60,7 +60,7 @@ The middle column is the one worth knowing about. A span typed as a place or an 
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2246 | 0 | text layer and OCR |
+| 2362 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -81,11 +81,11 @@ what nobody publishes.
 
 **The case for the model layer is much weaker than it was, because the rules got better.**
 
-With the rules alone the tool leaks 2.6 percent and withholds 23.2 percent of what must be
+With the rules alone the tool leaks 2.4 percent and withholds 22.4 percent of what must be
 released. With the model deciding what the rules could not, at the confidence threshold
-measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.9 percent and
-withholds 20.5 percent. In counts, over 5,460 labelled spans: turning the model on
-correctly releases **107 spans the rules had withheld** and wrongly releases **35 that had
+measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.5 percent and
+withholds 19.7 percent. In counts, over 5,460 labelled spans: turning the model on
+correctly releases **104 spans the rules had withheld** and wrongly releases **35 that had
 to go**. Both rows are in the table above and neither is hidden behind the other.
 
 That ratio was **eight to one** a day ago and it is **three to one** now. Nothing about the
@@ -103,7 +103,7 @@ Three to one is thin. The three are a requester receiving their own record; the 
 third party's personal information in a stranger's hands, and it cannot be recalled. On
 these numbers the rules-only configuration is the defensible default, and it is what the
 tool does with no flags: the model layer is opt-in, costs money, and now has to argue for
-2.7 points of over-redaction against 2.3 points of leak. Which to run is a public body's
+2.7 points of over-redaction against 2.1 points of leak. Which to run is a public body's
 decision and this repository does not make it.
 
 **Project 03's release gate, asked the same question, blocks the model layer.** Its
@@ -126,7 +126,7 @@ a category that used to be withheld is exactly how a leak class gets introduced.
 column only exists because a two-bucket decomposition filed those 23 under "the decision
 was wrong" and pointed the next fix at the wrong module.
 
-**And the leak rate is still above the blunt baseline's 1.1 percent.** That gap is
+**And the leak rate is still above the blunt baseline's 1.0 percent.** That gap is
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
@@ -139,17 +139,26 @@ resample documents and say nothing about how a second reviewer would differ, and
 proposals half came second, so some of the gain is familiarity with the templates. The
 study needs at least two more reviewers before it is the time claim at the top of this page.
 
-Accuracy was about the same in both halves. Over-redaction was 5.4 percent with proposals
-and 5.2 unaided, against 24.1 for the unreviewed proposals on the same records; leaks were
-2.6 and 1.5 percent against 3.5, intervals overlapping. Two things in the detail matter more than the rates. **Both
-leaks in the proposals half were the tool's own misses, passed through.** Each was a
-twelve-digit MCP number whose first nine digits the SIN recogniser claimed, so the last
-three were proposed for release and the reviewer, reading a highlighted number, approved
-it; unaided, the one leak was a first name the tool would have caught. And **every
-over-redaction in both halves is the same disagreement with the labels**: in a workplace
-complaint the reviewer withholds the respondent's name and title, and the grievant's job
-title, where the corpus labels them as officials acting in their role. That is consistent
-across all four such records and is a question about the labels, not about the reviewer.
+The reviewer disagreed with the labels once, consistently, and the labels changed. In all
+four workplace-complaint memoranda they withheld the respondent's name and title and the
+complainant's title, which the corpus labelled as officials acting in their role. Their
+ruling: an internal, confidential complaint is about the people in it, not their positions,
+it has nothing to do with the requester, and a title released beside a severed name
+identifies the person in a division with one holder of that title. The corpus now labels
+both parties and their titles R1, and a `complaint_party` rule withholds them. Every table
+on this page carries the change.
+
+Scored against those labels, accuracy was about the same in both halves: no over-redaction
+in either, against 23.2 percent for the unreviewed proposals on the same records; leaks 3.5
+percent with proposals and 1.3 unaided, against 10.6 for the tool alone, with intervals
+that overlap. **Every leak in the proposals half was the tool's box, approved.** Two were
+twelve-digit MCP numbers whose first nine digits the SIN recogniser claimed, leaving the
+last three proposed for release; one was a complainant's title, "Access and Privacy
+Coordinator", where the tool's box covered "Coordinator" and the reviewer withheld the box
+as drawn. Unaided, the one leak was the third mention of a delegate's first name. The MCP
+defect is fixed. The study's proposals are frozen in `data/study/proposals.jsonl`, so
+these pages stay scored against what was on the screen and every later reviewer sees the
+same tool. The short title box is not yet fixed in the tool; see PLAN.md 12.36.
 
 The first run, on 2026-10-08, was a trial: the reviewer was learning the rules and the
 application while it was still being changed at their request. It is discarded and is in
@@ -216,14 +225,14 @@ Three more limitations, none of them small:
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the
   plain corpus so they stay comparable; the harder numbers sit beside them.
-- **30.3 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table, and 20.6 of those 30.3 points are escalation rather than a
+- **29.6 percent over-redaction on officials acting in an official capacity** is the
+  weakest number in the table, and 19.1 of those 29.6 points are escalation rather than a
   wrong answer: names and work addresses the rules could not pair with a title anywhere in
   the record, which the model was also unwilling to place. A published staff directory is
   the remedy a person would use, and [results/directory.md](results/directory.md) measures
-  it: matched on the work email address alone it takes the rules-only figure from 30.7 to
-  20.3 percent with no leak at all, and matched on names it multiplies the leak rate by
-  twelve, because an employee who files a grievance is in the directory too.
+  it: matched on the work email address alone it takes the rules-only figure from 30.1 to
+  18.8 percent with no leak at all, and matched on names it multiplies the leak rate by
+  nine, because an employee who files a grievance is in the directory too.
   [docs/rejected.md](docs/rejected.md) entry 6 has the account. The headline tables use no
   directory, because a directory is something a public body supplies.
 - **All 36 statutory provisions are verified** against the consolidated texts, federal
@@ -240,24 +249,28 @@ the same threshold, with the rules removed so every span is sent rather than onl
 residual. The difference between it and the full configuration is the deterministic layer
 and nothing else.
 
-It leaks more than twice as much, **11.4% against 4.9%**, and over-redacts twice as much,
-**41.9% against 20.5%**.
+It leaks more than three times as much, **15.5% against 4.5%**, and over-redacts twice as
+much, **41.6% against 19.7%**.
 
-The leak half of that is new, and the reason is a single word. Until 2026-10-08 the two
-leaked about the same (4.8% against 5.3%), and this section said the rules were not the
+The leak half of that is new, and it comes from two rulings by a reviewer. The first is a
+single word. Until 2026-10-08 the two leaked about the same (4.8% against 5.3%), and this section said the rules were not the
 safety net under the model. Then a reviewer ruled that "the client's sibling" identifies
 the sibling and must be withheld with the name. A rule withholds it every time. Asked on
 its own, the model releases it almost every time, because a family word with no name
-beside it reads as harmless: 140 of the model-only row's 172 leaks are its decisions,
-against 35 when it only sees what the rules leave. So the rules *are* a safety net, for
-exactly the kind of judgement a public body writes down once and expects applied every
-time. They also earn their place by being decisive: they settle the cases that have a settled answer, the model is asked only
+beside it reads as harmless: 140 of the model-only row's leaks are its decisions,
+against 35 when it only sees what the rules leave. The second ruling, on 2026-10-10, widened
+the gap again: the parties to a confidential workplace complaint are withheld with their job
+titles, and asked about "Regional Director" on its own, the model calls it a position and
+releases it, which is 104 of the model-only row's 261 leaks. So the rules *are* a safety
+net, for exactly the kind of judgement a public body writes down once and expects applied
+every time. They also earn their place by being decisive: they settle the cases that have a settled answer, the model is asked only
 the genuinely ambiguous ones, and a model asked only hard questions escalates far less than
 a model asked everything.
 
 Read that against the `sentence-only` row, which is the same rules with the document context
-blanked, at 48.9%. Neither half is carrying the tool, and each ablation costs about what the
-other does.
+blanked, at 49.3%. Neither half is carrying the tool, and each ablation costs about what the
+other does. Since the complaint ruling the sentence-only row leaks too, 8.7 percent: whether
+a record is a confidential complaint is a fact about the document, not the sentence.
 
 ## What this does not do
 
@@ -285,7 +298,7 @@ whether they appear in a public register or on the letterhead, which other menti
 record are the same person, and whether they match the configured requester. That record is
 the whole argument of the project, and the sentence-only row in the results table is what
 it is worth: judging a name from its sentence alone more than doubles over-redaction, from
-23.2 percent to 48.9 percent with the same rules, because a person's capacity is almost
+22.4 percent to 49.3 percent with the same rules, because a person's capacity is almost
 never in the sentence
 that names them. It is three inches lower, in the signature block.
 

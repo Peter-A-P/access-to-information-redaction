@@ -48,17 +48,19 @@ from __future__ import annotations
 
 import json
 import random
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 from sever.context.register import RegisterEntry
 from sever.corpus.labels import LabelledSpan
-from sever.decide.pipeline import Proposal
+from sever.decide.pipeline import Proposal, Source
+from sever.detect.types import Detection, EntityType
+from sever.ingest.document import Offsets
 from sever.review.audit import AuditLog
 from sever.review.decisions import Origin, final_spans
 from sever.review.session import Item, Mode, Session, build_session
-from sever.taxonomy.loader import Taxonomy
+from sever.taxonomy.loader import Decision, Provision, Taxonomy
 
 STUDY_DIR = Path("review/study")
 STUDY_SEED = 20271001
@@ -67,6 +69,8 @@ CORPUS_DOCUMENTS = 210
 # page per arm.
 STUDY_RECORDS = 20
 PRACTICE_RECORDS = 2
+# What every reviewer is shown, frozen. See `freeze_proposals`.
+STUDY_PROPOSALS = Path("data/study/proposals.jsonl")
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,11 +249,18 @@ def open_run(reviewer: int, *, root: Path = STUDY_DIR, seed: int = STUDY_SEED) -
         request=request_id(reviewer),
         actor=reviewer_name(reviewer),
         reviewer=reviewer,
+        frozen=shown_proposals(),
     )
 
 
 def _run_for(
-    tasks: tuple[Task, ...], *, folder: Path, request: str, actor: str, reviewer: int
+    tasks: tuple[Task, ...],
+    *,
+    folder: Path,
+    request: str,
+    actor: str,
+    reviewer: int,
+    frozen: Mapping[str, tuple[Proposal, ...]] | None = None,
 ) -> StudyRun:
     from sever.context.register import load_register
     from sever.corpus.generate import build
@@ -264,11 +275,14 @@ def _run_for(
         corpus_item = by_id[t.doc_id]
         config = config_for(corpus_item)
         doc = corpus_item.rendered.document
-        proposals = DecisionEngine(config=config, detector=detector).propose(doc)
+        if frozen is not None:
+            proposals = frozen[t.doc_id]
+        else:
+            proposals = tuple(DecisionEngine(config=config, detector=detector).propose(doc))
         items.append(
             Item(
                 document=doc,
-                proposals=tuple(proposals),
+                proposals=proposals,
                 arm=t.arm,
                 practice=t.practice,
                 requester=config.requester_name,
@@ -421,7 +435,7 @@ def _count(
 
 
 def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResult, ...]:
-    """Every completed page of every reviewer, scored.
+    """Every completed page of every reviewer, scored against the frozen proposals.
 
     Reads each reviewer's audit log, which is the record of what they decided, and their
     timings file, which is the record of how long it took. A completed page with no timing
@@ -429,15 +443,13 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
     out of the denominator.
     """
     from sever.corpus.generate import build
-    from sever.decide.pipeline import DecisionEngine
-    from sever.detect.engine import SeverDetector
-    from sever.eval.report import config_for
     from sever.taxonomy.loader import default_taxonomy
 
     taxonomy = default_taxonomy()
     corpus = {i.doc_id: i for i in build(documents=CORPUS_DOCUMENTS)}
-    detector = SeverDetector()
-    tool: dict[str, tuple[Proposal, ...]] = {}
+    # What the reviewers were shown, not what the tool would propose today: a page is
+    # scored against the proposals on the screen when it was decided.
+    tool = shown_proposals()
     out: list[PageResult] = []
     for number in enrolled(root):
         folder = reviewer_dir(number, root)
@@ -460,10 +472,6 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
                 continue
             item = corpus[task.doc_id]
             doc = item.rendered.document
-            if task.doc_id not in tool:
-                tool[task.doc_id] = tuple(
-                    DecisionEngine(config=config_for(item), detector=detector).propose(doc)
-                )
             proposals = tool[task.doc_id] if task.arm.shows_proposals else ()
             final = final_spans(rows, proposals, doc_id=task.doc_id, taxonomy=taxonomy)
             text = doc.page(1).text
@@ -507,6 +515,100 @@ def write_results(results: Sequence[PageResult], path: Path = STUDY_RESULTS) -> 
         encoding="utf-8",
     )
     return path
+
+
+# --- what the reviewers are shown, frozen ----------------------------------------------
+#
+# The first real run (2026-10-10) found a detector defect: the SIN recogniser claimed the
+# first nine digits of a twelve-digit MCP number and the last three were proposed for
+# release. Fixing it changes the proposals, and until then `collect` recomputed proposals
+# from whatever the code was on the day it ran. A fix would have rescored reviewer 1's
+# pages against proposals they never saw, crediting them with the fix, and reviewer 2 would
+# have been shown a different tool from reviewer 1. So the proposals for the study's
+# records are written down once, from the code reviewer 1 used (commit d2d6d3d), and both
+# the screen and the scoring read them. The headline tables use the current tool; the
+# study measures one fixed tool across every reviewer, and says which.
+
+
+def _proposal_json(doc_id: str, p: Proposal) -> dict[str, object]:
+    d = p.detection
+    return {
+        "doc_id": doc_id,
+        "page": d.page,
+        "start": d.offsets.start,
+        "end": d.offsets.end,
+        "text": d.text,
+        "entity_type": d.entity_type.value,
+        "score": d.score,
+        "recogniser": d.recogniser,
+        "code": p.code,
+        "decision": p.decision.value,
+        "confidence": p.confidence,
+        "reason": p.reason,
+        "source": p.source.value,
+        "rule": p.rule,
+        "provisions": [pr.model_dump(mode="json") for pr in p.provisions],
+        "disagreement": p.disagreement,
+    }
+
+
+def _proposal_from(d: Mapping[str, object]) -> Proposal:
+    raw_provisions = d["provisions"]
+    assert isinstance(raw_provisions, list)
+    return Proposal(
+        detection=Detection(
+            page=int(str(d["page"])),
+            offsets=Offsets(int(str(d["start"])), int(str(d["end"]))),
+            text=str(d["text"]),
+            entity_type=EntityType(str(d["entity_type"])),
+            score=float(str(d["score"])),
+            recogniser=str(d["recogniser"]),
+        ),
+        code=str(d["code"]),
+        decision=Decision(str(d["decision"])),
+        confidence=float(str(d["confidence"])),
+        reason=str(d["reason"]),
+        source=Source(str(d["source"])),
+        rule=None if d["rule"] is None else str(d["rule"]),
+        provisions=tuple(Provision.model_validate(x) for x in raw_provisions),
+        disagreement=None if d["disagreement"] is None else str(d["disagreement"]),
+    )
+
+
+def freeze_proposals(path: Path = STUDY_PROPOSALS, *, seed: int = STUDY_SEED) -> Path:
+    """Write the current tool's rules-only proposals for every study record."""
+    from sever.corpus.generate import build
+    from sever.decide.pipeline import DecisionEngine
+    from sever.detect.engine import SeverDetector
+    from sever.eval.report import config_for
+
+    corpus = {i.doc_id: i for i in build(documents=CORPUS_DOCUMENTS)}
+    detector = SeverDetector()
+    lines: list[str] = []
+    for doc_id in study_pool(seed=seed).all:
+        item = corpus[doc_id]
+        engine = DecisionEngine(config=config_for(item), detector=detector)
+        for p in engine.propose(item.rendered.document):
+            lines.append(json.dumps(_proposal_json(doc_id, p), sort_keys=True) + "\n")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(lines), encoding="utf-8")
+    return path
+
+
+def shown_proposals(
+    path: Path = STUDY_PROPOSALS, *, seed: int = STUDY_SEED
+) -> dict[str, tuple[Proposal, ...]]:
+    """The frozen proposals, by record. Every study record must be present: a record
+    missing from the file would otherwise be shown with no proposals at all."""
+    out: dict[str, list[Proposal]] = {doc_id: [] for doc_id in study_pool(seed=seed).all}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            d = json.loads(line)
+            out.setdefault(str(d["doc_id"]), []).append(_proposal_from(d))
+    empty = sorted(doc_id for doc_id, ps in out.items() if not ps)
+    if empty:
+        raise ValueError(f"{path} has no proposals for {', '.join(empty)}")
+    return {doc_id: tuple(ps) for doc_id, ps in out.items()}
 
 
 # --- the trial: learning the screen, outside the study ---------------------------------

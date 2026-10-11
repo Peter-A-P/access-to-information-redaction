@@ -19,9 +19,9 @@ Against the corpus labels, which are known by construction. A must-redact span i
 
 | What was released | Leak rate | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |
 |---|---|---|---:|---:|
-| reviewer, with proposals | 2.6% (0.0% to 6.0%), n=76 | 5.4% (0.0% to 14.0%), n=185 | 0 | 10 |
-| reviewer, unaided | 1.5% (0.0% to 5.3%), n=65 | 5.2% (0.0% to 13.4%), n=193 | 2 | 10 |
-| the tool's proposals, nobody reviewing, same records | 3.5% (1.2% to 6.3%), n=141 | 24.1% (19.3% to 28.5%), n=378 | 0 | 20 |
+| reviewer, with proposals | 3.5% (0.0% to 6.8%), n=86 | 0.0% (0.0% to 21.6%), n=175 | 0 | 10 |
+| reviewer, unaided | 1.3% (0.0% to 4.8%), n=75 | 0.0% (0.0% to 21.6%), n=183 | 2 | 10 |
+| the tool's proposals, nobody reviewing, same records | 10.6% (5.0% to 16.7%), n=161 | 23.2% (18.5% to 27.8%), n=358 | 0 | 20 |
 
 The fourth column is text withheld outside every labelled span, such as the word "sibling" beside a severed name. The labels cannot say whether withholding it was right, so it is in neither rate; it is counted because it costs the reviewer time and the requester text, and would otherwise appear nowhere.
 

@@ -121,6 +121,29 @@ def family_relationship(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def complaint_party(ctx: ContextRecord) -> RuleOutcome | None:
+    """R1 for the parties to a confidential workplace complaint, and their job titles.
+
+    Reviewer 1's ruling, 2026-10-10: a complaint by or against an employee is about them,
+    not about their position, so the exclusion for officials does not reach it, and a
+    title is withheld with the name because in a small unit the title identifies the
+    person. Runs after the requester rules, so a requester who is a party still gets
+    their own information, and before both the rule that releases a bare title and the
+    rules that release a titled official.
+    """
+    if ctx.complaint_party is None:
+        return None
+    return RuleOutcome(
+        code="R1",
+        confidence=0.85,
+        reason=(
+            f"{ctx.text!r} is {ctx.complaint_party} in a confidential workplace complaint. "
+            f"That is about the person, not their position, and a title would identify them."
+        ),
+        rule="complaint_party",
+    )
+
+
 def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
     """K6. An organisation, a place, a bare date or a job title with no person attached.
 
@@ -332,6 +355,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     requester_own_information,
     inherently_sensitive,
     family_relationship,
+    complaint_party,
     not_personal_information,
     mixed_span,
     official_capacity,

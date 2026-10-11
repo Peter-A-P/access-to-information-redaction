@@ -1,7 +1,7 @@
 @doc hr_memorandum
 @meta title: HR memorandum on a workplace complaint
 @meta subject: Complaint under the respectful workplace policy
-@meta traps: an official appearing as a complainant in their own grievance is R1, not K2
+@meta traps: both parties to a confidential workplace complaint are R1, not K2, and so are their job titles, which identify them in a small unit (reviewer 1, 2026-10-10)
 @cast hr=official grievant=official respondent=official adm=official requester=requester
 @block letterhead
 {hr.organisation}
@@ -19,16 +19,16 @@ Subject: Complaint under the Respectful Workplace Policy - file {hr.file_number!
 This memorandum sets out the findings of the review I was asked to conduct.
 
 The complaint was made by {grievant.full_name!R1}, who is employed in this Department as
-{grievant.title}. In the complaint {grievant.given_name!R1} describes a pattern of
+{grievant.title!R1}. In the complaint {grievant.given_name!R1} describes a pattern of
 conduct over eleven months and states that the conduct has affected their health. A
 medical certificate was provided in support and is held separately; it records a period
 of leave from 3 February and gives a personal contact number of
 {grievant.personal_phone!R1}. {grievant.given_name!R1} asked that their home address,
 {grievant.home_address!R1}, not be shared with the respondent.
 
-The complaint names {respondent.full_name}, {respondent.title}, as the respondent. The
+The complaint names {respondent.full_name!R1}, {respondent.title!R1}, as the respondent. The
 conduct described concerns the allocation of work and the conduct of team meetings, all
-of it within the respondent's duties as {respondent.title}. {respondent.given_name}
+of it within the respondent's duties as {respondent.title!R1}. {respondent.given_name!R1}
 responded in writing on 24 April and was interviewed on 2 May.
 
 @block body

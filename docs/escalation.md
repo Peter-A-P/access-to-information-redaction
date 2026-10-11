@@ -90,6 +90,16 @@ These are not escalations. The tool does not attempt them at all, and says so.
   so it is left to the reviewer, who knows the organisation. Until 2026-09-21 the tool tried
   to cover it by escalating any title with a name in the same sentence, which withheld the
   word "Minister" about once a page and covered the real case only by accident.
+- **A complaint party the phrasing does not reveal.** The parties to a confidential
+  workplace complaint, and their job titles, are withheld (`complaint_party`, reviewer 1's
+  ruling of 2026-10-10). The rule reads a record marked confidential that is about a
+  workplace complaint, and a party is someone named in a sentence that says "the
+  complainant", "the respondent", "the complaint was made by" or "the complaint names".
+  One template in the corpus exercises it. A complaint file that names a party some other
+  way, or a title the job-title recogniser only partly matches, reaches the rules behind
+  it, which release a titled official, so a miss here is a leak and the reviewer is the
+  backstop. The exception to the unique-office point above is this one: inside a
+  complaint, the tool withholds the title rather than leaving it to the reviewer.
 - **Handwriting.** Scanned typed documents only.
 - **Release.** There is no code path from a proposal to a released document without a
   reviewer action on every page.

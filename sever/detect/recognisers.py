@@ -55,21 +55,27 @@ def _ci(pattern: str) -> re.Pattern[str]:
 
 # Newfoundland and Labrador MCP numbers are twelve digits, conventionally grouped in
 # threes. The context requirement is doing real work: twelve grouped digits also describe
-# a phone number written oddly and a purchase order.
+# a phone number written oddly and a purchase order. The window is a sentence rather than
+# a few words, because "MCP number, taken for the ambulance service, is 404 474 556 704"
+# puts the label 48 characters before the value; at 40 the number went unseen and the SIN
+# pattern took its first nine digits (found by reviewer 1, 2026-10-10).
 MCP_NUMBER = PatternRecogniser(
     name="nl_mcp_number",
     entity_type=EntityType.HEALTH_NUMBER,
     pattern=re.compile(r"\b\d{3}[ -]?\d{3}[ -]?\d{3}[ -]?\d{3}\b"),
     score=0.85,
     context_words=("mcp", "medical care plan", "health card", "health number", "mcp#"),
+    context_window=80,
 )
 
 # A social insurance number is nine digits in threes. Bare nine-digit runs are far too
-# common to redact unconditionally, so this needs either the label or the grouping.
+# common to redact unconditionally, so this needs either the label or the grouping. Never
+# nine digits out of a longer grouped run: a span that cuts a number releases the rest of
+# it, which is how the last three digits of an MCP number reached a released page.
 SIN_NUMBER = PatternRecogniser(
     name="sin",
     entity_type=EntityType.SIN,
-    pattern=re.compile(r"\b\d{3}[ -]\d{3}[ -]\d{3}\b"),
+    pattern=re.compile(r"(?<!\d[ -])\b\d{3}[ -]\d{3}[ -]\d{3}\b(?![ -]?\d)"),
     score=0.8,
 )
 SIN_LABELLED = PatternRecogniser(

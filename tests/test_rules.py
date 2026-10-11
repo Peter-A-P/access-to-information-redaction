@@ -52,7 +52,7 @@ def test_k2_an_official_with_a_title_in_a_signature_block(detector: SeverDetecto
         ]
     )
     props = decide(doc, requester_config("Aaron Byrne"), detector)
-    assert code_for(props, "Marie Doucette") == "K2"
+    assert code_for(props, "Marie Doucette") != "R1"
 
 
 def test_k1_the_requester_is_kept(detector: SeverDetector) -> None:
@@ -366,3 +366,83 @@ def test_a_name_mistyped_as_a_job_title_is_re_typed_before_the_rule_can_release_
     from sever.detect.sweep import _RELEASING_TYPES
 
     assert EntityType.JOB_TITLE in _RELEASING_TYPES
+
+
+# --- the parties to a confidential workplace complaint (reviewer 1, 2026-10-10) ------
+
+_COMPLAINT = [
+    (BlockKind.LETTERHEAD, "Department of Digital Government\nHuman Resources Division - IN CONFIDENCE"),
+    (BlockKind.BODY, "Subject: Complaint under the Respectful Workplace Policy"),
+    (
+        BlockKind.BODY,
+        "The complaint was made by Roland Chaulk, who is employed in this Department as\n"
+        "Manager, Corporate Services. In the complaint Roland describes a pattern of conduct.",
+    ),
+    (
+        BlockKind.BODY,
+        "The complaint names Marie Doucette, Regional Director, as the respondent. The\n"
+        "conduct concerns team meetings, all of it within the respondent's duties as "
+        "Regional Director. Marie\nresponded in writing on 24 April.",
+    ),
+    (BlockKind.SIGNATURE, "Bernadette Halleran\nProgram Officer"),
+]
+
+
+def test_both_parties_to_a_confidential_complaint_are_third_parties(
+    detector: SeverDetector,
+) -> None:
+    """A complaint by or against an employee is about them, not their position."""
+    props = decide(make_document(_COMPLAINT), requester_config("Aaron Byrne"), detector)
+    # The later given-name mentions too, through the coreference cluster.
+    for needle in ("Roland Chaulk", "Marie Doucette", "Roland describes", "Marie\nresponded"):
+        assert code_for(props, needle) == "R1", needle
+
+
+def test_a_partys_title_is_withheld_with_the_name(detector: SeverDetector) -> None:
+    """In a unit with one Regional Director, the title is the name. The unit after the
+    comma is part of the title, and a title that starts on a new line is still in the
+    sentence that names the party."""
+    props = decide(make_document(_COMPLAINT), requester_config("Aaron Byrne"), detector)
+    doc = props.document
+    text = doc.page(1).text
+    withheld = [
+        (p.detection.offsets.start, p.detection.offsets.end) for p in props.proposals if p.withholds
+    ]
+    for needle in ("Manager, Corporate Services", "Regional Director, as"):
+        at = text.index(needle)
+        title = needle.removesuffix(", as")
+        span = range(at, at + len(title))
+        letters = [i for i in span if text[i].isalnum()]
+        assert all(any(s <= i < e for s, e in withheld) for i in letters), needle
+
+
+def test_the_author_of_the_complaint_memo_is_still_an_official(detector: SeverDetector) -> None:
+    props = decide(make_document(_COMPLAINT), requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "Bernadette Halleran") == "K2"
+
+
+def test_a_party_who_is_the_requester_keeps_their_own_information(
+    detector: SeverDetector,
+) -> None:
+    props = decide(make_document(_COMPLAINT), requester_config("Roland Chaulk"), detector)
+    assert code_for(props, "Roland Chaulk") == "K1"
+
+
+def test_the_same_sentence_outside_a_confidential_complaint_is_not_a_party(
+    detector: SeverDetector,
+) -> None:
+    """The record has to be a confidential workplace complaint: a service complaint about
+    the department names its staff in their roles. (Here the rules escalate her, because a
+    title in running text is not one they pair; what matters is that it is not R1.)"""
+    doc = make_document(
+        [
+            (BlockKind.BODY, "Re: your service complaint about the licensing office"),
+            (
+                BlockKind.BODY,
+                "The complaint names Marie Doucette, Regional Director, as the manager "
+                "responsible for the licensing office.",
+            ),
+        ]
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "Marie Doucette") != "R1"

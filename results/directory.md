@@ -6,14 +6,14 @@ Rules only, over the 210-document corpus. The directory lists the corpus's offic
 
 | Directory | Leak rate | Over-redaction | K2 over-redaction | Escalation | Decided by it | Leaks: the listed person | Leaks: a stranger |
 |---|---|---|---|---|---:|---:|---:|
-| no directory | 2.6% (1.7% to 3.7%), n=1505 | 23.2% (21.7% to 24.6%), n=3955 | 30.7% (28.5% to 33.1%), n=2345 | 40.4% (39.2% to 41.6%), n=5460 | 0 | 0 | 0 |
-| 50% of employees, matched on email and name and phone | 19.2% (16.4% to 22.2%), n=1505 | 13.1% (11.9% to 14.5%), n=3955 | 14.2% (12.2% to 16.2%), n=2345 | 28.6% (27.4% to 29.8%), n=5460 | 646 | 52 | 198 |
-| 80% of employees, matched on email and name and phone | 26.1% (22.9% to 29.5%), n=1505 | 9.1% (8.1% to 10.1%), n=3955 | 7.3% (5.9% to 8.8%), n=2345 | 23.7% (22.5% to 24.9%), n=5460 | 912 | 91 | 263 |
-| 100% of employees, matched on email and name and phone | 30.6% (27.1% to 34.1%), n=1505 | 7.2% (6.3% to 8.1%), n=3955 | 4.2% (3.1% to 5.4%), n=2345 | 21.1% (20.0% to 22.3%), n=5460 | 1054 | 129 | 293 |
-| 50% of employees, matched on email | 2.6% (1.7% to 3.7%), n=1505 | 19.2% (18.0% to 20.3%), n=3955 | 24.0% (22.3% to 25.8%), n=2345 | 37.5% (36.5% to 38.5%), n=5460 | 158 | 0 | 0 |
-| 80% of employees, matched on email | 2.6% (1.7% to 3.7%), n=1505 | 17.7% (16.7% to 18.7%), n=3955 | 21.5% (20.0% to 23.1%), n=2345 | 36.5% (35.5% to 37.4%), n=5460 | 216 | 0 | 0 |
-| 100% of employees, matched on email | 2.6% (1.7% to 3.7%), n=1505 | 17.0% (16.0% to 18.0%), n=3955 | 20.3% (18.8% to 21.9%), n=2345 | 35.9% (35.0% to 36.9%), n=5460 | 245 | 0 | 0 |
+| no directory | 2.4% (1.6% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 30.1% (27.6% to 32.6%), n=2170 | 37.3% (35.8% to 38.7%), n=5460 | 0 | 0 | 0 |
+| 50% of employees, matched on email and name and phone | 13.9% (11.6% to 16.4%), n=1680 | 12.7% (11.4% to 14.0%), n=3780 | 13.5% (11.4% to 15.6%), n=2170 | 27.0% (25.7% to 28.3%), n=5460 | 561 | 9 | 183 |
+| 80% of employees, matched on email and name and phone | 19.0% (16.3% to 21.9%), n=1680 | 8.9% (7.9% to 9.9%), n=3780 | 6.9% (5.3% to 8.4%), n=2170 | 22.8% (21.6% to 24.0%), n=5460 | 791 | 24 | 254 |
+| 100% of employees, matched on email and name and phone | 22.0% (19.0% to 25.1%), n=1680 | 7.3% (6.4% to 8.3%), n=3780 | 4.2% (3.1% to 5.5%), n=2170 | 20.8% (19.7% to 22.0%), n=5460 | 899 | 35 | 293 |
+| 50% of employees, matched on email | 2.4% (1.6% to 3.5%), n=1680 | 18.3% (17.2% to 19.3%), n=3780 | 22.8% (21.0% to 24.7%), n=2170 | 34.4% (33.2% to 35.5%), n=5460 | 158 | 0 | 0 |
+| 80% of employees, matched on email | 2.4% (1.6% to 3.5%), n=1680 | 16.7% (15.8% to 17.7%), n=3780 | 20.1% (18.5% to 21.8%), n=2170 | 33.3% (32.2% to 34.4%), n=5460 | 216 | 0 | 0 |
+| 100% of employees, matched on email | 2.4% (1.6% to 3.5%), n=1680 | 16.0% (14.9% to 17.0%), n=3780 | 18.8% (17.3% to 20.4%), n=2170 | 32.8% (31.7% to 33.9%), n=5460 | 245 | 0 | 0 |
 
-Leaks at 100% of employees, matched on email and name and phone, by template field: `grievant.given_name` 62, `witness.full_name` 38, `injured.given_name` 33, `grievant.full_name` 32, `sibling.full_name` 28, `sibling.given_name` 28, `officer.personal_phone` 20, `sibling.personal_phone` 17, `physician.personal_phone` 17, `witness.given_name` 17, `grievant.personal_phone` 15, `physician.full_name` 15.
+Leaks at 100% of employees, matched on email and name and phone, by template field: `witness.full_name` 38, `injured.given_name` 33, `sibling.full_name` 28, `sibling.given_name` 28, `officer.personal_phone` 20, `sibling.personal_phone` 17, `physician.personal_phone` 17, `witness.given_name` 17, `grievant.personal_phone` 15, `physician.full_name` 15, `neighbour.personal_phone` 14, `witness.personal_phone` 14.
 
 At 100% of employees, matched on email, the directory rule released nothing that had to go.

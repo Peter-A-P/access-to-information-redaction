@@ -1506,18 +1506,41 @@ seconds a page (61 to 73); unaided, 130 (103 to 159); 1.9 times. One reviewer an
 order, so this is not yet the time claim; the box in section 10 stays open until at least
 two more reviewers have done it.
 
-Two findings came from the spans rather than the rates, and both are open:
+Two findings came from the spans rather than the rates, and Peter settled both the same day:
 
-- **A leak the tool hands the reviewer.** Both leaks in the proposals half are twelve-digit
-  MCP numbers in the incident report. The SIN recogniser matches the first nine digits of
-  `404 474 556 704`, wins the overlap, and the last three digits are proposed for release.
-  The reviewer approved both. It is a detector defect and it is in the headline leak rate
-  too. Fixing it changes the proposals, and `collect` recomputes proposals from the current
-  code, so the fix has to freeze what reviewer 1 was shown first, or this run would be
-  rescored against proposals they never saw.
-- **The workplace complaint's labels.** All twenty over-redacted spans across both halves
-  are in the four HR memoranda: the reviewer withholds the respondent's name and title and
-  the grievant's title, which the corpus labels K2. A respondent named in a harassment
-  complaint is arguably a third party whose employment history is at stake, and the
-  grievant's title identifies the grievant. Whether the labels change is Peter's ruling.
+- **The workplace complaint's labels change.** All twenty over-redacted spans across both
+  halves were in the four HR memoranda: the respondent's name and title and the grievant's
+  title, labelled K2. Peter's ruling: an internal, confidential complaint is about the people
+  in it, not their positions; it has nothing to do with the requester; and releasing a
+  title beside a severed name identifies the person where a division has one holder of that
+  title. The template now labels both parties and their titles R1 (`!R1`), and
+  `sever/context/complaint.py` with a `complaint_party` rule, placed after the requester and
+  kinship rules and before `not_personal_information`, withholds them: a record marked
+  confidential that is about a workplace complaint, a party is a person named in a sentence
+  that names a party role, and their coreference cluster goes with them; a job title in
+  such a sentence is theirs, read back to the previous full stop because the page splitter
+  breaks at line ends, and so is a unit written straight after it ("Manager, Corporate
+  Services"). One template exercises it; docs/escalation.md records the limit. With the
+  new labels both of Peter's halves have no over-redaction at all.
+- **The MCP leak is fixed, after freezing what the study showed.** The MCP recogniser's
+  context window was 40 characters and the template's label sits 48 before the number, so
+  the number went unseen and the SIN pattern took its first nine digits. The window is now
+  80, and the SIN pattern never takes nine digits out of a longer run. Before that change,
+  `freeze_proposals` wrote the study records' proposals from the code reviewer 1 used
+  (d2d6d3d) to `data/study/proposals.jsonl`; the study screen and `collect` both read it, and
+  rescoring reviewer 1 against it reproduced their results byte for byte. The study measures
+  one fixed tool across every reviewer; the headline tables measure the current tool.
 
+What the frozen proposals cost reviewer 1 under the new labels is three leaks in the
+proposals half, all of them the tool's box approved as drawn: the two MCP numbers, and
+"Access and Privacy Coordinator", where `JOB_TITLE` matches only "Coordinator". A whole-title
+`JOB_TITLE` (multi-word titles, and a minister's portfolio) was written and measured: it
+changes the text of the title in many model requests, so the model-only baseline would need
+246 new answers, about US$0.25. It is not in this commit; it waits on Peter's approval of
+that spend.
+
+Regenerated with nothing spent except one model-only answer (the MCP number's request, run
+`sever-modelonly-mcp`, US$0.0010): the headline table, NL, names, directory, thresholds, the
+reviewer study and the gate (still BLOCK on no_leak, 35 documents worse and 0 better). The
+model-only row now leaks 15.5 percent against 4.5: asked about a party's title on its own,
+the model releases it as a position.
