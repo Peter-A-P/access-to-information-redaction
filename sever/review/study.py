@@ -374,8 +374,9 @@ class PageResult:
     unlabelled_chars: int = 0
     unlabelled_severances: int = 0
     tool_unlabelled_chars: int = 0
-    # Of the leaks, how many were a number with at most four of its digits left showing.
-    # See `is_number_fragment`.
+    # Of the leaks, how many were partial and identify nobody: a number with at most four
+    # digits showing, or a job title with its role word withheld. See
+    # `is_partial_that_identifies_nobody`.
     leaked_fragments: int = 0
     tool_leaked_fragments: int = 0
 
@@ -436,14 +437,45 @@ def is_number_fragment(
     text: str, start: int, end: int, spans: Sequence[tuple[int, int]]
 ) -> bool:
     """True for a leaked span that is a number of nine or more digits with at most
-    `FRAGMENT_DIGITS` of them left showing. Words never qualify: "Access and Privacy" left
-    beside a severed "Coordinator", or a surname beside a severed forename, still names
-    someone."""
+    `FRAGMENT_DIGITS` of them left showing."""
     chars = [i for i in range(start, end) if text[i].isalnum()]
     if len(chars) < 9 or not all(text[i].isdigit() for i in chars):
         return False
     showing = sum(1 for i in chars if not any(s <= i < e for s, e in spans))
     return 0 < showing <= FRAGMENT_DIGITS
+
+
+def is_title_qualifier(
+    text: str, start: int, end: int, spans: Sequence[tuple[int, int]]
+) -> bool:
+    """True for a leaked job title whose role word is withheld and only its qualifier
+    shows: "Access and Privacy" beside a severed "Coordinator", "Corporate Services"
+    beside a severed "Manager".
+
+    Reviewer 1's second observation on 2026-10-10: a qualifier names a function or a unit,
+    which several people share; it is the position, qualifier and role together, that
+    identifies its one holder. The role word is what the job-title recogniser matches
+    inside the title. A title the recogniser finds no role word in never qualifies, and nor
+    does anything that is not a title: a surname beside a severed forename names someone.
+    """
+    from sever.detect.recognisers import JOB_TITLE
+
+    title = text[start:end]
+    role = JOB_TITLE.pattern.search(title)
+    if role is None:
+        return False
+    role_chars = [start + i for i in range(*role.span()) if title[i].isalnum()]
+    return all(any(s <= i < e for s, e in spans) for i in role_chars)
+
+
+def is_partial_that_identifies_nobody(
+    label: LabelledSpan, text: str, spans: Sequence[tuple[int, int]]
+) -> bool:
+    """A leak the second study column does not count. See the two rules above."""
+    start, end = label.offsets.start, label.offsets.end
+    if (label.field_name or "").endswith(".title"):
+        return is_title_qualifier(text, start, end, spans)
+    return is_number_fragment(text, start, end, spans)
 
 
 def _count(
@@ -457,7 +489,7 @@ def _count(
             must_redact += 1
             if not full:
                 leaked += 1
-                fragments += 1 if is_number_fragment(text, start, end, spans) else 0
+                fragments += 1 if is_partial_that_identifies_nobody(label, text, spans) else 0
         else:
             must_keep += 1
             over += 1 if touched else 0

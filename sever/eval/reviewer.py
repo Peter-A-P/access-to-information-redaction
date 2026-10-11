@@ -428,7 +428,7 @@ def study_markdown(rows: Sequence[dict[str, object]]) -> str:
         "leaked unless every letter and digit of it was withheld; a must-keep span is "
         "over-redacted if any of it was.",
         "",
-        "| What was released | Leak rate | Leak rate, number fragments not counted | "
+        "| What was released | Leak rate | Leak rate, partials that identify nobody not counted | "
         "Over-redaction rate | Unlabelled text withheld, characters per page | Pages |",
         "|---|---|---|---|---:|---:|",
     ]
@@ -460,12 +460,14 @@ def study_markdown(rows: Sequence[dict[str, object]]) -> str:
     )
     lines += [
         "",
-        "The third column does not count a leak that is a number of nine or more digits with "
-        "at most four of them showing, such as the last three digits of a twelve-digit MCP "
-        "number: those identify nobody, and card masking shows four. Words never qualify, "
-        "because a surname or a unit name left beside a severed word still names someone. "
-        "The rule was set after the first real run, when its reviewer pointed out that the "
-        "two such leaks in it identify nobody, so the strict column stays beside it.",
+        "The third column does not count two kinds of partial leak, which identify nobody: a "
+        "number of nine or more digits with at most four of them showing, such as the last "
+        "three digits of a twelve-digit MCP number (card masking shows four); and a job "
+        "title whose role word was withheld, leaving only a qualifier such as \"Access and "
+        "Privacy\" or a unit such as \"Corporate Services\", which several people share. "
+        "Nothing else qualifies: a surname left beside a severed forename names someone. Both "
+        "rules were set after the first real run, at its reviewer's prompting, so the strict "
+        "column stays beside them.",
         "",
         "The fifth column is text withheld outside every labelled span, such as the word "
         "\"sibling\" beside a severed name. The labels cannot say whether withholding it "

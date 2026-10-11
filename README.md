@@ -153,16 +153,17 @@ in either, against 23.2 percent for the unreviewed proposals on the same records
 percent with proposals and 1.3 unaided, against 10.6 for the tool alone, with intervals
 that overlap. **Every leak in the proposals half was the tool's box, approved.** Two were
 twelve-digit MCP numbers whose first nine digits the SIN recogniser claimed, leaving the
-last three proposed for release. Three digits of twelve identify nobody, and the reviewer
-meant to withhold the number, so the study now also reports a leak rate that does not count
-a number with four or fewer of its digits showing: 1.2 percent with proposals, 1.3 unaided,
-8.7 for the tool alone. That rule was written after the run it changes, at the reviewer's
-prompting, so the strict rate stays first. The third leak was a complainant's title, "Access and Privacy
+last three proposed for release; the third was a complainant's title, "Access and Privacy
 Coordinator", where the tool's box covered "Coordinator" and the reviewer withheld the box
-as drawn. Unaided, the one leak was the third mention of a delegate's first name. The MCP
-defect is fixed. The study's proposals are frozen in `data/study/proposals.jsonl`, so
-these pages stay scored against what was on the screen and every later reviewer sees the
-same tool. The short title box is not yet fixed in the tool; see PLAN.md 12.36.
+as drawn. None of the three identifies anyone: three digits of twelve do not, and "Access
+and Privacy" names a function several people share, where the whole position names its one
+holder. So the study also reports a leak rate that does not count those two kinds of
+partial, a long number with four or fewer digits showing and a title with its role word
+withheld: **0 percent with proposals** and 1.3 unaided (a delegate's first name, missed),
+against 8.7 for the tool alone. Both rules were written after the run they change, at the
+reviewer's prompting, so the strict rate stays first. The MCP defect is fixed. The
+study's proposals are frozen in `data/study/proposals.jsonl`, so these pages stay scored
+against what was on the screen and every later reviewer sees the same tool.
 
 The first run, on 2026-10-08, was a trial: the reviewer was learning the rules and the
 application while it was still being changed at their request. It is discarded and is in

@@ -1557,3 +1557,12 @@ this, and has the opposite looseness: it matches a label to its best-overlapping
 so a box over nine of twelve digits, or over "Coordinator" alone, counts as withheld. The
 two scorers should agree; which way is open.
 
+**Title qualifiers, the same way.** Peter, the same day: "Access and Privacy" left beside a
+withheld "Coordinator" identifies nobody either; a qualifier or a unit names a function
+several people share, and it is the whole position that names its one holder. The second
+column now also leaves out a leaked job title whose role word (what `JOB_TITLE` matches
+inside it) is withheld. Names and other identifiers never qualify. Reviewer 1 with
+proposals: 3.5 percent strict, 0 percent without the two kinds of partial. This also takes
+the urgency out of the whole-title `JOB_TITLE` (US$0.25, above): the short box it fixes now
+leaks only by the strict count, so it waits.
+

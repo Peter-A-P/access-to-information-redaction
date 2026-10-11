@@ -437,12 +437,31 @@ def test_a_number_with_four_digits_or_fewer_showing_is_a_fragment() -> None:
     assert not is_number_fragment(text, start, end, [(3, 18)])  # not a leak
 
 
-def test_words_are_never_a_fragment() -> None:
-    """A unit name left beside a severed title, or a surname beside a forename, names
-    someone."""
-    from sever.review.study import is_number_fragment
+def test_a_title_with_its_role_word_withheld_identifies_nobody() -> None:
+    """"Access and Privacy" names a function several people share; "Coordinator" with it
+    names one person."""
+    from sever.review.study import is_title_qualifier
 
     text = "Access and Privacy Coordinator"
-    assert not is_number_fragment(text, 0, len(text), [(19, 30)])
-    short = "EMP-79966"
-    assert not is_number_fragment(short, 0, len(short), [(0, 7)])
+    assert is_title_qualifier(text, 0, len(text), [(19, 30)])
+    assert not is_title_qualifier(text, 0, len(text), [(0, 18)])  # the role word shows
+    unit = "Manager, Corporate Services"
+    assert is_title_qualifier(unit, 0, len(unit), [(0, 7)])
+
+
+def test_a_partial_name_or_identifier_is_always_a_leak() -> None:
+    """Only titles and long numbers have a harmless remainder."""
+    from sever.corpus.labels import LabelledSpan
+    from sever.review.study import is_partial_that_identifies_nobody
+
+    text = "Marie Doucette and EMP-79966"
+    name = LabelledSpan.from_json(
+        {"page": 1, "start": 0, "end": 14, "text": "Marie Doucette", "code": "R1",
+         "field_name": "grievant.full_name"}
+    )
+    ident = LabelledSpan.from_json(
+        {"page": 1, "start": 19, "end": 28, "text": "EMP-79966", "code": "R1",
+         "field_name": "worker.employee_id"}
+    )
+    assert not is_partial_that_identifies_nobody(name, text, [(0, 5)])
+    assert not is_partial_that_identifies_nobody(ident, text, [(19, 26)])
