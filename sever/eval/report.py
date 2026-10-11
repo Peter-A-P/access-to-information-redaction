@@ -493,21 +493,25 @@ def to_markdown(report: Report) -> str:
         "",
         "**Where the leaks come from**",
         "",
-        "| System | Leaks | Never found | Found, called impersonal | The decision was wrong |",
-        "|---|---:|---:|---:|---:|",
+        "| System | Leaks | Never found | Found, called impersonal | Box too short | The decision was wrong |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
     for s in report.systems:
         d = s.scored.decomposition()
         lines.append(
             f"| {s.name} | {d['leaks']} | {d['detector_missed']} | "
-            f"{d['detector_mislabelled']} | {d['decision_wrong']} |"
+            f"{d['detector_mislabelled']} | {d['box_too_short']} | {d['decision_wrong']} |"
         )
     lines += [
         "",
         "The middle column is the one worth knowing about. A span typed as a place or an "
         "organisation is not personal information, so the rule releases it and says why, "
         "and recall counts it as found the whole time. It is a wrong label rather than a "
-        "wrong decision, and a two-column decomposition blamed the decision layer for it.",
+        "wrong decision, and a two-column decomposition blamed the decision layer for it. "
+        "\"Box too short\" is a span the tool withheld only part of, where what shows still "
+        "identifies someone; a remainder that identifies nobody (a long number with four or "
+        "fewer digits showing, a job title with its role word withheld) is not a leak. See "
+        "`sever/eval/coverage.py`.",
     ]
     if report.leak_report is not None:
         lines += [

@@ -19,48 +19,48 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-10 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 1 model calls, US$0.0010, US$0.00104 per call, 754 in / 58 out tokens, 9751 replayed from the answer cache, free, of which 2002 were the tool's own residual and 7750 the model-only baseline.
+**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 246 model calls, US$0.2737, US$0.00111 per call, 189330 in / 16868 out tokens, 9383 replayed from the answer cache, free, of which 2002 were the tool's own residual and 7627 the model-only baseline.
 
-**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2002 times and paid 871 of them, because 56% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01048 each, which is the figure to read if your documents are not generated from templates. A further US$1.4744 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2002 times and paid 871 of them, because 56% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01048 each, which is the figure to read if your documents are not generated from templates. A further US$1.4754 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
 | `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
-| `K2` | 2170 | n/a | 29.6% (27.1% to 32.1%), n=2170 | 19.1% (17.3% to 21.1%), n=2170 |
+| `K2` | 2170 | n/a | 29.5% (27.1% to 32.0%), n=2170 | 19.1% (17.3% to 21.1%), n=2170 |
 | `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
-| `R1` | 1680 | 4.5% (3.5% to 5.7%), n=1680 | n/a | 43.9% (41.4% to 46.3%), n=1680 |
+| `R1` | 1680 | 4.6% (3.6% to 5.7%), n=1680 | n/a | 43.9% (41.4% to 46.3%), n=1680 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 4.5% (3.5% to 5.7%), n=1680 | 19.7% (18.1% to 21.2%), n=3780 | 22.7% (21.6% to 23.8%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| model-only, no rules | 15.5% (13.9% to 17.1%), n=1680 | 41.6% (38.9% to 44.1%), n=3780 | 41.4% (40.4% to 42.5%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sever, rules only | 2.4% (1.6% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 37.3% (35.8% to 38.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| blunt redact-all-PII | 1.0% (0.6% to 1.5%), n=1680 | 98.4% (97.9% to 99.0%), n=3780 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sentence-only, no document context | 8.7% (6.8% to 10.7%), n=1680 | 49.3% (47.1% to 51.4%), n=3780 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules then the model on the residual | 4.6% (3.6% to 5.7%), n=1680 | 19.7% (18.1% to 21.2%), n=3780 | 22.7% (21.6% to 23.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| model-only, no rules | 15.4% (13.8% to 17.0%), n=1680 | 41.0% (38.4% to 43.6%), n=3780 | 40.8% (39.7% to 41.9%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules only | 2.5% (1.7% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 37.3% (35.8% to 38.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| blunt redact-all-PII | 1.1% (0.6% to 1.6%), n=1680 | 98.4% (97.9% to 99.0%), n=3780 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sentence-only, no document context | 8.8% (6.9% to 10.8%), n=1680 | 49.3% (47.1% to 51.4%), n=3780 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 
 **Where the leaks come from**
 
-| System | Leaks | Never found | Found, called impersonal | The decision was wrong |
-|---|---:|---:|---:|---:|
-| sever, rules then the model on the residual | 76 | 17 | 24 | 35 |
-| model-only, no rules | 261 | 17 | 104 | 140 |
-| sever, rules only | 41 | 17 | 24 | 0 |
-| blunt redact-all-PII | 17 | 17 | 0 | 0 |
-| sentence-only, no document context | 146 | 17 | 129 | 0 |
+| System | Leaks | Never found | Found, called impersonal | Box too short | The decision was wrong |
+|---|---:|---:|---:|---:|---:|
+| sever, rules then the model on the residual | 77 | 17 | 24 | 1 | 35 |
+| model-only, no rules | 259 | 17 | 101 | 1 | 140 |
+| sever, rules only | 42 | 17 | 24 | 1 | 0 |
+| blunt redact-all-PII | 18 | 17 | 0 | 1 | 0 |
+| sentence-only, no document context | 147 | 17 | 129 | 1 | 0 |
 
-The middle column is the one worth knowing about. A span typed as a place or an organisation is not personal information, so the rule releases it and says why, and recall counts it as found the whole time. It is a wrong label rather than a wrong decision, and a two-column decomposition blamed the decision layer for it.
+The middle column is the one worth knowing about. A span typed as a place or an organisation is not personal information, so the rule releases it and says why, and recall counts it as found the whole time. It is a wrong label rather than a wrong decision, and a two-column decomposition blamed the decision layer for it. "Box too short" is a span the tool withheld only part of, where what shows still identifies someone; a remainder that identifies nobody (a long number with four or fewer digits showing, a job title with its role word withheld) is not a leak. See `sever/eval/coverage.py`.
 
 **PDF leak test**
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2362 | 0 | text layer and OCR |
+| 2361 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -81,11 +81,11 @@ what nobody publishes.
 
 **The case for the model layer is much weaker than it was, because the rules got better.**
 
-With the rules alone the tool leaks 2.4 percent and withholds 22.4 percent of what must be
+With the rules alone the tool leaks 2.5 percent and withholds 22.4 percent of what must be
 released. With the model deciding what the rules could not, at the confidence threshold
-measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.5 percent and
+measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.6 percent and
 withholds 19.7 percent. In counts, over 5,460 labelled spans: turning the model on
-correctly releases **104 spans the rules had withheld** and wrongly releases **35 that had
+correctly releases **105 spans the rules had withheld** and wrongly releases **35 that had
 to go**. Both rows are in the table above and neither is hidden behind the other.
 
 That ratio was **eight to one** a day ago and it is **three to one** now. Nothing about the
@@ -126,7 +126,17 @@ a category that used to be withheld is exactly how a leak class gets introduced.
 column only exists because a two-bucket decomposition filed those 23 under "the decision
 was wrong" and pointed the next fix at the wrong module.
 
-**And the leak rate is still above the blunt baseline's 1.0 percent.** That gap is
+**Every leak rate on this page now counts a partial box the way a reader would.** Until
+2026-10-10 the tables asked whether the box that overlapped a span most was a withholding
+one, so a box over nine digits of a twelve-digit number counted as the whole number
+withheld. Now a must-redact span is withheld only when every letter and digit of it is
+under a box, or when what shows identifies nobody: a long number with four or fewer digits
+showing, or a job title with its role word withheld ([`sever/eval/coverage.py`](sever/eval/coverage.py)).
+The reviewer study uses the same rule. It moved every leak rate by one span, the same one in
+every row: "Desmond Ivany of Happy Valley" detected as one name, which leaves "Goose Bay"
+showing, and that names the town. It is in the decomposition as "Box too short".
+
+**And the leak rate is still above the blunt baseline's 1.1 percent.** That gap is
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
@@ -230,8 +240,8 @@ Three more limitations, none of them small:
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the
   plain corpus so they stay comparable; the harder numbers sit beside them.
-- **29.6 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table, and 19.1 of those 29.6 points are escalation rather than a
+- **29.5 percent over-redaction on officials acting in an official capacity** is the
+  weakest number in the table, and 19.1 of those 29.5 points are escalation rather than a
   wrong answer: names and work addresses the rules could not pair with a title anywhere in
   the record, which the model was also unwilling to place. A published staff directory is
   the remedy a person would use, and [results/directory.md](results/directory.md) measures
@@ -254,8 +264,8 @@ the same threshold, with the rules removed so every span is sent rather than onl
 residual. The difference between it and the full configuration is the deterministic layer
 and nothing else.
 
-It leaks more than three times as much, **15.5% against 4.5%**, and over-redacts twice as
-much, **41.6% against 19.7%**.
+It leaks more than three times as much, **15.4% against 4.6%**, and over-redacts twice as
+much, **41.0% against 19.7%**.
 
 The leak half of that is new, and it comes from two rulings by a reviewer. The first is a
 single word. Until 2026-10-08 the two leaked about the same (4.8% against 5.3%), and this section said the rules were not the
@@ -266,7 +276,7 @@ beside it reads as harmless: 140 of the model-only row's leaks are its decisions
 against 35 when it only sees what the rules leave. The second ruling, on 2026-10-10, widened
 the gap again: the parties to a confidential workplace complaint are withheld with their job
 titles, and asked about "Regional Director" on its own, the model calls it a position and
-releases it, which is 104 of the model-only row's 261 leaks. So the rules *are* a safety
+releases it, which is 101 of the model-only row's 259 leaks. So the rules *are* a safety
 net, for exactly the kind of judgement a public body writes down once and expects applied
 every time. They also earn their place by being decisive: they settle the cases that have a settled answer, the model is asked only
 the genuinely ambiguous ones, and a model asked only hard questions escalates far less than
@@ -274,7 +284,7 @@ a model asked everything.
 
 Read that against the `sentence-only` row, which is the same rules with the document context
 blanked, at 49.3%. Neither half is carrying the tool, and each ablation costs about what the
-other does. Since the complaint ruling the sentence-only row leaks too, 8.7 percent: whether
+other does. Since the complaint ruling the sentence-only row leaks too, 8.8 percent: whether
 a record is a confidential complaint is a fact about the document, not the sentence.
 
 ## What this does not do

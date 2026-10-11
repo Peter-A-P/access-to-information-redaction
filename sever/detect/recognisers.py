@@ -186,19 +186,38 @@ BANK_ACCOUNT = PatternRecogniser(
     group=1,
 )
 
+# The role word of a job title, without a portfolio or a qualifier: "Coordinator" in "Access
+# and Privacy Coordinator", "Minister" in "Minister of Health". Scoring reads it to decide
+# whether a partly withheld title still identifies anyone (sever.eval.coverage); the
+# recogniser below matches the whole title around it.
+_ROLE = (
+    r"assistant deputy minister|deputy minister|minister|director(?: of [A-Z][\w ]{2,30})?|"
+    r"regional director|executive director|assistant director|manager|senior manager|"
+    r"coordinator|co-ordinator|supervisor|analyst|policy analyst|senior policy analyst|"
+    r"program officer|programme officer|officer|administrator|clerk|inspector|"
+    r"investigator|adjudicator|registrar|commissioner|solicitor|counsel|"
+    r"chief executive officer|chief[\w ]{0,20}officer|superintendent|principal|"
+    r"social worker|case worker|nurse practitioner|physician|receptionist"
+)
+ROLE_WORD = _ci(rf"\b(?:{_ROLE})\b")
+
 # Job titles. Not personal information in themselves, but the decision layer needs them:
 # a title next to a name in a signature block is the strongest K2 signal there is.
+#
+# The whole title, not its last word (2026-10-10). A party's title in a confidential
+# complaint is withheld, and a box over "Coordinator" that leaves "Access and Privacy"
+# showing is a box drawn short, which reviewer 1 approved as drawn. So the multi-word titles
+# the corpus uses come first, and a minister's portfolio is part of the title, read as
+# capitalised words only (`(?-i:...)`), so that "the Minister of Health said" stops at
+# "Health".
+_PORTFOLIO = r"(?: of (?-i:[A-Z]\w+(?:,? (?:and )?[A-Z]\w+)*))?"
 JOB_TITLE = PatternRecogniser(
     name="job_title",
     entity_type=EntityType.JOB_TITLE,
     pattern=_ci(
-        r"\b(?:assistant deputy minister|deputy minister|minister|director(?: of [A-Z][\w ]{2,30})?|"
-        r"regional director|executive director|assistant director|manager|senior manager|"
-        r"coordinator|co-ordinator|supervisor|analyst|policy analyst|senior policy analyst|"
-        r"program officer|programme officer|officer|administrator|clerk|inspector|"
-        r"investigator|adjudicator|registrar|commissioner|solicitor|counsel|"
-        r"chief executive officer|chief[\w ]{0,20}officer|superintendent|principal|"
-        r"social worker|case worker|nurse practitioner|physician|receptionist)\b"
+        r"\b(?:access and privacy coordinator|information and privacy commissioner|"
+        rf"assistant deputy minister{_PORTFOLIO}|deputy minister{_PORTFOLIO}|"
+        rf"minister{_PORTFOLIO}|{_ROLE})\b"
     ),
     score=0.7,
 )

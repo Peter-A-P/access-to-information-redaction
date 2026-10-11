@@ -15,9 +15,9 @@
  },
  "detector": "sever-detector",
  "model": "anthropic/claude-haiku-4-5-20251001",
- "model_run": "1 model calls, US$0.0010, US$0.00104 per call, 754 in / 58 out tokens, 9751 replayed from the answer cache, free",
+ "model_run": "246 model calls, US$0.2737, US$0.00111 per call, 189330 in / 16868 out tokens, 9383 replayed from the answer cache, free",
  "model_asks": 2002,
- "model_only_asks": 7750,
+ "model_only_asks": 7627,
  "jurisdiction": "federal",
  "cost": {
   "run_ids": [
@@ -25,14 +25,15 @@
    "sever-full-210",
    "sever-modelonly-210",
    "sever-modelonly-kinship",
+   "sever-modelonly-mcp",
    "sever-modelonly-smoke",
    "sever-retype-210",
    "sever-sweep-210"
   ],
   "usd_per_page": 0.004557552380952381,
   "undeduplicated_usd_per_page": 0.01047556815920398,
-  "cost_usd": 2.4314690000000008,
-  "paid_calls": 2240,
+  "cost_usd": 2.432513000000001,
+  "paid_calls": 2241,
   "asks": 2002
  },
  "systems": [
@@ -43,29 +44,30 @@
    "documents": 210,
    "over_redaction_rate": "19.7% (18.1% to 21.2%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "22.7% (21.6% to 23.8%), n=5460",
+   "escalation_rate": "22.7% (21.6% to 23.7%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
-   "unlabelled_detections": 2396,
+   "unlabelled_detections": 2273,
    "unlabelled_detections_withheld": 16,
-   "decomposition_leaks": 76,
+   "decomposition_leaks": 77,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 24,
+   "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 35,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "4.5% (3.5% to 5.7%), n=1680",
-   "category_accuracy": "54.1% (51.5% to 56.7%), n=1604",
+   "leak_rate": "4.6% (3.6% to 5.7%), n=1680",
+   "category_accuracy": "54.0% (51.4% to 56.7%), n=1603",
    "per_code_over_redaction": {
     "K1": "6.9% (5.6% to 8.3%), n=980",
-    "K2": "29.6% (27.1% to 32.1%), n=2170",
+    "K2": "29.5% (27.1% to 32.0%), n=2170",
     "K3": "0.0% (0.0% to 3.4%), n=280",
     "K4": "48.6% (45.7% to 50.0%), n=70",
     "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "4.5% (3.5% to 5.7%), n=1680"
+    "R1": "4.6% (3.6% to 5.7%), n=1680"
    }
   },
   {
@@ -73,31 +75,32 @@
    "note": "The same model, the same context record and the same confidence threshold, with the deterministic layer removed: every span is sent rather than only the residual. The difference between this row and the one above is what the deterministic rules are worth.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "41.6% (38.9% to 44.1%), n=3780",
+   "over_redaction_rate": "41.0% (38.4% to 43.6%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "41.4% (40.4% to 42.5%), n=5460",
+   "escalation_rate": "40.8% (39.7% to 41.9%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
-   "unlabelled_detections": 2396,
-   "unlabelled_detections_withheld": 48,
-   "decomposition_leaks": 261,
+   "unlabelled_detections": 2273,
+   "unlabelled_detections_withheld": 27,
+   "decomposition_leaks": 259,
    "decomposition_detector_missed": 17,
-   "decomposition_detector_mislabelled": 104,
+   "decomposition_detector_mislabelled": 101,
+   "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 140,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "15.5% (13.9% to 17.1%), n=1680",
-   "category_accuracy": "34.2% (31.5% to 36.6%), n=1419",
+   "leak_rate": "15.4% (13.8% to 17.0%), n=1680",
+   "category_accuracy": "34.1% (31.4% to 36.5%), n=1421",
    "per_code_over_redaction": {
     "K1": "7.1% (5.8% to 8.4%), n=980",
-    "K2": "65.0% (61.6% to 68.2%), n=2170",
-    "K3": "20.4% (15.7% to 25.0%), n=280",
+    "K2": "65.5% (62.2% to 68.6%), n=2170",
+    "K3": "8.9% (6.1% to 11.8%), n=280",
     "K4": "50.0% (50.0% to 50.0%), n=70",
     "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "15.5% (13.9% to 17.1%), n=1680"
+    "R1": "15.4% (13.8% to 17.0%), n=1680"
    }
   },
   {
@@ -109,17 +112,18 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "37.3% (35.8% to 38.7%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
-   "unlabelled_detections": 2396,
+   "unlabelled_detections": 2273,
    "unlabelled_detections_withheld": 16,
-   "decomposition_leaks": 41,
+   "decomposition_leaks": 42,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 24,
+   "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "2.4% (1.6% to 3.5%), n=1680",
-   "category_accuracy": "27.5% (23.6% to 31.7%), n=1639",
+   "leak_rate": "2.5% (1.7% to 3.5%), n=1680",
+   "category_accuracy": "27.5% (23.6% to 31.8%), n=1638",
    "per_code_over_redaction": {
     "K1": "9.1% (7.8% to 10.4%), n=980",
     "K2": "30.1% (27.6% to 32.6%), n=2170",
@@ -129,7 +133,7 @@
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "2.4% (1.6% to 3.5%), n=1680"
+    "R1": "2.5% (1.7% to 3.5%), n=1680"
    }
   },
   {
@@ -141,17 +145,18 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "0.0% (0.0% to 1.1%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
-   "unlabelled_detections": 2396,
-   "unlabelled_detections_withheld": 2396,
-   "decomposition_leaks": 17,
+   "unlabelled_detections": 2273,
+   "unlabelled_detections_withheld": 2273,
+   "decomposition_leaks": 18,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 0,
+   "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "1.0% (0.6% to 1.5%), n=1680",
-   "category_accuracy": "100.0% (98.8% to 100.0%), n=1663",
+   "leak_rate": "1.1% (0.6% to 1.6%), n=1680",
+   "category_accuracy": "100.0% (98.8% to 100.0%), n=1662",
    "per_code_over_redaction": {
     "K1": "95.0% (93.2% to 96.8%), n=980",
     "K2": "99.9% (99.8% to 100.0%), n=2170",
@@ -161,7 +166,7 @@
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "1.0% (0.6% to 1.5%), n=1680"
+    "R1": "1.1% (0.6% to 1.6%), n=1680"
    }
   },
   {
@@ -173,17 +178,18 @@
    "unweighed_release_rate": "n/a (0)",
    "escalation_rate": "59.0% (57.4% to 60.6%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
-   "unlabelled_detections": 2396,
+   "unlabelled_detections": 2273,
    "unlabelled_detections_withheld": 9,
-   "decomposition_leaks": 146,
+   "decomposition_leaks": 147,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 129,
+   "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "8.7% (6.8% to 10.7%), n=1680",
-   "category_accuracy": "11.4% (9.6% to 13.1%), n=1534",
+   "leak_rate": "8.8% (6.9% to 10.8%), n=1680",
+   "category_accuracy": "11.4% (9.6% to 13.1%), n=1533",
    "per_code_over_redaction": {
     "K1": "9.1% (7.8% to 10.4%), n=980",
     "K2": "70.8% (68.2% to 73.1%), n=2170",
@@ -193,12 +199,12 @@
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "8.7% (6.8% to 10.7%), n=1680"
+    "R1": "8.8% (6.9% to 10.8%), n=1680"
    }
   }
  ],
  "pdf_leak_test": {
-  "boxes_tested": 2362,
+  "boxes_tested": 2361,
   "recoverable": 0,
   "documents": 210,
   "ocr_channel_ran": true,

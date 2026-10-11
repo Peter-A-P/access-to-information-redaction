@@ -5,6 +5,11 @@ a reader is entitled to know exactly what was counted.
 
   * A **must-redact** span is a labelled span whose true code carries the redact decision
     (R1, R2). A **must-keep** span is one whose true code carries keep (K1 to K6).
+  * **Withheld** means by `sever.eval.coverage`: every letter and digit of a must-redact
+    span under a withholding box, or a remainder that identifies nobody (a long number with
+    four or fewer digits showing, a job title with its role word withheld); any letter or
+    digit of a must-keep span under one. Until 2026-10-10 it meant "the box that overlaps
+    the span most withholds", which counted a box over part of a span as all of it.
   * **Leak rate** = must-redact spans the tool proposed to release, over all must-redact
     spans. A span the detector never found counts as a leak. That is the strict reading
     and it is the right one: from the requester's point of view a name in the released
@@ -42,13 +47,15 @@ implementations that agree are worth more than one shared one anyway.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Protocol
 
 import numpy as np
 
 from sever.corpus.labels import LabelledSpan, LabelSet, LabelSource
 from sever.decide.pipeline import DocumentProposals, Proposal
+from sever.eval.coverage import withheld
+from sever.ingest.document import Offsets
 from sever.taxonomy.loader import Decision, Taxonomy, default_taxonomy
 
 BOOTSTRAP_RESAMPLES = 2000
@@ -109,6 +116,11 @@ class SpanOutcome:
     proposal: Proposal | None
     true_decision: Decision
     proposed_decision: Decision | None
+    # Whether the boxes over this span withhold it, by `sever.eval.coverage.withheld`:
+    # all of a must-redact span or a remainder that names nobody, any of a must-keep one.
+    # `score` always sets it. None only for an outcome built by hand, which falls back to
+    # the matched proposal's decision.
+    covered: bool | None = None
 
     @property
     def detected(self) -> bool:
@@ -156,7 +168,11 @@ class SpanOutcome:
 
     @property
     def was_withheld(self) -> bool:
-        """An undetected span is released: nothing proposed a box over it."""
+        """An undetected span is released: nothing proposed a box over it. A span the boxes
+        cover only partly is withheld or not by the coverage rule, not by the box that
+        overlaps it most."""
+        if self.covered is not None:
+            return self.covered
         return self.proposal is not None and self.proposal.withholds
 
     @property
@@ -199,7 +215,18 @@ class SpanOutcome:
         """
         if not (self.is_leak and self.detected) or self.proposal is None:
             return False
+        if self.proposal.withholds:
+            return False
         return not self.proposal.detection.entity_type.is_about_a_person
+
+    @property
+    def failed_because_box_too_short(self) -> bool:
+        """A leak under a box that withholds: the box covers part of the span and what it
+        leaves showing identifies someone. Neither a detection miss nor a wrong decision;
+        the boundary was wrong. Counted on its own since 2026-10-10, when scoring moved
+        from "the box that overlaps most withholds" to coverage; before that these were
+        not leaks at all."""
+        return self.is_leak and self.proposal is not None and self.proposal.withholds
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,11 +315,13 @@ class Scored:
         leaks = [o for o in self.outcomes if o.is_leak]
         undetected = sum(1 for o in leaks if o.failed_because_undetected)
         mislabelled = sum(1 for o in leaks if o.failed_because_mislabelled)
+        short = sum(1 for o in leaks if o.failed_because_box_too_short)
         return {
             "leaks": len(leaks),
             "detector_missed": undetected,
             "detector_mislabelled": mislabelled,
-            "decision_wrong": len(leaks) - undetected - mislabelled,
+            "box_too_short": short,
+            "decision_wrong": len(leaks) - undetected - mislabelled - short,
             "must_redact_spans": sum(1 for o in self.outcomes if o.must_redact),
             "must_be_weighed_spans": sum(1 for o in self.outcomes if o.must_be_weighed),
             "unweighed_releases": sum(1 for o in self.outcomes if o.is_unweighed_release),
@@ -456,13 +485,28 @@ def score(
                     best, best_overlap = p, len(hit)
             if best is not None:
                 used.add(best.key)
+            true_decision = t.decision(label.code, jurisdiction)
+            boxes = [
+                (p.detection.offsets.start - label.offsets.start, p.detection.offsets.end - label.offsets.start)
+                for p in proposals
+                if p.page == label.page
+                and p.withholds
+                and p.detection.offsets.intersection(label.offsets) is not None
+            ]
+            local = replace(label, offsets=Offsets(0, len(label.text)))
             outcomes.append(
                 SpanOutcome(
                     doc_id=doc_id,
                     label=label,
                     proposal=best,
-                    true_decision=t.decision(label.code, jurisdiction),
+                    true_decision=true_decision,
                     proposed_decision=best.decision if best else None,
+                    covered=withheld(
+                        local,
+                        label.text,
+                        boxes,
+                        must_redact=true_decision is Decision.REDACT,
+                    ),
                 )
             )
         unlabelled.extend(p for p in proposals if p.key not in used)

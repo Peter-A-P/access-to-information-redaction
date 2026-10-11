@@ -2,7 +2,7 @@
  "label": "sever, rules then the model on the residual",
  "source": {
   "answers": "results/model-answers.jsonl",
-  "commit": "516e60b",
+  "commit": "6943054",
   "corpus": "210 documents, seed 20270802",
   "model": "anthropic/claude-haiku-4-5-20251001",
   "repository": "access-to-information-redaction"
@@ -707,7 +707,7 @@
     "meeting_minutes-191": false,
     "meeting_minutes-197": false,
     "meeting_minutes-203": false,
-    "meeting_minutes-209": true
+    "meeting_minutes-209": false
    },
    "suite": "no_leak",
    "uncosted_calls": 0,

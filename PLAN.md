@@ -1566,3 +1566,21 @@ proposals: 3.5 percent strict, 0 percent without the two kinds of partial. This 
 the urgency out of the whole-title `JOB_TITLE` (US$0.25, above): the short box it fixes now
 leaks only by the strict count, so it waits.
 
+**One scoring rule everywhere, and the whole title.** Peter approved both on 2026-10-10.
+`sever/eval/coverage.py` now decides "withheld" for the headline scorer and the study
+alike: every letter and digit of a must-redact span under a withholding box, or a remainder
+that identifies nobody (the two rules above); any of a must-keep span. `score` used to ask
+whether the best-overlapping proposal withheld. A fourth leak bucket, "Box too short",
+holds a leak under a withholding box. The change moved each row by exactly one span, the
+same one: a meeting delegate detected as "Desmond Ivany of Happy Valley", leaving "Goose
+Bay" showing. Not fixed; the detector's boundary at a hyphenated place name is the cause.
+
+`JOB_TITLE` now matches the whole title: "Access and Privacy Coordinator", "Information and
+Privacy Commissioner", and a minister's portfolio read as capitalised words. `ROLE_WORD` is
+the old pattern, kept for the qualifier rule, which needs the role word inside a title.
+Because job titles go to the model in clear, the longer titles changed 246 model-only
+requests; run `sever-wholetitle-210`, 246 calls, US$0.2737. Rules only now leaks 2.5
+percent, rules then the model 4.6, model only 15.4; the gate still blocks the model layer
+on no_leak, 35 documents worse and 0 better. Reviewer 1's results are unchanged: the study
+reads its frozen proposals.
+

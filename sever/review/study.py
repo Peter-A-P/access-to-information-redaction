@@ -56,6 +56,7 @@ from sever.context.register import RegisterEntry
 from sever.corpus.labels import LabelledSpan
 from sever.decide.pipeline import Proposal, Source
 from sever.detect.types import Detection, EntityType
+from sever.eval.coverage import covered, is_partial_that_identifies_nobody
 from sever.ingest.document import Offsets
 from sever.review.audit import AuditLog
 from sever.review.decisions import Origin, final_spans
@@ -403,15 +404,6 @@ class PageResult:
         }
 
 
-def _covered(text: str, start: int, end: int, spans: Sequence[tuple[int, int]]) -> tuple[bool, bool]:
-    """(every letter and digit covered, any letter or digit covered) for text[start:end]."""
-    positions = [i for i in range(start, end) if text[i].isalnum()]
-    if not positions:
-        return (True, False)
-    hit = [any(s <= i < e for s, e in spans) for i in positions]
-    return (all(hit), any(hit))
-
-
 def _unlabelled(
     text: str, labels: Sequence[LabelledSpan], spans: Sequence[tuple[int, int]]
 ) -> tuple[int, int]:
@@ -426,65 +418,13 @@ def _unlabelled(
     return len(withheld - labelled), loose
 
 
-# The most digits of a number that may show for the release of the rest not to identify
-# anyone: the convention card masking uses, "**** **** **** 1234". Set on 2026-10-10 after
-# reviewer 1 observed that three digits of a twelve-digit MCP number identify nobody, which
-# is after the results it changes were seen; that is why the strict count stays beside it.
-FRAGMENT_DIGITS = 4
-
-
-def is_number_fragment(
-    text: str, start: int, end: int, spans: Sequence[tuple[int, int]]
-) -> bool:
-    """True for a leaked span that is a number of nine or more digits with at most
-    `FRAGMENT_DIGITS` of them left showing."""
-    chars = [i for i in range(start, end) if text[i].isalnum()]
-    if len(chars) < 9 or not all(text[i].isdigit() for i in chars):
-        return False
-    showing = sum(1 for i in chars if not any(s <= i < e for s, e in spans))
-    return 0 < showing <= FRAGMENT_DIGITS
-
-
-def is_title_qualifier(
-    text: str, start: int, end: int, spans: Sequence[tuple[int, int]]
-) -> bool:
-    """True for a leaked job title whose role word is withheld and only its qualifier
-    shows: "Access and Privacy" beside a severed "Coordinator", "Corporate Services"
-    beside a severed "Manager".
-
-    Reviewer 1's second observation on 2026-10-10: a qualifier names a function or a unit,
-    which several people share; it is the position, qualifier and role together, that
-    identifies its one holder. The role word is what the job-title recogniser matches
-    inside the title. A title the recogniser finds no role word in never qualifies, and nor
-    does anything that is not a title: a surname beside a severed forename names someone.
-    """
-    from sever.detect.recognisers import JOB_TITLE
-
-    title = text[start:end]
-    role = JOB_TITLE.pattern.search(title)
-    if role is None:
-        return False
-    role_chars = [start + i for i in range(*role.span()) if title[i].isalnum()]
-    return all(any(s <= i < e for s, e in spans) for i in role_chars)
-
-
-def is_partial_that_identifies_nobody(
-    label: LabelledSpan, text: str, spans: Sequence[tuple[int, int]]
-) -> bool:
-    """A leak the second study column does not count. See the two rules above."""
-    start, end = label.offsets.start, label.offsets.end
-    if (label.field_name or "").endswith(".title"):
-        return is_title_qualifier(text, start, end, spans)
-    return is_number_fragment(text, start, end, spans)
-
-
 def _count(
     text: str, labels: Sequence[LabelledSpan], spans: Sequence[tuple[int, int]], taxonomy: Taxonomy
 ) -> tuple[int, int, int, int, int]:
     must_redact = leaked = must_keep = over = fragments = 0
     for label in labels:
         start, end = label.offsets.start, label.offsets.end
-        full, touched = _covered(text, start, end, spans)
+        full, touched = covered(text, start, end, spans)
         if taxonomy.decision(label.code).withholds:
             must_redact += 1
             if not full:

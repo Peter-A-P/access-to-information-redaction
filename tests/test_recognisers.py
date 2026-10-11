@@ -26,6 +26,7 @@ from sever.detect.recognisers import (
     EMAIL,
     EMPLOYEE_ID,
     FILE_NUMBER,
+    JOB_TITLE,
     MCP_NUMBER,
     POSTAL_CODE,
     SIN_LABELLED,
@@ -178,3 +179,22 @@ def test_a_street_address_keeps_its_house_number() -> None:
     detection drops. Project 04's analyzer released it until 0.5.1 resolved containment
     before score; this project's resolver orders by specificity and never did."""
     assert matches(STREET_ADDRESS, "lives at 14 Bannerman Street") == ["14 Bannerman Street"]
+
+
+# --- the whole title, not its last word (2026-10-10) ---------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "title"),
+    [
+        ("employed as\nAccess and Privacy Coordinator. In", "Access and Privacy Coordinator"),
+        ("the Information and Privacy Commissioner said", "Information and Privacy Commissioner"),
+        ("Deputy Minister of Justice and Public Safety (Chair)", "Deputy Minister of Justice and Public Safety"),
+        ("the Minister of Children, Seniors and Social Development, wrote", "Minister of Children, Seniors and Social Development"),
+        ("the Minister of Health said", "Minister of Health"),
+        ("the Minister responsible", "Minister"),
+    ],
+)
+def test_a_title_is_matched_whole(text: str, title: str) -> None:
+    """A box over "Coordinator" alone leaves "Access and Privacy" showing."""
+    assert matches(JOB_TITLE, text) == [title]

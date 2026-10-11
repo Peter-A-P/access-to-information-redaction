@@ -8,7 +8,8 @@
     "sever-modelonly-mcp",
     "sever-modelonly-smoke",
     "sever-retype-210",
-    "sever-sweep-210"
+    "sever-sweep-210",
+    "sever-wholetitle-210"
   ],
   "pipeline_runs": [
     "sever-full-001",
@@ -18,14 +19,14 @@
   ],
   "recorded_on": "2026-10-10",
   "model": "claude-haiku-4-5-20251001",
-  "calls": 2241,
-  "cost_usd": 2.432513000000001,
-  "input_tokens": 1693493,
-  "output_tokens": 147804,
+  "calls": 2487,
+  "cost_usd": 2.7061830000000007,
+  "input_tokens": 1882823,
+  "output_tokens": 164672,
   "uncosted": 0,
   "pages": 210,
   "documents": 210,
-  "cached_answers": 2241,
+  "cached_answers": 2487,
   "asks": 2002,
   "per_run": {
     "sever-full-001": 0.410757,
@@ -35,7 +36,8 @@
     "sever-modelonly-mcp": 0.001044,
     "sever-modelonly-smoke": 0.08223,
     "sever-retype-210": 0.008851,
-    "sever-sweep-210": 0.026649
+    "sever-sweep-210": 0.026649,
+    "sever-wholetitle-210": 0.27367
   },
   "calls_per_run": {
     "sever-full-001": 373,
@@ -45,7 +47,8 @@
     "sever-modelonly-mcp": 1,
     "sever-modelonly-smoke": 79,
     "sever-retype-210": 8,
-    "sever-sweep-210": 24
+    "sever-sweep-210": 24,
+    "sever-wholetitle-210": 246
   },
   "usd_per_page": 0.00455755,
   "undeduplicated_usd_per_page": 0.01047557,

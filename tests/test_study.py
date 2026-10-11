@@ -427,7 +427,7 @@ def test_reviewer_one_was_shown_the_mcp_defect() -> None:
 
 
 def test_a_number_with_four_digits_or_fewer_showing_is_a_fragment() -> None:
-    from sever.review.study import is_number_fragment
+    from sever.eval.coverage import is_number_fragment
 
     text = "is 404 474 556 704 and"
     start, end = 3, 18
@@ -440,7 +440,7 @@ def test_a_number_with_four_digits_or_fewer_showing_is_a_fragment() -> None:
 def test_a_title_with_its_role_word_withheld_identifies_nobody() -> None:
     """"Access and Privacy" names a function several people share; "Coordinator" with it
     names one person."""
-    from sever.review.study import is_title_qualifier
+    from sever.eval.coverage import is_title_qualifier
 
     text = "Access and Privacy Coordinator"
     assert is_title_qualifier(text, 0, len(text), [(19, 30)])
@@ -452,7 +452,7 @@ def test_a_title_with_its_role_word_withheld_identifies_nobody() -> None:
 def test_a_partial_name_or_identifier_is_always_a_leak() -> None:
     """Only titles and long numbers have a harmless remainder."""
     from sever.corpus.labels import LabelledSpan
-    from sever.review.study import is_partial_that_identifies_nobody
+    from sever.eval.coverage import is_partial_that_identifies_nobody
 
     text = "Marie Doucette and EMP-79966"
     name = LabelledSpan.from_json(
