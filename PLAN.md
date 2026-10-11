@@ -1544,3 +1544,16 @@ Regenerated with nothing spent except one model-only answer (the MCP number's re
 reviewer study and the gate (still BLOCK on no_leak, 35 documents worse and 0 better). The
 model-only row now leaks 15.5 percent against 4.5: asked about a party's title on its own,
 the model releases it as a position.
+
+**Number fragments, counted separately.** Peter's view on 2026-10-10: three digits of a
+twelve-digit MCP number identify nobody, and in the aided half the intention was to
+withhold the number, which a defect in the tool's box defeated. Agreed, with one condition:
+the rule is written after the results it changes, so it is reported beside the strict
+count rather than replacing it. `results/reviewer.md` now has a second leak column that
+does not count a leak of a number of nine or more digits with at most four showing
+(`FRAGMENT_DIGITS`, the card-masking convention); words never qualify. Reviewer 1 with
+proposals: 3.5 percent strict, 1.2 without fragments. The headline scorer is not changed by
+this, and has the opposite looseness: it matches a label to its best-overlapping proposal,
+so a box over nine of twelve digits, or over "Coordinator" alone, counts as withheld. The
+two scorers should agree; which way is open.
+

@@ -17,13 +17,15 @@ The unaided arm is served the same records with the proposals dropped before the
 
 Against the corpus labels, which are known by construction. A must-redact span is leaked unless every letter and digit of it was withheld; a must-keep span is over-redacted if any of it was.
 
-| What was released | Leak rate | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |
-|---|---|---|---:|---:|
-| reviewer, with proposals | 3.5% (0.0% to 6.8%), n=86 | 0.0% (0.0% to 21.6%), n=175 | 0 | 10 |
-| reviewer, unaided | 1.3% (0.0% to 4.8%), n=75 | 0.0% (0.0% to 21.6%), n=183 | 2 | 10 |
-| the tool's proposals, nobody reviewing, same records | 10.6% (5.0% to 16.7%), n=161 | 23.2% (18.5% to 27.8%), n=358 | 0 | 20 |
+| What was released | Leak rate | Leak rate, number fragments not counted | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |
+|---|---|---|---|---:|---:|
+| reviewer, with proposals | 3.5% (0.0% to 6.8%), n=86 | 1.2% (0.0% to 3.7%), n=86 | 0.0% (0.0% to 21.6%), n=175 | 0 | 10 |
+| reviewer, unaided | 1.3% (0.0% to 4.8%), n=75 | 1.3% (0.0% to 4.8%), n=75 | 0.0% (0.0% to 21.6%), n=183 | 2 | 10 |
+| the tool's proposals, nobody reviewing, same records | 10.6% (5.0% to 16.7%), n=161 | 8.7% (3.1% to 15.3%), n=161 | 23.2% (18.5% to 27.8%), n=358 | 0 | 20 |
 
-The fourth column is text withheld outside every labelled span, such as the word "sibling" beside a severed name. The labels cannot say whether withholding it was right, so it is in neither rate; it is counted because it costs the reviewer time and the requester text, and would otherwise appear nowhere.
+The third column does not count a leak that is a number of nine or more digits with at most four of them showing, such as the last three digits of a twelve-digit MCP number: those identify nobody, and card masking shows four. Words never qualify, because a surname or a unit name left beside a severed word still names someone. The rule was set after the first real run, when its reviewer pointed out that the two such leaks in it identify nobody, so the strict column stays beside it.
+
+The fifth column is text withheld outside every labelled span, such as the word "sibling" beside a severed name. The labels cannot say whether withholding it was right, so it is in neither rate; it is counted because it costs the reviewer time and the requester text, and would otherwise appear nowhere.
 
 ## Record by record
 

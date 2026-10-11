@@ -330,10 +330,14 @@ class _SpanHit:
     hit: bool
 
 
-def _expand(rows: Sequence[dict[str, object]], hits: str, total: str) -> list[_SpanHit]:
+def _expand(
+    rows: Sequence[dict[str, object]], hits: str, total: str, *, less: str | None = None
+) -> list[_SpanHit]:
+    """One hit per counted span. `less` names a count of hits that are not counted as
+    hits, such as leaks that are only a fragment of a number."""
     out: list[_SpanHit] = []
     for r in rows:
-        n_hit = int(str(r[hits]))
+        n_hit = int(str(r[hits])) - (int(str(r.get(less, 0) or 0)) if less else 0)
         n_total = int(str(r[total]))
         doc = str(r["doc_id"])
         out += [_SpanHit(doc, True)] * n_hit + [_SpanHit(doc, False)] * (n_total - n_hit)
@@ -424,31 +428,46 @@ def study_markdown(rows: Sequence[dict[str, object]]) -> str:
         "leaked unless every letter and digit of it was withheld; a must-keep span is "
         "over-redacted if any of it was.",
         "",
-        "| What was released | Leak rate | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |",
-        "|---|---|---|---:|---:|",
+        "| What was released | Leak rate | Leak rate, number fragments not counted | "
+        "Over-redaction rate | Unlabelled text withheld, characters per page | Pages |",
+        "|---|---|---|---|---:|---:|",
     ]
     for arm, label in (("proposals", "reviewer, with proposals"), ("unaided", "reviewer, unaided")):
         arm_rows = [r for r in counted if r["mode"] == arm]
         if not arm_rows:
-            lines.append(f"| {label} | not collected | | | 0 |")
+            lines.append(f"| {label} | not collected | | | | 0 |")
             continue
         leak = clustered_rate(_expand(arm_rows, "leaked", "must_redact"), lambda h: h.hit)
+        whole = clustered_rate(
+            _expand(arm_rows, "leaked", "must_redact", less="leaked_fragments"), lambda h: h.hit
+        )
         over = clustered_rate(_expand(arm_rows, "over_redacted", "must_keep"), lambda h: h.hit)
         lines.append(
-            f"| {label} | {leak} | {over} | {_mean(arm_rows, 'unlabelled_chars')} | "
+            f"| {label} | {leak} | {whole} | {over} | {_mean(arm_rows, 'unlabelled_chars')} | "
             f"{len(arm_rows)} |"
         )
     # Once per record: the tool's proposals do not change with who is reviewing them.
     once = list({str(r["doc_id"]): r for r in counted}.values())
     tool_leak = clustered_rate(_expand(once, "tool_leaked", "must_redact"), lambda h: h.hit)
+    tool_whole = clustered_rate(
+        _expand(once, "tool_leaked", "must_redact", less="tool_leaked_fragments"), lambda h: h.hit
+    )
     tool_over = clustered_rate(_expand(once, "tool_over_redacted", "must_keep"), lambda h: h.hit)
     lines.append(
-        f"| the tool's proposals, nobody reviewing, same records | {tool_leak} | {tool_over} | "
+        f"| the tool's proposals, nobody reviewing, same records | {tool_leak} | {tool_whole} | "
+        f"{tool_over} | "
         f"{_mean(once, 'tool_unlabelled_chars')} | {len(once)} |"
     )
     lines += [
         "",
-        "The fourth column is text withheld outside every labelled span, such as the word "
+        "The third column does not count a leak that is a number of nine or more digits with "
+        "at most four of them showing, such as the last three digits of a twelve-digit MCP "
+        "number: those identify nobody, and card masking shows four. Words never qualify, "
+        "because a surname or a unit name left beside a severed word still names someone. "
+        "The rule was set after the first real run, when its reviewer pointed out that the "
+        "two such leaks in it identify nobody, so the strict column stays beside it.",
+        "",
+        "The fifth column is text withheld outside every labelled span, such as the word "
         "\"sibling\" beside a severed name. The labels cannot say whether withholding it "
         "was right, so it is in neither rate; it is counted because it costs the reviewer "
         "time and the requester text, and would otherwise appear nowhere.",

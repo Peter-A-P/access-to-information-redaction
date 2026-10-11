@@ -374,6 +374,10 @@ class PageResult:
     unlabelled_chars: int = 0
     unlabelled_severances: int = 0
     tool_unlabelled_chars: int = 0
+    # Of the leaks, how many were a number with at most four of its digits left showing.
+    # See `is_number_fragment`.
+    leaked_fragments: int = 0
+    tool_leaked_fragments: int = 0
 
     def as_json(self) -> dict[str, object]:
         return {
@@ -393,6 +397,8 @@ class PageResult:
             "unlabelled_chars": self.unlabelled_chars,
             "unlabelled_severances": self.unlabelled_severances,
             "tool_unlabelled_chars": self.tool_unlabelled_chars,
+            "leaked_fragments": self.leaked_fragments,
+            "tool_leaked_fragments": self.tool_leaked_fragments,
         }
 
 
@@ -419,19 +425,43 @@ def _unlabelled(
     return len(withheld - labelled), loose
 
 
+# The most digits of a number that may show for the release of the rest not to identify
+# anyone: the convention card masking uses, "**** **** **** 1234". Set on 2026-10-10 after
+# reviewer 1 observed that three digits of a twelve-digit MCP number identify nobody, which
+# is after the results it changes were seen; that is why the strict count stays beside it.
+FRAGMENT_DIGITS = 4
+
+
+def is_number_fragment(
+    text: str, start: int, end: int, spans: Sequence[tuple[int, int]]
+) -> bool:
+    """True for a leaked span that is a number of nine or more digits with at most
+    `FRAGMENT_DIGITS` of them left showing. Words never qualify: "Access and Privacy" left
+    beside a severed "Coordinator", or a surname beside a severed forename, still names
+    someone."""
+    chars = [i for i in range(start, end) if text[i].isalnum()]
+    if len(chars) < 9 or not all(text[i].isdigit() for i in chars):
+        return False
+    showing = sum(1 for i in chars if not any(s <= i < e for s, e in spans))
+    return 0 < showing <= FRAGMENT_DIGITS
+
+
 def _count(
     text: str, labels: Sequence[LabelledSpan], spans: Sequence[tuple[int, int]], taxonomy: Taxonomy
-) -> tuple[int, int, int, int]:
-    must_redact = leaked = must_keep = over = 0
+) -> tuple[int, int, int, int, int]:
+    must_redact = leaked = must_keep = over = fragments = 0
     for label in labels:
-        full, touched = _covered(text, label.offsets.start, label.offsets.end, spans)
+        start, end = label.offsets.start, label.offsets.end
+        full, touched = _covered(text, start, end, spans)
         if taxonomy.decision(label.code).withholds:
             must_redact += 1
-            leaked += 0 if full else 1
+            if not full:
+                leaked += 1
+                fragments += 1 if is_number_fragment(text, start, end, spans) else 0
         else:
             must_keep += 1
             over += 1 if touched else 0
-    return must_redact, leaked, must_keep, over
+    return must_redact, leaked, must_keep, over, fragments
 
 
 def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResult, ...]:
@@ -482,8 +512,8 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
                 for p in tool[task.doc_id]
                 if p.withholds and p.page == 1
             ]
-            mr, lk, mk, ov = _count(text, labels, reviewed, taxonomy)
-            _, tlk, _, tov = _count(text, labels, unreviewed, taxonomy)
+            mr, lk, mk, ov, fr = _count(text, labels, reviewed, taxonomy)
+            _, tlk, _, tov, tfr = _count(text, labels, unreviewed, taxonomy)
             loose_chars, loose_cuts = _unlabelled(text, labels, reviewed)
             tool_loose, _ = _unlabelled(text, labels, unreviewed)
             out.append(
@@ -503,6 +533,8 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
                     unlabelled_chars=loose_chars,
                     unlabelled_severances=loose_cuts,
                     tool_unlabelled_chars=tool_loose,
+                    leaked_fragments=fr,
+                    tool_leaked_fragments=tfr,
                 )
             )
     return tuple(out)

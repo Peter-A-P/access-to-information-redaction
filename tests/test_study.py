@@ -424,3 +424,25 @@ def test_reviewer_one_was_shown_the_mcp_defect() -> None:
         for p in shown_proposals()["incident_report-154"]
     }
     assert ("404 474 556", EntityType.SIN) in texts
+
+
+def test_a_number_with_four_digits_or_fewer_showing_is_a_fragment() -> None:
+    from sever.review.study import is_number_fragment
+
+    text = "is 404 474 556 704 and"
+    start, end = 3, 18
+    assert is_number_fragment(text, start, end, [(3, 14)])  # "704" showing
+    assert not is_number_fragment(text, start, end, [(3, 10)])  # "556 704" showing
+    assert not is_number_fragment(text, start, end, [])  # nothing withheld at all
+    assert not is_number_fragment(text, start, end, [(3, 18)])  # not a leak
+
+
+def test_words_are_never_a_fragment() -> None:
+    """A unit name left beside a severed title, or a surname beside a forename, names
+    someone."""
+    from sever.review.study import is_number_fragment
+
+    text = "Access and Privacy Coordinator"
+    assert not is_number_fragment(text, 0, len(text), [(19, 30)])
+    short = "EMP-79966"
+    assert not is_number_fragment(short, 0, len(short), [(0, 7)])
