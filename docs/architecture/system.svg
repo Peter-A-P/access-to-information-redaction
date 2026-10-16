@@ -70,27 +70,27 @@
 <text x="1053.0" y="657.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Export and the schedule</text>
 <text x="1053.0" y="673.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">true redaction; the PDF leak test</text>
 <text x="1053.0" y="690.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.export, sever.eval.pdf_leak</text>
-<rect x="152.3" y="151.5" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="152.7" y="151.5" width="40.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="173.0" y="163.5" font-size="12" text-anchor="middle" fill="#14201E">pages</text>
-<rect x="114.1" y="259.0" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="121.6" y="259.0" width="102.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="173.0" y="271.0" font-size="12" text-anchor="middle" fill="#14201E">blocks with layout</text>
-<rect x="122.9" y="373.0" width="100.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="125.0" y="373.0" width="96.1" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="173.0" y="385.0" font-size="12" text-anchor="middle" fill="#14201E">candidate spans</text>
-<rect x="331.1" y="430.0" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="335.0" y="430.0" width="116.1" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="393.0" y="442.0" font-size="12" text-anchor="middle" fill="#14201E">one record per span</text>
-<rect x="565.8" y="371.5" width="94.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="571.0" y="371.5" width="84.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="613.0" y="383.5" font-size="12" text-anchor="middle" fill="#14201E">the categories</text>
-<rect x="599.5" y="509.0" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="610.3" y="509.0" width="102.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="661.3" y="521.0" font-size="12" text-anchor="middle" fill="#14201E">what the rules left</text>
-<rect x="782.9" y="430.0" width="100.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="784.6" y="430.0" width="96.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="833.0" y="442.0" font-size="12" text-anchor="middle" fill="#14201E">coded proposals</text>
-<rect x="364.8" y="544.0" width="153.1" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="373.0" y="544.0" width="136.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="441.3" y="556.0" font-size="12" text-anchor="middle" fill="#14201E">proposals against labels</text>
-<rect x="75.9" y="601.0" width="194.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="89.3" y="601.0" width="167.4" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="173.0" y="613.0" font-size="12" text-anchor="middle" fill="#14201E">over-redaction, leak rate, cost</text>
-<rect x="991.1" y="484.5" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="998.3" y="484.5" width="109.4" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="1053.0" y="496.5" font-size="12" text-anchor="middle" fill="#14201E">every action, a row</text>
-<rect x="994.1" y="603.5" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="997.0" y="603.5" width="112.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="1053.0" y="615.5" font-size="12" text-anchor="middle" fill="#14201E">approved rows only</text>
 <rect x="28" y="722" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
 <text x="62" y="734" font-size="11" fill="#5C6B67">built here</text>

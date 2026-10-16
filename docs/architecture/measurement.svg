@@ -124,37 +124,37 @@
 <text x="1120.0" y="423.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">README tables</text>
 <text x="1120.0" y="439.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">with 95% intervals</text>
 <text x="1120.0" y="456.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">results/</text>
-<rect x="279.3" y="88.0" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="280.0" y="88.0" width="40.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="100.0" font-size="12" text-anchor="middle" fill="#14201E">spans</text>
-<rect x="604.4" y="88.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="88.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="100.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="273.4" y="200.0" width="53.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="276.7" y="200.0" width="46.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="212.0" font-size="12" text-anchor="middle" fill="#14201E">configs</text>
-<rect x="604.4" y="200.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="200.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="212.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="279.3" y="312.0" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="279.7" y="312.0" width="40.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="324.0" font-size="12" text-anchor="middle" fill="#14201E">pages</text>
-<rect x="604.4" y="312.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="312.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="324.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="279.3" y="424.0" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="283.0" y="424.0" width="34.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="436.0" font-size="12" text-anchor="middle" fill="#14201E">pairs</text>
-<rect x="604.4" y="424.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="424.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="436.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="279.3" y="536.0" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="280.0" y="536.0" width="40.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="548.0" font-size="12" text-anchor="middle" fill="#14201E">scans</text>
-<rect x="604.4" y="536.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="536.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="548.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="282.2" y="648.0" width="35.5" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="283.3" y="648.0" width="33.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="660.0" font-size="12" text-anchor="middle" fill="#14201E">rows</text>
-<rect x="604.4" y="648.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="648.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="660.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="273.4" y="760.0" width="53.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="277.0" y="760.0" width="46.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="772.0" font-size="12" text-anchor="middle" fill="#14201E">timings</text>
-<rect x="604.4" y="760.0" width="47.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="608.3" y="760.0" width="39.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="772.0" font-size="12" text-anchor="middle" fill="#14201E">writes</text>
-<rect x="270.5" y="872.0" width="59.0" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="269.7" y="872.0" width="60.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="300.0" y="884.0" font-size="12" text-anchor="middle" fill="#14201E">outcomes</text>
-<rect x="601.4" y="872.0" width="53.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="606.0" y="872.0" width="44.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="628.0" y="884.0" font-size="12" text-anchor="middle" fill="#14201E">verdict</text>
 <rect x="28" y="936" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
 <text x="62" y="948" font-size="11" fill="#5C6B67">a published number</text>

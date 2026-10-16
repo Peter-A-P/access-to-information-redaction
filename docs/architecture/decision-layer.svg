@@ -52,23 +52,23 @@
 <rect x="868.0" y="822.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
 <text x="1008.0" y="850.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Escalated</text>
 <text x="1008.0" y="866.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">reasoning attached; withheld meanwhile</text>
-<rect x="543.8" y="147.0" width="88.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="552.3" y="147.0" width="71.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="159.0" font-size="12" text-anchor="middle" fill="#14201E">where it sits</text>
-<rect x="552.6" y="277.0" width="70.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="556.7" y="277.0" width="62.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="289.0" font-size="12" text-anchor="middle" fill="#14201E">the record</text>
-<rect x="520.3" y="407.0" width="135.5" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="538.0" y="407.0" width="100.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="419.0" font-size="12" text-anchor="middle" fill="#14201E">first rule that fires</text>
-<rect x="363.2" y="655.0" width="29.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="364.7" y="655.0" width="26.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="378.0" y="667.0" font-size="12" text-anchor="middle" fill="#14201E">yes</text>
-<rect x="523.2" y="529.0" width="129.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="534.0" y="529.0" width="108.0" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="541.0" font-size="12" text-anchor="middle" fill="#14201E">no: whatever is left</text>
-<rect x="745.0" y="592.0" width="106.1" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="749.6" y="592.0" width="96.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="798.0" y="604.0" font-size="12" text-anchor="middle" fill="#14201E">placeholders out</text>
-<rect x="529.1" y="655.0" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="531.6" y="655.0" width="112.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="667.0" font-size="12" text-anchor="middle" fill="#14201E">answer, confidence</text>
-<rect x="573.2" y="781.0" width="29.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="574.7" y="781.0" width="26.7" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="588.0" y="793.0" font-size="12" text-anchor="middle" fill="#14201E">yes</text>
-<rect x="856.1" y="718.0" width="23.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<rect x="857.3" y="718.0" width="21.3" height="20.0" rx="3" fill="#FFFFFF"/>
 <text x="868.0" y="730.0" font-size="12" text-anchor="middle" fill="#5C6B67">no</text>
 <rect x="28" y="908" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
 <text x="62" y="920" font-size="11" fill="#5C6B67">built here</text>
