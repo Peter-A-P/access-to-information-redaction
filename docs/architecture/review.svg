@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1176" height="944" viewBox="0 0 1176 944" role="img" aria-label="The reviewer sees one page at a time with every proposed severance highlighted, withholds, releases or escalates each one or severs text the tool missed, and every action is an append-only hash-chained audit row; a page cannot be completed with a span undecided, a record cannot be released with a page incomplete, and the export applies only what the log says." font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#14201E"/></marker><marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#0E6E60"/></marker><marker id="arrow-signal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#A64C1C"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#5C6B67"/></marker></defs>
+<rect width="1176" height="944" fill="#FFFFFF"/>
+<text x="28" y="42" font-size="16" font-weight="700" fill="#14201E">The reviewer decides, and the export reads only their decisions</text>
+<path d="M 588.0 130.0 L 588.0 191.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 728.0 224.0 L 868.0 224.0" fill="none" stroke="#14201E" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 588.0 257.0 L 588.0 313.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 1008.0 256.0 L 1008.0 344.0 Q 1008.0 350.0 1002.0 350.0 L 728.0 350.0" fill="none" stroke="#14201E" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M 588.0 387.0 L 588.0 444.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 508.0 L 588.0 570.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 634.0 L 588.0 696.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 760.0 L 588.0 822.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="448.0" y="66.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="87.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">sever review, on loopback</text>
+<text x="588.0" y="103.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">one page at a time, proposals highlighted</text>
+<text x="588.0" y="120.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.app, no network</text>
+<rect x="448.0" y="191.0" width="280.0" height="66.0" rx="33.0" fill="#F2F4F3" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="212.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">The reviewer</text>
+<text x="588.0" y="228.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">W withhold, R release, E escalate;</text>
+<text x="588.0" y="244.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">or select text the tool missed</text>
+<rect x="868.0" y="192.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="1008.0" y="220.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Release everything still undecided</text>
+<text x="1008.0" y="236.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">asks first; names the tool&#x27;s withholds</text>
+<path d="M 448.0 320.0 a 140.0 7 0 0 1 280.0 0 L 728.0 380.0 a 140.0 7 0 0 1 -280.0 0 Z" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/><path d="M 448.0 320.0 a 140.0 7 0 0 0 280.0 0" fill="none" stroke="#0E6E60" stroke-width="1.6"/>
+<text x="588.0" y="343.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">An audit row, append-only</text>
+<text x="588.0" y="359.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">hash-chained; hashes of text, never text</text>
+<text x="588.0" y="376.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.audit</text>
+<text x="168.0" y="346.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">A change of mind is a second row</text>
+<text x="168.0" y="362.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">the screen shows the latest, the log keeps both</text>
+<rect x="448.0" y="444.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="448.0" y="444.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="588.0" y="465.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Page complete?</text>
+<text x="588.0" y="481.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">refused while any span is undecided</text>
+<text x="588.0" y="498.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">tests/test_review_app.py</text>
+<rect x="448.0" y="570.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="448.0" y="570.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="588.0" y="591.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">The release gate</text>
+<text x="588.0" y="607.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">raises while any page is incomplete</text>
+<text x="588.0" y="624.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.session</text>
+<rect x="448.0" y="696.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="717.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">sever export --audit</text>
+<text x="588.0" y="733.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">applies the decisions, not the proposals</text>
+<text x="588.0" y="750.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.export</text>
+<text x="1008.0" y="724.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">Without --audit: the same PDFs,</text>
+<text x="1008.0" y="740.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">named -proposed, not a release</text>
+<rect x="448.0" y="822.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="448.0" y="822.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="588.0" y="843.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">True-redaction PDF and the schedule</text>
+<text x="588.0" y="859.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">text under every box removed; leak test</text>
+<text x="588.0" y="876.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.eval.pdf_leak</text>
+<rect x="467.3" y="150.5" width="241.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="162.5" font-size="12" text-anchor="middle" fill="#14201E">the proposal, in words, with its reason</text>
+<rect x="762.6" y="214.0" width="70.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="798.0" y="226.0" font-size="12" text-anchor="middle" fill="#5C6B67">one button</text>
+<rect x="543.8" y="275.0" width="88.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="287.0" font-size="12" text-anchor="middle" fill="#14201E">each decision</text>
+<rect x="815.0" y="340.0" width="106.1" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="868.0" y="352.0" font-size="12" text-anchor="middle" fill="#5C6B67">one row per span</text>
+<rect x="540.8" y="405.5" width="94.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="417.5" font-size="12" text-anchor="middle" fill="#14201E">spans decided?</text>
+<rect x="552.6" y="529.0" width="70.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="541.0" font-size="12" text-anchor="middle" fill="#14201E">every page</text>
+<rect x="558.5" y="655.0" width="59.0" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="667.0" font-size="12" text-anchor="middle" fill="#14201E">released</text>
+<rect x="543.8" y="781.0" width="88.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="793.0" font-size="12" text-anchor="middle" fill="#14201E">approved rows</text>
+<rect x="28" y="908" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<text x="62" y="920" font-size="11" fill="#5C6B67">enforced in code</text>
+<rect x="174.24" y="908" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<text x="208.24" y="920" font-size="11" fill="#5C6B67">what leaves</text>
+<path d="M 293.53 916 L 321.53 916" stroke="#14201E" stroke-width="1.4" fill="none" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="329.53" y="920" font-size="11" fill="#5C6B67">the bulk path</text>
+</svg>

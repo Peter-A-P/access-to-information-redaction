@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1176" height="944" viewBox="0 0 1176 944" role="img" aria-label="A candidate span gets a context record, the deterministic rules decide the clear cases in a fixed order, whatever is left goes to a model that sees typed placeholders and never a name, and an answer below the measured confidence threshold is escalated with the model&#x27;s reasoning; there is no rule that releases a span because nothing matched." font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#14201E"/></marker><marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#0E6E60"/></marker><marker id="arrow-signal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#A64C1C"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#5C6B67"/></marker></defs>
+<rect width="1176" height="944" fill="#FFFFFF"/>
+<text x="28" y="42" font-size="16" font-weight="700" fill="#14201E">One span through the decision layer: rules first, the model second, escalate when neither is sure</text>
+<path d="M 588.0 130.0 L 588.0 184.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 264.0 L 588.0 310.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 390.0 L 588.0 444.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 728.0 476.0 L 384.0 476.0 Q 378.0 476.0 378.0 482.0 L 378.0 848.0 Q 378.0 854.0 384.0 854.0 L 448.0 854.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 508.0 L 588.0 570.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 728.0 602.0 L 868.0 602.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<path d="M 588.0 634.0 L 588.0 696.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 588.0 760.0 L 588.0 822.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 728.0 728.0 L 1002.0 728.0 Q 1008.0 728.0 1008.0 734.0 L 1008.0 822.0" fill="none" stroke="#14201E" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<rect x="448.0" y="66.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="87.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">A candidate span</text>
+<text x="588.0" y="103.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">found by the detector</text>
+<text x="588.0" y="120.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.detect</text>
+<rect x="448.0" y="184.0" width="280.0" height="80.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="448.0" y="184.0" width="5" height="80.0" rx="2" fill="#0E6E60"/>
+<text x="588.0" y="205.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Its context record</text>
+<text x="588.0" y="221.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">block, sentence, heading, title pairing,</text>
+<text x="588.0" y="237.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">register, letterhead, coref, requester</text>
+<text x="588.0" y="254.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.context</text>
+<rect x="448.0" y="310.0" width="280.0" height="80.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="448.0" y="310.0" width="5" height="80.0" rx="2" fill="#0E6E60"/>
+<text x="588.0" y="331.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Rules, in a fixed order</text>
+<text x="588.0" y="347.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">requester, sensitive ids, non-personal</text>
+<text x="588.0" y="363.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">types, capacity, register, twenty years</text>
+<text x="588.0" y="380.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.decide.rules</text>
+<rect x="448.0" y="444.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="480.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">A clear case?</text>
+<rect x="448.0" y="570.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="448.0" y="570.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="588.0" y="591.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">The model, on typed placeholders</text>
+<text x="588.0" y="607.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">never a name; data class personal</text>
+<text x="588.0" y="624.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.decide.model, placeholders</text>
+<path d="M 868.0 572.0 a 140.0 7 0 0 1 280.0 0 L 1148.0 632.0 a 140.0 7 0 0 1 -280.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 868.0 572.0 a 140.0 7 0 0 0 280.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="1008.0" y="595.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">The gateway ledger</text>
+<text x="1008.0" y="611.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">every row carries class personal</text>
+<text x="1008.0" y="628.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">boundary, project 04</text>
+<text x="168.0" y="472.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">No rule releases a span</text>
+<text x="168.0" y="488.0" font-size="13" font-weight="400" text-anchor="middle" fill="#5C6B67" font-style="italic">because nothing matched</text>
+<rect x="448.0" y="696.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="588.0" y="725.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Above the measured threshold?</text>
+<text x="588.0" y="742.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">results/thresholds.md</text>
+<rect x="448.0" y="822.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="448.0" y="822.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="588.0" y="843.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">A proposal with its exemption code</text>
+<text x="588.0" y="859.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">withhold, release, escalate or flag only</text>
+<text x="588.0" y="876.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.decide.pipeline</text>
+<rect x="868.0" y="822.0" width="280.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="868.0" y="822.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="1008.0" y="850.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Escalated</text>
+<text x="1008.0" y="866.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">reasoning attached; withheld meanwhile</text>
+<rect x="543.8" y="147.0" width="88.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="159.0" font-size="12" text-anchor="middle" fill="#14201E">where it sits</text>
+<rect x="552.6" y="277.0" width="70.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="289.0" font-size="12" text-anchor="middle" fill="#14201E">the record</text>
+<rect x="520.3" y="407.0" width="135.5" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="419.0" font-size="12" text-anchor="middle" fill="#14201E">first rule that fires</text>
+<rect x="363.2" y="655.0" width="29.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="378.0" y="667.0" font-size="12" text-anchor="middle" fill="#14201E">yes</text>
+<rect x="523.2" y="529.0" width="129.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="541.0" font-size="12" text-anchor="middle" fill="#14201E">no: whatever is left</text>
+<rect x="745.0" y="592.0" width="106.1" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="798.0" y="604.0" font-size="12" text-anchor="middle" fill="#14201E">placeholders out</text>
+<rect x="529.1" y="655.0" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="667.0" font-size="12" text-anchor="middle" fill="#14201E">answer, confidence</text>
+<rect x="573.2" y="781.0" width="29.6" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="588.0" y="793.0" font-size="12" text-anchor="middle" fill="#14201E">yes</text>
+<rect x="856.1" y="718.0" width="23.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="868.0" y="730.0" font-size="12" text-anchor="middle" fill="#5C6B67">no</text>
+<rect x="28" y="908" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<text x="62" y="920" font-size="11" fill="#5C6B67">built here</text>
+<rect x="141.9" y="908" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<text x="175.9" y="920" font-size="11" fill="#5C6B67">what the reviewer sees</text>
+<path d="M 320.5 915.0 a 13.0 7 0 0 1 26.0 0 L 346.5 917.0 a 13.0 7 0 0 1 -26.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 320.5 915.0 a 13.0 7 0 0 0 26.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="354.48" y="920" font-size="11" fill="#5C6B67">data at rest</text>
+</svg>

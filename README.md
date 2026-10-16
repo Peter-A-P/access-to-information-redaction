@@ -354,6 +354,9 @@ of what was withheld does not itself contain the personal information. The expor
 the text under every box, and the schedule the requester receives is generated from the
 approved rows rather than written by hand.
 
+Four architecture diagrams, the system, one span through the decision layer, the reviewer's workflow
+and how the numbers are produced, are in [docs/architecture.md](docs/architecture.md).
+
 ## Redaction is destructive here
 
 A black rectangle drawn over selectable text is the most common real-world redaction

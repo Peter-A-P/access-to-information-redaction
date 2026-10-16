@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1226" height="758" viewBox="0 0 1226 758" role="img" aria-label="Documents are ingested with their layout, a detector finds candidate spans, a context record is built for each, deterministic rules decide the clear cases in a fixed order and a model on placeholders decides the rest or escalates; a reviewer approves page by page into an append-only audit log from which the true-redaction export and the schedule are generated, and the evaluation scores every proposal against labels." font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#14201E"/></marker><marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#0E6E60"/></marker><marker id="arrow-signal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#A64C1C"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9 z" fill="#5C6B67"/></marker></defs>
+<rect width="1226" height="758" fill="#FFFFFF"/>
+<text x="28" y="42" font-size="16" font-weight="700" fill="#14201E">The system: from a page to a reviewed, exported release</text>
+<path d="M 173.0 143.0 L 173.0 180.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 173.0 244.0 L 173.0 294.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 173.0 358.0 L 173.0 408.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 318.0 440.0 L 468.0 440.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 613.0 363.0 L 613.0 400.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 661.3 480.0 L 661.3 552.0 Q 661.3 558.0 655.3 558.0 L 619.0 558.0 Q 613.0 558.0 613.0 564.0 L 613.0 636.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<path d="M 758.0 440.0 L 908.0 440.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 564.7 480.0 L 564.7 548.0 Q 564.7 554.0 558.7 554.0 L 318.0 554.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 173.0 586.0 L 173.0 636.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 1053.0 472.0 L 1053.0 517.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 1053.0 591.0 L 1053.0 636.0" fill="none" stroke="#14201E" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M 28.0 60.0 a 145.0 7 0 0 1 290.0 0 L 318.0 136.0 a 145.0 7 0 0 1 -290.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 28.0 60.0 a 145.0 7 0 0 0 290.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="173.0" y="83.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Documents</text>
+<text x="173.0" y="99.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">210 generated pages, labels built in;</text>
+<text x="173.0" y="115.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">82 pages of federal releases</text>
+<text x="173.0" y="132.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.corpus, sever.ingest.releases</text>
+<rect x="28.0" y="180.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/>
+<text x="173.0" y="201.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Ingest with layout</text>
+<text x="173.0" y="217.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">PDF, scans via OCR, Word, email</text>
+<text x="173.0" y="234.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.ingest</text>
+<rect x="28.0" y="294.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="28.0" y="294.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="173.0" y="315.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Detector</text>
+<text x="173.0" y="331.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Presidio, spaCy, own recognisers, coref</text>
+<text x="173.0" y="348.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.detect</text>
+<rect x="28.0" y="408.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="28.0" y="408.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="173.0" y="429.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Context record per span</text>
+<text x="173.0" y="445.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">block, heading, capacity, register</text>
+<text x="173.0" y="462.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.context</text>
+<rect x="28.0" y="522.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="28.0" y="522.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="173.0" y="543.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Evaluation</text>
+<text x="173.0" y="559.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">confusion per category, baselines, cost</text>
+<text x="173.0" y="576.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.eval</text>
+<rect x="28.0" y="636.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="28.0" y="636.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="173.0" y="657.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">results/ and the 03 gate</text>
+<text x="173.0" y="673.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">tables with intervals; the gate&#x27;s verdict</text>
+<text x="173.0" y="690.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">results/, gate/</text>
+<path d="M 468.0 296.0 a 145.0 7 0 0 1 290.0 0 L 758.0 356.0 a 145.0 7 0 0 1 -290.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 468.0 296.0 a 145.0 7 0 0 0 290.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="613.0" y="319.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Taxonomy</text>
+<text x="613.0" y="335.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">11 codes; federal acts, NL ATIPPA 2015</text>
+<text x="613.0" y="352.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.taxonomy, *.yaml</text>
+<rect x="468.0" y="400.0" width="290.0" height="80.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="468.0" y="400.0" width="5" height="80.0" rx="2" fill="#0E6E60"/>
+<text x="613.0" y="421.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Decision pipeline</text>
+<text x="613.0" y="437.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">rules in a fixed order, then the model,</text>
+<text x="613.0" y="453.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">else withhold and escalate</text>
+<text x="613.0" y="470.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.decide</text>
+<rect x="468.0" y="636.0" width="290.0" height="64.0" rx="4" fill="#F2F4F3" stroke="#5C6B67" stroke-width="1.1" stroke-dasharray="5 3"/>
+<text x="613.0" y="657.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">The gateway, project 04</text>
+<text x="613.0" y="673.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">placeholders, never a name; class personal</text>
+<text x="613.0" y="690.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.gateway, boundary</text>
+<rect x="908.0" y="408.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<rect x="908.0" y="408.0" width="5" height="64.0" rx="2" fill="#0E6E60"/>
+<text x="1053.0" y="429.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Reviewer application, on loopback</text>
+<text x="1053.0" y="445.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">W, R, E; the release gate; nothing edited</text>
+<text x="1053.0" y="462.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review</text>
+<path d="M 908.0 524.0 a 145.0 7 0 0 1 290.0 0 L 1198.0 584.0 a 145.0 7 0 0 1 -290.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 908.0 524.0 a 145.0 7 0 0 0 290.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="1053.0" y="547.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Audit log</text>
+<text x="1053.0" y="563.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">append-only, hash-chained, hashes of text</text>
+<text x="1053.0" y="580.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.audit, DuckDB</text>
+<rect x="908.0" y="636.0" width="290.0" height="64.0" rx="4" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<rect x="908.0" y="636.0" width="5" height="64.0" rx="2" fill="#A64C1C"/>
+<text x="1053.0" y="657.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">Export and the schedule</text>
+<text x="1053.0" y="673.0" font-size="13" font-weight="500" text-anchor="middle" fill="#14201E">true redaction; the PDF leak test</text>
+<text x="1053.0" y="690.0" font-size="11" font-family="Consolas, Menlo, 'DejaVu Sans Mono', monospace" text-anchor="middle" fill="#5C6B67">sever.review.export, sever.eval.pdf_leak</text>
+<rect x="152.3" y="151.5" width="41.4" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="173.0" y="163.5" font-size="12" text-anchor="middle" fill="#14201E">pages</text>
+<rect x="114.1" y="259.0" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="173.0" y="271.0" font-size="12" text-anchor="middle" fill="#14201E">blocks with layout</text>
+<rect x="122.9" y="373.0" width="100.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="173.0" y="385.0" font-size="12" text-anchor="middle" fill="#14201E">candidate spans</text>
+<rect x="331.1" y="430.0" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="393.0" y="442.0" font-size="12" text-anchor="middle" fill="#14201E">one record per span</text>
+<rect x="565.8" y="371.5" width="94.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="613.0" y="383.5" font-size="12" text-anchor="middle" fill="#14201E">the categories</text>
+<rect x="599.5" y="509.0" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="661.3" y="521.0" font-size="12" text-anchor="middle" fill="#14201E">what the rules left</text>
+<rect x="782.9" y="430.0" width="100.2" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="833.0" y="442.0" font-size="12" text-anchor="middle" fill="#14201E">coded proposals</text>
+<rect x="364.8" y="544.0" width="153.1" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="441.3" y="556.0" font-size="12" text-anchor="middle" fill="#14201E">proposals against labels</text>
+<rect x="75.9" y="601.0" width="194.3" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="173.0" y="613.0" font-size="12" text-anchor="middle" fill="#14201E">over-redaction, leak rate, cost</text>
+<rect x="991.1" y="484.5" width="123.7" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="1053.0" y="496.5" font-size="12" text-anchor="middle" fill="#14201E">every action, a row</text>
+<rect x="994.1" y="603.5" width="117.8" height="20.0" rx="3" fill="#FFFFFF"/>
+<text x="1053.0" y="615.5" font-size="12" text-anchor="middle" fill="#14201E">approved rows only</text>
+<rect x="28" y="722" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#0E6E60" stroke-width="1.6"/>
+<text x="62" y="734" font-size="11" fill="#5C6B67">built here</text>
+<rect x="141.9" y="722" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#A64C1C" stroke-width="1.6"/>
+<text x="175.9" y="734" font-size="11" fill="#5C6B67">the measurement</text>
+<rect x="282.75" y="722" width="26" height="16" rx="3" fill="#F2F4F3" stroke="#5C6B67" stroke-dasharray="4 3"/>
+<text x="316.75" y="734" font-size="11" fill="#5C6B67">reused</text>
+<path d="M 375.1 729.0 a 13.0 7 0 0 1 26.0 0 L 401.1 731.0 a 13.0 7 0 0 1 -26.0 0 Z" fill="#FFFFFF" stroke="#14201E" stroke-width="1.1"/><path d="M 375.1 729.0 a 13.0 7 0 0 0 26.0 0" fill="none" stroke="#14201E" stroke-width="1.1"/>
+<text x="409.09" y="734" font-size="11" fill="#5C6B67">data at rest</text>
+</svg>
