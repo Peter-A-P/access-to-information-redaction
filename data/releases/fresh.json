@@ -1,0 +1,59 @@
+{
+  "_comment": "Published federal access-to-information release packages, for the real-record over-redaction test. The PDFs are not committed; these checksums and URLs are, so the same packages can be downloaded and the same numbers reproduced. See sever/ingest/releases.py.",
+  "packages": [
+    {
+      "file_name": "A-2026-01517_01.pdf",
+      "sha256": "c11e9e29ec73620f896855ce65068735ad16ac09e1b0b7811eae534e2578e6ca",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=183a40c2-e89d-407a-8a3f-5dbc2f47fbcf",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG76 records, found under RG76)",
+      "request_number": "A-2026-01517",
+      "note": "Disclosed in part. Chin Fook Jung - ***; Son: . Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-01517 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    },
+    {
+      "file_name": "A-2026-01110_01.pdf",
+      "sha256": "f622b55537d831368af4323f494293e6ba3e6b8296346ece3d16ecf5468edfcf",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=4c383451-bc76-4693-9b6c-ee27a763b7c7",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG76 records, found under RG76)",
+      "request_number": "A-2026-01110",
+      "note": "Disclosed in part. Oue Bing Kee - Bing Kee -. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-01110 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    },
+    {
+      "file_name": "A-2026-00453_01.pdf",
+      "sha256": "d370c52bd4bf1304f71a5f9d13a5a139d209e06d789cf2c22a9f7001447a29bd",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=e5fc0e9f-d00f-478c-b866-cec603e9d943",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG29 records, found under RG29)",
+      "request_number": "A-2026-00453",
+      "note": "Disclosed in part. Epidemiology - Di. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-00453 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    },
+    {
+      "file_name": "A-2025-06543_01.pdf",
+      "sha256": "e3f94340eb07151f5a578209a6006ef6dc465e92231095e3ea7847c7851b900c",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=9b190eb4-f944-4709-a3de-64959545fc19",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG29 records, found under RG29)",
+      "request_number": "A-2025-06543",
+      "note": "Disclosed in part. [Hospital Patients], Date: 1950-1970, I. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-06543 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    },
+    {
+      "file_name": "A-2026-00638_01.pdf",
+      "sha256": "1472a84a5c03d33b0e9dd7b66739b85686940c7fcd88c2013ab1f42850d0626d",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=c6e8e719-43f4-46fa-9926-748d715d4b2c",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG13 records, found under RG13)",
+      "request_number": "A-2026-00638",
+      "note": "Disclosed in part. Office of Lieutenant Governor of A. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-00638 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    },
+    {
+      "file_name": "A-2025-04321_03.pdf",
+      "sha256": "edd8c96dc13235e065d0f25acc3fa764cb42f1fc3862fdf1fe9f363e3559a25b",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=14c64a0b-ce6c-4eb2-963c-bd8f24d4fdd1",
+      "retrieved_on": "2026-10-18",
+      "institution": "Library and Archives Canada (RG10 records, found under RG13)",
+      "request_number": "A-2025-04321",
+      "note": "Disclosed in part. Audit Repor. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2025-04321 . Fresh set: chosen by the rule in docs/data.md before the archival age rule was written; downloaded and checksummed before it was opened."
+    }
+  ]
+}

@@ -26,6 +26,7 @@ data/raw/
 data/releases/*
 !data/releases/manifest.json
 !data/releases/heldout.json
+!data/releases/fresh.json
 corpus/generated/
 corpus/scans/
 

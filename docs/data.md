@@ -212,3 +212,27 @@ evaluation job.
 2. No real personal information beyond what is already public in an already-released record.
 3. Nothing raw is committed. Loaders fetch and verify checksums; the manifest is committed.
 4. No credentials, and nothing from `.env`, ever.
+
+## The fresh set: six packages, registered before the code that will be scored on them
+
+`data/releases/fresh.json`. Written down, downloaded and checksummed on 2026-10-18, before
+the archival age rule and the release-stamp screen were written, and committed before either
+so the order is in the history rather than in a claim.
+
+**The rule.** RG76 (Immigration), RG25 (External Affairs) and RG29 (Health): LAC's search
+results newest request first, ranks 16 to 40, because the first 15 were the held-out set's
+pool. RG18 (RCMP) and RG13 (Justice): ranks 1 to 25. From each request's details page,
+packages in listed order; a package qualifies if it is "Disclosed in part" and has 3 to 40
+pages; the first two per record group, at most one per request; a group with none
+contributes none. The search returned one page of 28 to 41 requests per group and ranks
+beyond it were not fetched.
+
+**What it gave.** Two from Immigration (A-2026-01517, A-2026-01110), two from Health
+(A-2026-00453, A-2025-06543), two found under Justice (A-2026-00638, and A-2025-04321, whose
+package is an RG10 Indian Affairs audit report filed under the same request; the rule said
+packages in listed order and did not say same record group, so it stands). None from
+External Affairs ranks 16 to 28 or from RCMP. 132 pages. All six passed the redaction guard.
+
+**How they will be scored.** Once with the code that adds the new rules, and once with
+`48a1c4d` for comparison, into `results/releases-fresh.md`. Nothing is changed in response
+before that table is published.
