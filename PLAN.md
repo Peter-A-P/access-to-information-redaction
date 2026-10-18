@@ -277,9 +277,9 @@ published, not when the code for it exists.
 - [x] All model decisions through the 04 gateway with class `personal`; placeholders against raw text ablation reported
 - [x] Reviewer workflow with append-only audit log, true-redaction export and generated schedule
 - [x] PDF leak test published, out of N
-- [ ] Reviewer minutes per page with and without proposals, with CI
+- [x] Reviewer minutes per page with and without proposals, with CI
       (`sever study` runs the whole study and `sever study report` scores it; see 12.29.
-      Two reviewers of three done, 2026-10-10 and 2026-10-17; see 12.36 and 12.38)
+      Three reviewers, 2026-10-10, 10-17 and 10-18; 2.3 times faster; see 12.36, 12.38, 12.42)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -1752,3 +1752,27 @@ on the next set. Three held-out results now point the same way: the tool's real-
 outside Defence is not vocabulary, it is that archival release turns on facts about people
 (dead, or old enough) that the pages rarely state, and a reviewer at an archives decides
 them from knowledge the record does not carry.
+
+### 12.42 The third reviewer, and the study box ticked
+
+2026-10-18. Reviewer 3 completed the study (their session was still open when it was
+scored, holding the audit log, and was stopped with Ctrl+C as `docs/reviewer-study.md`
+says). Minutes a page, unaided then with proposals: 2.2 and 0.8. Over all three reviewers,
+with the records held fixed, **unaided review takes 2.3 times as long (2.0 to 2.6)**, 130
+seconds a page against 56. The section 10 box is ticked.
+
+Accuracy over all three: leaks 2.4 percent with proposals against 6.8 unaided, the first
+time the two arms' intervals do not overlap (0.8 to 4.4, 4.4 to 9.2); over-redaction 0.6 and
+0.7. Reviewer 3's misses unaided are the hand-made kind (a bare first name later in a
+record, a full name's second appearance, an employee number, a "sibling", a complaint
+party's title, two selections a character short); with proposals, two of the tool's boxes
+approved as drawn (the frozen MCP defect, and "Happy Valley-Goose Bay" outside a
+delegate's name, the known box-too-short case). Reviewer 3 also withheld the requester's
+own MCP number in the case notes, as reviewer 2 did; the label stands by the 12.38 ruling,
+noted here because two of three reviewers now read it the other way.
+
+The repeated-value propagation Peter proposed next (withhold one instance, withhold every
+exact match in the record) would have caught one of reviewer 3's nine unaided misses, the
+second "Desmond Osmond". The bare first names it would not, by design: "Maeve" alone could
+be someone else. It is built after this, and is off in `sever study`, so these three
+reviewers stay comparable with any later one.

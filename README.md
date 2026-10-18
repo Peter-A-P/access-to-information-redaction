@@ -140,16 +140,18 @@ showing, and that names the town. It is in the decomposition as "Box too short".
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**Two reviewers have done the study, and with proposals both were about twice as fast.**
-Each reviewed twenty test records, ten unaided and then ten with proposals, after a
-practice page in each half, with the halves swapped between them so every record was
-reviewed once in each arm ([results/reviewer.md](results/reviewer.md)). Reviewer 1, eight
-years in access-to-information work, on 2026-10-10: 2.2 minutes a page unaided, 1.1 with
-proposals. Reviewer 2, on 2026-10-17: 2.1 and 0.9. **Holding the records fixed, unaided
-review took 2.1 times as long as review with proposals (1.7 to 2.5)**: 128 seconds a page
-against 62. Two people, both doing the proposals half second, so some of the gain is
-familiarity with the templates, and the interval resamples records rather than people. The
-plan asks for a third reviewer before this is the time claim at the top of this page.
+**Three reviewers have done the study, and with proposals every one of them was more than
+twice as fast.** Each reviewed twenty test records, ten unaided and then ten with
+proposals, after a practice page in each half, with the halves swapped between reviewers
+so every record was reviewed in both arms ([results/reviewer.md](results/reviewer.md)).
+Unaided and then with proposals, in minutes a page: reviewer 1, eight years in
+access-to-information work, 2.2 and 1.1 (2026-10-10); reviewer 2, 2.1 and 0.9
+(2026-10-17); reviewer 3, 2.2 and 0.8 (2026-10-18). **Holding the records fixed, unaided
+review took 2.3 times as long as review with proposals (2.0 to 2.6)**: 130 seconds a page
+against 56. That is the time claim at the top of this page: a reviewer reads a page in
+under a minute instead of over two. Three people, all doing the proposals half second, so
+some of the gain is familiarity with the templates, and the interval resamples records
+rather than people.
 
 The reviewer disagreed with the labels once, consistently, and the labels changed. In all
 four workplace-complaint memoranda they withheld the respondent's name and title and the
@@ -160,10 +162,19 @@ identifies the person in a division with one holder of that title. The corpus no
 both parties and their titles R1, and a `complaint_party` rule withholds them. Every table
 on this page carries the change.
 
-Scored against those labels, over both reviewers, the proposals half was the more
-accurate: leaks 2.5 percent with proposals and 4.3 unaided, over-redaction 0.3 and 0.8,
-against 10.6 and 23.2 for the unreviewed proposals on the same records. The intervals
-overlap. Reviewer 2's unaided misses were the kind a person makes by hand: two employee
+Scored against those labels, over all three reviewers, **the proposals half was also the
+more accurate: leaks 2.4 percent with proposals against 6.8 unaided** (0.8 to 4.4 against
+4.4 to 9.2, the first pair of intervals in the study that do not overlap), and 0.4 against
+6.4 without the partials that identify nobody. Over-redaction 0.6 and 0.7, against 10.6
+and 23.2 for the unreviewed proposals on the same records. Reviewer 3's nine unaided misses
+were the hand-made kind again: a complaint party's or a correspondent's first name standing
+alone later in the text ("Maeve", "Loretta"), a delegate's full name the second time it
+appears, an employee number, a "sibling", a complaint party's title, and two selections
+one character short of an email address and a street number. Their two leaks with proposals
+were both the tool's box approved as drawn: the frozen MCP defect, and "Happy Valley-Goose
+Bay" left outside a delegate's name. Like reviewer 2, they withheld the client's own MCP
+number in the case notes, in both arms; the label stands by Peter's ruling, but two of three
+reviewers now read it the other way. Reviewer 2's unaided misses were the kind a person makes by hand: two employee
 numbers in an official's signature block, a "sibling" the first reviewer's ruling withholds,
 a complaint party's first name, and two hand selections one character short of an email
 address and a telephone number. Their one leak with proposals was the frozen MCP defect
@@ -648,7 +659,8 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 39 provisions verified | Reviewer time study: two reviewers of the three it needs (2.1 times faster with proposals, records held fixed) | |
+| Taxonomy, two jurisdictions, all 39 provisions verified | | |
+| Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
 | 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
