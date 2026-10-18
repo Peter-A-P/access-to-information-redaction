@@ -31,9 +31,10 @@ from enum import StrEnum
 from pathlib import Path
 
 from sever.decide.pipeline import Proposal
-from sever.ingest.document import Document
+from sever.ingest.document import Document, Offsets
 from sever.review.audit import Action, AuditLog
 from sever.review.decisions import FinalSpan, Origin, final_spans
+from sever.review.propagate import PROPAGATED_REASON, Occurrence, Spread, plan
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
 
@@ -134,6 +135,10 @@ class Session:
     timings_path: Path | None = None
     actor: str | None = None
     jurisdiction: str | None = None
+    # Withholding a value once withholds every other exact occurrence of it in the record.
+    # On, except in the reviewer study, whose three reviewers were timed without it. See
+    # sever.review.propagate.
+    propagate_withholding: bool = True
     # When each page was last served, so a completion can be measured against it. In
     # memory: a restart loses the open pages, which is correct, because a page served
     # before a restart was not being read during it.
@@ -263,6 +268,72 @@ class Session:
             final_code=final_code,
             reason=reason,
         )
+
+    def spread_withholding(
+        self, *, doc_id: str, page: int, start: int, end: int, code: str | None
+    ) -> tuple[Spread, ...]:
+        """Withhold every other occurrence of the value just withheld at `start`-`end`.
+
+        Called by the application after a reviewer withholds a span; never after a spread
+        row, so a spread does not spread again. Returns what it withheld, so the screen
+        can say so. Does nothing when `propagate_withholding` is off.
+        """
+        if not self.propagate_withholding:
+            return ()
+        item = self.item(doc_id)
+        document = item.document
+        value = document.page(page).text[start:end]
+        acted: dict[int, list[Offsets]] = {}
+        for row in self.log.rows(request_id=self.request_id):
+            if row.doc_id != doc_id or row.span_start is None or row.span_end is None:
+                continue
+            if row.action in (Action.PAGE_COMPLETE, Action.COMMENT):
+                continue
+            acted.setdefault(row.page, []).append(Offsets(row.span_start, row.span_end))
+        spreads = plan(
+            document,
+            value,
+            source=Occurrence(page, Offsets(start, end)),
+            proposals=item.proposals,
+            acted=acted,
+        )
+        reason = f"{PROPAGATED_REASON} on page {page}."
+        # The code the spread withholds under. The reviewer's own, where it withholds; R1
+        # where it does not, which happens when they pressed Withhold on a span the tool
+        # proposed to release and the row carries the tool's keep code. Moving another
+        # occurrence to a keep code would release it, which is the one thing a spread
+        # must never do.
+        withhold_code = (
+            code
+            if code is not None and self.taxonomy.decision(code, self.jurisdiction).withholds
+            else "R1"
+        )
+        for s in spreads:
+            text = document.page(s.page).text[s.offsets.start : s.offsets.end]
+            if s.proposal is not None:
+                self.record(
+                    doc_id=doc_id,
+                    page=s.page,
+                    action=Action.APPROVE if s.proposal.withholds else Action.CHANGE_CATEGORY,
+                    span_start=s.offsets.start,
+                    span_end=s.offsets.end,
+                    span_text=text,
+                    proposed_code=s.proposal.code,
+                    final_code=s.proposal.code if s.proposal.withholds else withhold_code,
+                    reason=reason,
+                )
+            else:
+                self.record(
+                    doc_id=doc_id,
+                    page=s.page,
+                    action=Action.ADD,
+                    span_start=s.offsets.start,
+                    span_end=s.offsets.end,
+                    span_text=text,
+                    final_code=withhold_code,
+                    reason=reason,
+                )
+        return spreads
 
     def complete_page(
         self, doc_id: str, page: int, *, at: dt.datetime | None = None

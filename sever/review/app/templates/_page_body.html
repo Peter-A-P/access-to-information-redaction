@@ -4,6 +4,7 @@
 <div id="body">
 
 {% if error %}<div class="error">{{ error }}</div>{% endif %}
+{% if notice %}<div class="ok">{{ notice }}</div>{% endif %}
 {% if complete %}
   <div class="ok">
     Page {{ page.number }} is complete. That is a row in the audit log, not a checkbox.

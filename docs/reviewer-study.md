@@ -38,6 +38,13 @@ writes `results/reviewer-study.jsonl` and builds `results/reviewer.md` from that
 alone. Commit both. The raw audit logs and timings stay in `review/study/`, which is not
 committed.
 
+If the session is still running when you score it, `sever study report` cannot open that
+reviewer's audit log and fails with a lock error. Press Ctrl+C in the study terminal first.
+
+The study runs without one feature the ordinary reviewer screen has: withholding a value
+once does not withhold its other occurrences (`sever/review/propagate.py`). The three
+reviewers so far were timed without it, so a later one has to be as well.
+
 ## What each person does
 
 Twenty-two one-page records in two halves, the half without proposals first. One half shows the tool's proposals, and the

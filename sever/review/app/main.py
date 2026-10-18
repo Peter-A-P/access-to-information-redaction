@@ -310,7 +310,29 @@ def create_app(
             final_code=final if chosen is not Action.REJECT else None,
             reason=reason or None,
         )
-        return templates.TemplateResponse(request, "_page_body.html", _page_context(doc_id, number))
+        ctx = _page_context(doc_id, number)
+        # A decision to withhold, and only that, reaches the other occurrences of the same
+        # value. Escalate is a question rather than a decision, so it does not.
+        withheld = chosen in (Action.APPROVE, Action.ADD) or (
+            chosen is Action.CHANGE_CATEGORY
+            and final is not None
+            and session.taxonomy.decision(final, session.jurisdiction).withholds
+        )
+        if withheld:
+            spreads = session.spread_withholding(
+                doc_id=doc_id, page=number, start=start, end=end, code=final
+            )
+            if spreads:
+                ctx = _page_context(doc_id, number)
+                pages = sorted({s.page for s in spreads})
+                ctx["notice"] = (
+                    f"{page.text[start:end]!r} is also withheld in {len(spreads)} other "
+                    f"place{'s' if len(spreads) != 1 else ''} in this record (page"
+                    f"{'s' if len(pages) != 1 else ''} {', '.join(str(p) for p in pages)}). "
+                    f"Each is its own row in the audit log, and each can be released "
+                    f"where it is."
+                )
+        return templates.TemplateResponse(request, "_page_body.html", ctx)
 
     @app.post("/doc/{doc_id}/page/{number}/release-rest", response_class=HTMLResponse)
     def release_rest(request: Request, doc_id: str, number: int) -> Any:

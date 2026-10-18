@@ -505,6 +505,20 @@ reviewer has not acted on, in one action. It asks first, and names any of those 
 tool had proposed to withhold. Each span still gets its own row in the audit log, marked as
 released in bulk, and the page still has to be marked complete separately.
 
+**Withhold a value once and it is withheld wherever it appears in the record**
+([`sever/review/propagate.py`](sever/review/propagate.py)). A full name of two words or
+more, matched ignoring case, accents and line breaks; an email address whole; a telephone,
+health card or file number on its digits, so "709-555-0142" finds "709 555 0142". A single
+word does not spread ("Tulk" could be another Tulk), and neither does a name inside a longer
+one ("Odette Tulk-Byrne"). Withholding spreads and releasing never does, because the same
+name can be an official on one page and a complainant on the next. A spread never touches a
+span the reviewer has already decided, withholds a span the tool proposed to release under
+a withholding code rather than the tool's keep code, and is its own audit row naming the
+page the decision was made on; the screen says how many other places it reached, and each
+can be released where it is. It is off in `sever study`, because the three reviewers were
+timed without it. One of reviewer 3's nine unaided misses, a delegate's full name the second
+time it appeared, is the case it exists for.
+
 Two rules are enforced in code rather than promised in prose, and
 [`tests/test_review_app.py`](tests/test_review_app.py) holds both:
 

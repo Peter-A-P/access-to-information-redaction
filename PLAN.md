@@ -1776,3 +1776,22 @@ exact match in the record) would have caught one of reviewer 3's nine unaided mi
 second "Desmond Osmond". The bare first names it would not, by design: "Maeve" alone could
 be someone else. It is built after this, and is off in `sever study`, so these three
 reviewers stay comparable with any later one.
+
+### 12.43 Withhold once, withheld everywhere
+
+2026-10-18, Peter's proposal after the third reviewer: a value a reviewer withholds in one
+place is withheld at every other exact occurrence in the record. `sever/review/propagate.py`,
+called from the span action in the reviewer application.
+
+The decisions, each with its reason in the module: withholding spreads and releasing never
+does; exact values only (a full name of two or more words ignoring case, accents and line
+breaks; an email whole; an identifier on its digits; never a single word, a short number or
+a name inside a longer one); never over a span the reviewer has decided; a spread to a span
+the tool proposed to release withholds it under the reviewer's withholding code, or R1 when
+the reviewer's row carries the tool's keep code; every spread is its own audit row, with a
+reason naming the page, and spreads do not spread; Escalate does not spread, because it is
+a question rather than a decision.
+
+Off in `sever study` and the trial, so the three timed reviewers stay comparable with any
+later one; on in `sever review` and the demonstration. Not measured: it would need a fourth
+study arm. What it would have caught in the study is one of reviewer 3's nine unaided misses.

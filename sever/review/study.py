@@ -297,6 +297,8 @@ def _run_for(
         timings_path=folder / "timings.jsonl",
         actor=actor,
     )
+    # Three reviewers were timed without it; one with it would not be comparable.
+    session.propagate_withholding = False
     return StudyRun(
         reviewer=reviewer,
         tasks=tasks,
