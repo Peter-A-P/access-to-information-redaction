@@ -279,7 +279,7 @@ published, not when the code for it exists.
 - [x] PDF leak test published, out of N
 - [ ] Reviewer minutes per page with and without proposals, with CI
       (`sever study` runs the whole study and `sever study report` scores it; see 12.29.
-      One reviewer of three done, 2026-10-10; see 12.36)
+      Two reviewers of three done, 2026-10-10 and 2026-10-17; see 12.36 and 12.38)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -1629,3 +1629,34 @@ gazetteer of towns is also a list of surnames), nationality words escalated as p
 information (`docs/escalation.md`), French words read as names (the French track is
 deferred, section 11), and a unit's postal code and telephone numbers, which sit in letterhead
 blocks the recovery cannot find in a text layer with no blank lines.
+
+### 12.38 The second reviewer, and the first paired comparison
+
+2026-10-17. Reviewer 2 completed the study: ten records unaided, then ten with proposals,
+the halves swapped against reviewer 1's, so every one of the twenty study records has now
+been reviewed once in each arm. That makes the paired comparison 12.29 designed for: holding
+the records fixed, unaided review took **2.1 times** as long as review with proposals (1.7
+to 2.5, resampled over records), 128 seconds a page against 62. Reviewer 2 alone: 2.1
+minutes a page unaided, 0.9 with proposals. Both reviewers did the unaided half first, by
+design, so familiarity is still in the gain. The box in section 10 stays open for a third.
+
+Accuracy over both reviewers: leaks 2.5 percent with proposals and 4.3 unaided,
+over-redaction 0.3 and 0.8, against 10.6 and 23.2 for the unreviewed proposals. Reviewer 2's
+one leak with proposals is the frozen MCP defect (nine of twelve digits boxed), which the
+second leak column does not count.
+
+**Two consistent departures from the labels, and Peter's ruling on both (2026-10-18): the
+labels stand.** Reviewer 2
+withheld the client's own MCP number in every case note in both arms, where the client is
+the requester and the label is K1; and released an official's employee number in the
+signature block every time it appeared unaided, where the label is R1. Unlike reviewer 1's
+complaint memoranda (12.36), these are questions the statute answers rather than a
+reading of the record: a federal requester's own health number is released to them (the K1
+configuration), and an employee number is an identifying number assigned to the individual
+(section 3(c)), not information about the position (section 3(j)). Both stay counted as
+the reviewer's errors.
+
+Reviewer 2's other unaided misses were by hand: a "sibling" (the 2026-10-08 ruling), a
+complaint party's first name, and two selections one character short of an email address
+and a telephone number. The study's proposals are frozen, so today's ranks and layout work
+(12.37) changes nothing in it.

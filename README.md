@@ -140,14 +140,16 @@ showing, and that names the town. It is in the decomposition as "Box too short".
 what releasing anything at all costs. A tool that never released a span would have no leak
 rate and no reason to exist.
 
-**One reviewer has done the study, and with proposals they were about twice as fast.**
-On 2026-10-10 one reviewer, eight years in access-to-information work, reviewed twenty
-test records, ten unaided and then ten with proposals, after a practice page in each half
-([results/reviewer.md](results/reviewer.md)). Unaided took 130 seconds a page (103 to 159);
-with proposals, 67 (61 to 73). Read that as one person, not a population: the intervals
-resample documents and say nothing about how a second reviewer would differ, and the
-proposals half came second, so some of the gain is familiarity with the templates. The
-study needs at least two more reviewers before it is the time claim at the top of this page.
+**Two reviewers have done the study, and with proposals both were about twice as fast.**
+Each reviewed twenty test records, ten unaided and then ten with proposals, after a
+practice page in each half, with the halves swapped between them so every record was
+reviewed once in each arm ([results/reviewer.md](results/reviewer.md)). Reviewer 1, eight
+years in access-to-information work, on 2026-10-10: 2.2 minutes a page unaided, 1.1 with
+proposals. Reviewer 2, on 2026-10-17: 2.1 and 0.9. **Holding the records fixed, unaided
+review took 2.1 times as long as review with proposals (1.7 to 2.5)**: 128 seconds a page
+against 62. Two people, both doing the proposals half second, so some of the gain is
+familiarity with the templates, and the interval resamples records rather than people. The
+plan asks for a third reviewer before this is the time claim at the top of this page.
 
 The reviewer disagreed with the labels once, consistently, and the labels changed. In all
 four workplace-complaint memoranda they withheld the respondent's name and title and the
@@ -158,10 +160,30 @@ identifies the person in a division with one holder of that title. The corpus no
 both parties and their titles R1, and a `complaint_party` rule withholds them. Every table
 on this page carries the change.
 
-Scored against those labels, accuracy was about the same in both halves: no over-redaction
-in either, against 23.2 percent for the unreviewed proposals on the same records; leaks 3.5
-percent with proposals and 1.3 unaided, against 10.6 for the tool alone, with intervals
-that overlap. **Every leak in the proposals half was the tool's box, approved.** Two were
+Scored against those labels, over both reviewers, the proposals half was the more
+accurate: leaks 2.5 percent with proposals and 4.3 unaided, over-redaction 0.3 and 0.8,
+against 10.6 and 23.2 for the unreviewed proposals on the same records. The intervals
+overlap. Reviewer 2's unaided misses were the kind a person makes by hand: two employee
+numbers in an official's signature block, a "sibling" the first reviewer's ruling withholds,
+a complaint party's first name, and two hand selections one character short of an email
+address and a telephone number. Their one leak with proposals was the frozen MCP defect
+below, approved as drawn.
+
+Reviewer 2 also departed from the labels twice, consistently, and Peter ruled on both on
+2026-10-18 that the labels stand. They withheld the client's own MCP number, which a
+physician's letter repeats, in every case note in both arms (three scored pages and the
+practice page); the client is the requester, and a requester's own health number goes back
+to them. And they released an official's employee number in a signature block every time it
+came up unaided (two scored pages and the practice page); an employee number is an
+identifying number assigned to the person, not information about the position. Both count
+against the reviewer in the tables. The tool's proposals got the outcome right both times,
+releasing the MCP number as the requester's own and withholding the employee number (as an
+escalation, not as a decided R1), and in the one case note they saw with proposals the
+reviewer overrode the release to withhold the number anyway.
+
+**Reviewer 1's half, in detail.** No over-redaction in either arm; leaks 3.5 percent with
+proposals and 1.3 unaided. **Every leak in their proposals half was the tool's box,
+approved.** Two were
 twelve-digit MCP numbers whose first nine digits the SIN recogniser claimed, leaving the
 last three proposed for release; the third was a complainant's title, "Access and Privacy
 Coordinator", where the tool's box covered "Coordinator" and the reviewer withheld the box
@@ -592,7 +614,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: one reviewer of the three it needs (1.9 times faster with proposals) | |
+| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: two reviewers of the three it needs (2.1 times faster with proposals, records held fixed) | |
 | 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |

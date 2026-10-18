@@ -4,10 +4,10 @@
 
 | Arm | Seconds per page | Minutes per page | Pages per hour | Pages | Documents |
 |---|---|---:|---:|---:|---:|
-| proposals | 67s per page (61 to 73), 10 pages over 10 documents | 1.1 | 54 | 10 | 10 |
-| unaided | 130s per page (103 to 159), 10 pages over 10 documents | 2.2 | 28 | 10 | 10 |
+| proposals | 62s per page (55 to 69), 20 pages over 20 documents | 1.0 | 58 | 20 | 20 |
+| unaided | 128s per page (111 to 147), 20 pages over 20 documents | 2.1 | 28 | 20 | 20 |
 
-The proposals arm is **1.9 times** the speed of the unaided arm on this evidence.
+The proposals arm is **2.1 times** the speed of the unaided arm on this evidence.
 
 Intervals are 95 percent bootstrap percentile intervals resampled over documents rather than pages, because pages within a record are not independent: one record's density of third parties, and one reviewer's growing familiarity with its template, are single facts and not many.
 
@@ -19,8 +19,8 @@ Against the corpus labels, which are known by construction. A must-redact span i
 
 | What was released | Leak rate | Leak rate, partials that identify nobody not counted | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |
 |---|---|---|---|---:|---:|
-| reviewer, with proposals | 3.5% (0.0% to 6.8%), n=86 | 0.0% (0.0% to 21.6%), n=86 | 0.0% (0.0% to 21.6%), n=175 | 0 | 10 |
-| reviewer, unaided | 1.3% (0.0% to 4.8%), n=75 | 1.3% (0.0% to 4.8%), n=75 | 0.0% (0.0% to 21.6%), n=183 | 2 | 10 |
+| reviewer, with proposals | 2.5% (0.6% to 4.7%), n=161 | 0.0% (0.0% to 11.5%), n=161 | 0.3% (0.0% to 0.9%), n=358 | 0 | 20 |
+| reviewer, unaided | 4.3% (1.5% to 7.4%), n=161 | 3.7% (1.2% to 6.7%), n=161 | 0.8% (0.0% to 1.9%), n=358 | 2 | 20 |
 | the tool's proposals, nobody reviewing, same records | 10.6% (5.0% to 16.7%), n=161 | 8.7% (3.1% to 15.3%), n=161 | 23.2% (18.5% to 27.8%), n=358 | 0 | 20 |
 
 The third column does not count two kinds of partial leak, which identify nobody: a number of nine or more digits with at most four of them showing, such as the last three digits of a twelve-digit MCP number (card masking shows four); and a job title whose role word was withheld, leaving only a qualifier such as "Access and Privacy" or a unit such as "Corporate Services", which several people share. Nothing else qualifies: a surname left beside a severed forename names someone. Both rules were set after the first real run, at its reviewer's prompting, so the strict column stays beside them.
@@ -29,12 +29,13 @@ The fifth column is text withheld outside every labelled span, such as the word 
 
 ## Record by record
 
-No record has yet been reviewed in both arms, by two different reviewers, so there is no paired comparison. It needs at least two reviewers.
+On the 20 records reviewed in both arms, unaided review took **2.1 times** as long as review with proposals (1.7 to 2.5, resampled over records). This is the comparison to quote: it holds the documents fixed and lets only the arm vary.
 
 ## Each reviewer
 
 | Reviewer | Minutes per page, with proposals | Minutes per page, unaided | Pages |
 |---|---:|---:|---:|
 | reviewer-1 | 1.1 | 2.2 | 20 |
+| reviewer-2 | 0.9 | 2.1 | 20 |
 
 Each reviewer did half the records with proposals and the other half unaided, never the same record twice, and the halves and their order swap between reviewers. The first page of each arm is practice and is in none of these numbers.
