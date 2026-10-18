@@ -20,4 +20,4 @@ services:
 networks:
   boundary:
     external: true
-    name: deploy_default
+    name: boundary_default
