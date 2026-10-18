@@ -1,0 +1,32 @@
+{
+  "_comment": "Published federal access-to-information release packages, for the real-record over-redaction test. The PDFs are not committed; these checksums and URLs are, so the same packages can be downloaded and the same numbers reproduced. See sever/ingest/releases.py.",
+  "packages": [
+    {
+      "file_name": "A-2026-01845_01.pdf",
+      "sha256": "e0df0b249aa45f207647f289353108660d020caf0d0c5207d7c37c90e78ea73f",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=5448bd28-8746-441e-ad23-ac1b4bf8211b",
+      "retrieved_on": "2026-10-17",
+      "institution": "Library and Archives Canada (Department of External Affairs records, RG25)",
+      "request_number": "A-2026-01845",
+      "note": "Disclosed in part. Political Affairs, German Democratic Republic, Government, 1969 to 1990. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-01845 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls. Held out: chosen by the rule in docs/data.md before anything was scored."
+    },
+    {
+      "file_name": "A-2026-03227_01.pdf",
+      "sha256": "7a45a148acdc83e2a52cf6ffe75022b5c2c9fe1132498e09f5f1439b29c0b474",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=3d9e17de-5cd6-4b02-8330-8bb7dc90b48c",
+      "retrieved_on": "2026-10-17",
+      "institution": "Library and Archives Canada (Immigration records, RG76)",
+      "request_number": "A-2026-03227",
+      "note": "Disclosed in part. Chinese immigration case file, 1913 to 1962. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-03227 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls. Held out: chosen by the rule in docs/data.md before anything was scored."
+    },
+    {
+      "file_name": "A-2026-02957_01.pdf",
+      "sha256": "a5346c653c569bea5d95fa0eab5c5890a2d49cf9ef5ca4b9cb8d85946d27e951",
+      "source_url": "https://sas-das.bac-lac.gc.ca/prod/download?app=arc&type=IO&uuid=0a638471-3768-47d2-b5c4-ad84b5570236",
+      "retrieved_on": "2026-10-17",
+      "institution": "Library and Archives Canada (Immigration records, RG76)",
+      "request_number": "A-2026-02957",
+      "note": "Disclosed in part. Chinese immigration case file, 1950 to 1951. Details page: https://telechargerdemandesaicompletees-downloadcompletedatirequests.bac-lac.gc.ca/eng/search/details/A-2026-02957 . The download URL answers with a staged link to sas-das-presv.bac-lac.gc.ca, which is what the details page itself calls. Held out: chosen by the rule in docs/data.md before anything was scored."
+    }
+  ]
+}

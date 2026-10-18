@@ -1660,3 +1660,35 @@ Reviewer 2's other unaided misses were by hand: a "sibling" (the 2026-10-08 ruli
 complaint party's first name, and two selections one character short of an email address
 and a telephone number. The study's proposals are frozen, so today's ranks and layout work
 (12.37) changes nothing in it.
+
+### 12.39 The held-out check: the gain does not travel
+
+2026-10-18. Peter asked for more release packages, ideally from another department. The
+selection rule went into `docs/data.md` before anything was downloaded (three non-Defence
+record groups, newest requests first, "Disclosed in part", 3 to 40 pages, two per group). It
+gave three packages from two groups, External Affairs and Immigration, 83 pages; Health had
+none that qualified and the rule had no fallback. They sit in their own manifest,
+`data/releases/heldout.json`, so the Defence table stays what it was.
+
+Scored once at `8e2b554`: **the tool withholds 95.2 percent of 727 spans a reviewer
+released** (93.8 to 97.0), against 100 with the code from before 12.37. All of the gain is
+the noise screen. The military vocabulary had nothing to act on and layout recovery found
+nothing. The one code change since is wording only: `--held-out` says the packages are
+blind instead of saying they are not, and the tables were checked identical before and
+after it.
+
+What is withheld points at the next work more clearly than the Defence track did:
+
+- **Archival age rules.** 116 boxes are "son", "wife", "father" in immigration case files
+  about people LAC can open because they died more than twenty years ago or were born more
+  than 110 years ago. The tool knows the first only from a date of death in the sentence,
+  and the second not at all. A record date and a configured archival rule would decide most
+  of these files.
+- **Public figures.** Ulbricht (42), Stalin, Honecker: heads of state the public register
+  does not list.
+- **Nationality words**, "Soviet", "German", "Chinese", escalated, as on the Defence track.
+- **The release stamp itself**: "Loi sur" from LAC's bilingual footer read as a person 26
+  times.
+
+Nothing is changed in response here. Whatever is built from this list is measured on the
+next held-out set, not on this one.

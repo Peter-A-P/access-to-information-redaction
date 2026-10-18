@@ -940,6 +940,9 @@ def eval_releases(
     out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
         "results/releases.md"
     ),
+    held_out: Annotated[
+        bool, typer.Option(help="The manifest is held out: chosen and scored blind.")
+    ] = False,
 ) -> None:
     """Over-redaction on records a public body actually released.
 
@@ -950,7 +953,7 @@ def eval_releases(
     """
     from sever.eval import releases as releases_eval
 
-    result = releases_eval.run(manifest=manifest, root=root)
+    result = releases_eval.run(manifest=manifest, root=root, held_out=held_out)
     typer.echo(result.to_markdown())
     if out is not None:
         typer.echo(f"wrote {releases_eval.write(result, out)}")

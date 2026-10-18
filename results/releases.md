@@ -28,7 +28,7 @@ The 41.8% here and the 65.8% in the first table measure the same tool over diffe
 
 In the shipping configuration the screen dropped 29 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 22 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
 
-**The vocabulary was written after reading these packages.** The rank list is the Canadian Armed Forces' own and would be the same had they never been read; the list of units and headquarters is not, because the ones on it are the ones these packages use. So the rows below the first are no longer a blind test. The next packages added to the manifest are, and until there are some this table measures how far the changes go on records they were written against, not how well they generalise.
+**The vocabulary was written after reading these packages.** The rank list is the Canadian Armed Forces' own and would be the same had they never been read; the list of units and headquarters is not, because the ones on it are the ones these packages use. So the rows below the first are no longer a blind test. `results/releases-heldout.md` is, on packages chosen and scored after these changes were made.
 
 **What the shipping configuration decides, by rule**
 

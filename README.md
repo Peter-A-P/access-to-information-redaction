@@ -235,10 +235,27 @@ Three more limitations, none of them small:
   lines to find paragraphs by. **This is no longer a blind test**: the unit list and some
   of the layout rules were written after reading what these packages withheld, so the
   number says how far the changes go on the records they were written against. More
-  packages, scored once before anything changes, are the held-out check, and none have
-  been added yet. What is still withheld is mostly a unit's postal code and telephone
-  numbers, "Kandahar", "Canadian", and names in sentences about a member's own complaint
-  or leave, which [`docs/escalation.md`](docs/escalation.md) case 7 escalates on purpose.
+  packages, scored once before anything changes, are the held-out check. What is still
+  withheld is mostly a unit's postal code and telephone numbers, "Kandahar", "Canadian",
+  and names in sentences about a member's own complaint or leave, which
+  [`docs/escalation.md`](docs/escalation.md) case 7 escalates on purpose.
+
+  **The held-out check says the gain does not travel.** Three packages from two other
+  departments, chosen by a rule written before any was downloaded and scored once with the
+  code unchanged: External Affairs on East Germany, 1969 to 1990, and two Chinese
+  immigration case files from 1913 to 1962, 83 pages
+  ([`results/releases-heldout.md`](results/releases-heldout.md)). **The tool withholds 95.2
+  percent of the 727 spans a reviewer released there** (93.8 to 97.0). The only change that
+  helped was dropping spans with no name-shaped word in them; the military vocabulary had
+  nothing to act on and layout recovery found nothing in these text layers. What it
+  withheld says why. Ulbricht, Stalin and Honecker are heads of state, which the public
+  register does not know. "Son", "wife" and "father" are 116 of the boxes, withheld by
+  reviewer 1's family rule, in case files about people most likely released because they
+  died more than twenty years ago or were born more than 110 years ago, which is how Library
+  and Archives Canada opens personal information in old records; the tool knows only the
+  first, and only when the sentence states a date of death. And "Soviet", "German" and "Chinese"
+  are escalated as nationality. So the Defence number is a result about Defence records,
+  and archival records need the archive's own age rules before anything else.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -560,7 +577,8 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [the same corpus under ATIPPA](results/nl/results.md) ·
 [the scanned track](results/scanned.md) ·
 [layout read back from text](results/layout.md) ·
-[real released records](results/releases.md) · [plan](PLAN.md)
+[real released records](results/releases.md) ·
+[held-out releases](results/releases-heldout.md) · [plan](PLAN.md)
 
 ## Engineering
 

@@ -157,8 +157,36 @@ after reading what the tool withheld on these packages. The rank list is the Can
 Forces' own and does not depend on them; the list of units and headquarters, and the OCR
 spelling of "Cc" as "Ce", came from them. `results/releases.md` scores the old and new
 configurations over the same spans and says this above the table. A held-out check needs
-more packages in the manifest, ideally from another institution and another decade, scored
-once before anything is changed in response.
+more packages, ideally from another institution and another decade, scored once before
+anything is changed in response. That check is the next section.
+
+## Held-out releases: three packages, 83 pages, two other departments
+
+`data/releases/heldout.json`, scored by `sever eval-releases --manifest
+data/releases/heldout.json --held-out` into `results/releases-heldout.md`.
+
+**The selection rule, written 2026-10-18 before anything was downloaded.** For each of three
+record groups that are not Defence, RG29 (Health), RG25 (External Affairs) and RG76
+(Immigration): walk LAC's search results for the record group newest request first, at most
+the first 15 requests; from each request's details page take packages in listed order; a
+package qualifies if its disposition is "Disclosed in part" and it has 3 to 40 pages; take
+the first two that qualify per record group, at most one per request. Score every package
+that passes the redaction guard once, with the code at commit `8e2b554`, and change nothing
+in response before the number is published.
+
+**What the rule gave.** RG29: none. Every one of its first 15 requests was either all
+disclosed or longer than 40 pages, and the rule had no fallback, so Health is not in the set.
+RG25: one, A-2026-01845, East German government, 1969 to 1990, 36 pages. RG76: two,
+A-2026-03227 and A-2026-02957, Chinese immigration case files from 1913 to 1962, 36 and 14
+pages. All three passed the guard (4, 6 and 10 boxes, none with text under them).
+
+**How they were found.** Through LAC's own search page, as a browser uses it: the page's
+anti-forgery token, its search request, then the details pages and the download service the
+details page calls, about two seconds apart, about sixty requests in all. Nothing that did this is
+committed, for 12.28's reasons; the manifest records each package's details page and download
+URL, which is all a reproducer needs. The site's certificate chain ends in a Sectigo root the
+macOS system bundle did not have, so the requests used the `certifi` bundle from the
+project's environment rather than turning verification off.
 
 ## Planned, not present
 

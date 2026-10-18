@@ -139,6 +139,10 @@ class ReleaseResult:
     dropped_as_noise: int = 0
     retyped_military: int = 0
     by_rule: dict[str, int] = field(default_factory=dict)
+    # A held-out manifest: packages chosen by a rule written before any was scored, and
+    # scored once with no change made in response. Changes only what the page says
+    # about blindness; the scoring is the same.
+    held_out: bool = False
 
     @property
     def personal_candidates(self) -> list[VisibleSpan]:
@@ -245,13 +249,21 @@ class ReleaseResult:
                 f"re-typed {self.retyped_military} as ranks, appointments or units (\"LCol\", "
                 f"\"KAF\", \"TFK Comd\").",
                 "",
-                "**The vocabulary was written after reading these packages.** The rank list is "
-                "the Canadian Armed Forces' own and would be the same had they never been "
-                "read; the list of units and headquarters is not, because the ones on it are "
-                "the ones these packages use. So the rows below the first are no longer a "
-                "blind test. The next packages added to the manifest are, and until there "
-                "are some this table measures how far the changes go on records they were "
-                "written against, not how well they generalise.",
+                (
+                    "**These packages are held out.** They were chosen by a rule written "
+                    "before any was downloaded (docs/data.md), from record groups other than "
+                    "Defence, and scored once with the code as it stood; nothing was changed "
+                    "in response before this table was published. So the rows below the "
+                    "first say how far the 2026-10-17 changes carry to records nobody tuned "
+                    "them against."
+                    if self.held_out
+                    else "**The vocabulary was written after reading these packages.** The "
+                    "rank list is the Canadian Armed Forces' own and would be the same had "
+                    "they never been read; the list of units and headquarters is not, "
+                    "because the ones on it are the ones these packages use. So the rows "
+                    "below the first are no longer a blind test. `results/releases-heldout.md` "
+                    "is, on packages chosen and scored after these changes were made."
+                ),
             ]
         if self.by_rule:
             lines += [
@@ -358,6 +370,7 @@ def run(
     detector: Detector | None = None,
     loaded: Loaded | None = None,
     ablation: bool = True,
+    held_out: bool = False,
 ) -> ReleaseResult:
     """Propose redactions over every visible span, and count the ones that would land.
 
@@ -411,6 +424,7 @@ def run(
             1 for s in spans if s.proposal.detection.recogniser.startswith("military:")
         ),
         by_rule=dict(sorted(by_rule.items(), key=lambda kv: -kv[1])),
+        held_out=held_out,
     )
 
 

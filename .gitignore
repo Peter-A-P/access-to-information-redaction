@@ -25,6 +25,7 @@ data/raw/
 # real-record track: anyone can obtain the same bytes from the same URLs.
 data/releases/*
 !data/releases/manifest.json
+!data/releases/heldout.json
 corpus/generated/
 corpus/scans/
 
