@@ -188,6 +188,7 @@ class SeverDetector:
         pattern_recognisers: Sequence[rec.PatternRecogniser] = rec.DEFAULT_RECOGNISERS,
         min_score: float = 0.3,
         sweep_names: bool = True,
+        screen_names: bool = True,
     ) -> None:
         self.model = model
         self.use_presidio = use_presidio
@@ -197,6 +198,11 @@ class SeverDetector:
         # On by default, and switchable so the ablation in results/names.md can measure
         # what it is worth rather than assert it. See sever.detect.sweep.
         self.sweep_names = sweep_names
+        # On by default and switchable for the same reason: `results/releases.md` reports
+        # the real-record track with it off and on. Off also lets the sweep treat a rank
+        # or a unit as a name part, as it did before either was known. See
+        # sever.detect.military.
+        self.screen_names = screen_names
         self._warned = False
 
     @property
@@ -213,6 +219,12 @@ class SeverDetector:
         out: list[Detection] = []
         for page in document:
             out.extend(self.detect_page(page))
+        if self.screen_names:
+            # Before the sweep, so that "KAF" typed as a person does not license every
+            # other "KAF" in the record as one.
+            from sever.detect.military import screen
+
+            out = list(screen(document, out))
         if not self.sweep_names:
             return tuple(out)
         # Document-wide, and therefore here rather than in detect_page: a name found on
@@ -220,7 +232,12 @@ class SeverDetector:
         # the per-page model misses. sever.detect.sweep has the measurement behind it.
         from sever.detect.sweep import with_sweep
 
-        return with_sweep(document, out)
+        not_names = None
+        if self.screen_names:
+            from sever.detect.military import is_military_record, is_rank, is_vocabulary
+
+            not_names = is_vocabulary if is_military_record(document) else is_rank
+        return with_sweep(document, out, not_names=not_names)
 
     def detect_page(self, page: Page) -> list[Detection]:
         if not page.text.strip():

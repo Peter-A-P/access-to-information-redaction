@@ -6,11 +6,22 @@
 
 | Input | Character error rate | Mean OCR confidence | Labels that survived | Detector recall | Leak rate | Over-redaction |
 |---|---:|---:|---:|---|---|---|
-| native (no OCR) | 0.0% | n/a | 100.0% | 98.0% (97.1% to 98.9%), n=1277 | 3.0% (1.0% to 5.5%), n=333 | 28.7% (26.4% to 31.0%), n=944 |
-| clean | 0.7% | 95.1% | 100.0% | 97.3% (96.3% to 98.1%), n=1277 | 3.0% (1.0% to 5.5%), n=333 | 48.3% (44.1% to 52.9%), n=944 |
-| scanner | 0.6% | 95.3% | 100.0% | 97.6% (96.5% to 98.5%), n=1277 | 3.6% (1.5% to 6.1%), n=333 | 48.9% (44.6% to 53.5%), n=944 |
-| photocopy | 0.9% | 94.5% | 99.9% | 96.8% (95.7% to 97.8%), n=1276 | 3.9% (1.7% to 6.4%), n=332 | 48.1% (43.8% to 52.6%), n=944 |
-| fax | 65.1% | 19.0% | 45.2% | 52.9% (48.4% to 57.6%), n=577 | 69.2% (60.0% to 78.0%), n=130 | 36.7% (31.2% to 41.8%), n=447 |
+| native (no OCR) | 0.0% | n/a | 100.0% | 98.1% (97.1% to 98.9%), n=1304 | 3.0% (1.2% to 5.4%), n=400 | 22.1% (19.0% to 25.4%), n=904 |
+| clean | 0.7% | 95.1% | 100.0% | 97.2% (96.2% to 98.0%), n=1304 | 3.0% (1.2% to 5.4%), n=400 | 23.9% (20.3% to 27.6%), n=904 |
+| scanner | 0.6% | 95.3% | 100.0% | 97.4% (96.3% to 98.3%), n=1304 | 3.8% (1.7% to 6.2%), n=400 | 23.1% (19.7% to 26.8%), n=904 |
+| photocopy | 0.7% | 94.6% | 100.0% | 97.2% (96.1% to 98.1%), n=1304 | 6.0% (3.3% to 9.2%), n=400 | 23.0% (19.4% to 27.0%), n=904 |
+| fax | 65.2% | 18.7% | 46.9% | 54.8% (50.7% to 59.3%), n=611 | 78.7% (71.4% to 85.5%), n=155 | 40.1% (35.2% to 44.9%), n=456 |
+
+**What reading the layout back is worth on a scan**
+
+The same read-back scored twice: with every paragraph BODY, which is how this track was scored until 2026-10-17, and with the blocks read back from the OCR text by `recover_blocks`. The text is identical, so the difference is the blocks.
+
+| Input | Leak, paragraphs only | Leak, layout recovered | Over-redaction, paragraphs only | Over-redaction, layout recovered |
+|---|---|---|---|---|
+| clean | 3.0% (1.2% to 5.4%), n=400 | 3.0% (1.2% to 5.4%), n=400 | 39.2% (33.3% to 45.2%), n=904 | 23.9% (20.3% to 27.6%), n=904 |
+| scanner | 3.8% (1.7% to 6.2%), n=400 | 3.8% (1.7% to 6.2%), n=400 | 39.9% (34.1% to 46.0%), n=904 | 23.1% (19.7% to 26.8%), n=904 |
+| photocopy | 6.0% (3.3% to 9.2%), n=400 | 6.0% (3.3% to 9.2%), n=400 | 39.6% (33.6% to 45.9%), n=904 | 23.0% (19.4% to 27.0%), n=904 |
+| fax | 78.7% (71.4% to 85.5%), n=155 | 78.7% (71.4% to 85.5%), n=155 | 40.1% (35.2% to 44.9%), n=456 | 40.1% (35.2% to 44.9%), n=456 |
 
 **What each profile is**
 
@@ -23,13 +34,13 @@
 
 The `fax` row is 100 dpi, at which 9.5 point text stops being recoverable at all. It is kept because knowing where the floor falls out is worth more than a table of rows that all work.
 
-**The column that moves is over-redaction, and it moves before the character error rate does.** A near-perfect scan costs about a fifth of a point of recall and twenty points of over-redaction. The characters are almost all there; the structure is not. `paragraph_blocks` can recover where the paragraphs are and nothing more, so every block is BODY, nothing is role-bearing, and the rules lose the signature block and the letterhead, which is the evidence they lean on hardest to tell an official acting in an official capacity from a third party. Unable to place the person, the rules escalate, and escalation withholds. So the scanned pages are not read less accurately in any way a character error rate can show: they are read without the layout, and the layout is where half the decision lives.
+**What a scan cost was the layout, and the layout reads back from the text.** Read as paragraphs, a near-perfect scan cost about a fifth of a point of recall and some eighteen points of over-redaction: the characters were almost all there and the structure was not, so nothing was role-bearing, the rules lost the signature block and the letterhead, and a person they could not place was escalated and withheld. With the blocks read back from the OCR text by `recover_blocks`, the three working profiles are within two points of the native row, and the leak rate does not move. The structure was in the text all along, in the line breaks and in the words a signature block and an email header are made of. That is on the six templates the recovery was written against, so it is the most it can do; `results/releases.md` is a layout it was not written against, and recovers much less there.
 
-That is worth stating plainly because the obvious worry about OCR is the opposite one. The fear is that a misread name gets released. On these numbers that barely happens until the page falls apart entirely; what happens first is that the requester gets a blacker page.
+That is worth stating plainly because the obvious worry about OCR is the opposite one. The fear is that a misread name gets released. On these numbers that barely happens until the page falls apart entirely; what happened first, before the layout was read back, was that the requester got a blacker page.
 
 **Labels that survived** is the share of labelled values still present in the OCR output at all. A value the scan destroyed cannot be found by any detector, so it caps recall for reasons that have nothing to do with detection. Reading the recall column without this one would blame the detector for text that is no longer on the page.
 
-It also moves the denominators, which is what makes the worst row readable. A label none of whose characters survived is not in the leak pool either: there is nothing on the page to release. So the `fax` row's leak rate is over the labels that were still there to leak, which is why its n is smaller than the rows above it. Reading 69 percent as though it were measured on the same denominator as the 3 percent above would overstate it; reading it as a page that has been destroyed rather than redacted is closer.
+It also moves the denominators, which is what makes the worst row readable. A label none of whose characters survived is not in the leak pool either: there is nothing on the page to release. So the `fax` row's leak rate is over the labels that were still there to leak, which is why its n is smaller than the rows above it. Reading it as though it were measured on the same denominator as the rows above would overstate it; reading it as a page that has been destroyed rather than redacted is closer.
 
 The corpus renders in Courier at 9.5 point: monospaced, high contrast, one generation from the original. That is close to the easiest input an OCR engine can be given, so a row without degradation is a floor rather than a typical case, and it is not zero even so.
 

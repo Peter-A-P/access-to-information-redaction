@@ -1584,3 +1584,48 @@ percent, rules then the model 4.6, model only 15.4; the gate still blocks the mo
 on no_leak, 35 documents worse and 0 better. Reviewer 1's results are unchanged: the study
 reads its frozen proposals.
 
+
+### 12.37 Ranks, units and noise, and the layout read back from text
+
+2026-10-17. Peter asked for what 12.32 named as the next work: ranks as titles and layout
+recovery. Both are built, measured, and change no headline number: the 210-document corpus
+has no rank, unit or OCR noise in it and keeps its native blocks, and every proposal on it
+was checked identical before and after (7,627 of them, rules only), with the model row
+reproducing from the answer cache.
+
+**Layout from text, not geometry.** 12.22 expected the gain to come from
+Tesseract's word geometry. It came from the text: `sever/ingest/layout.py` reads blocks from
+line breaks, line lengths and what lines say (a closing word, a name with a title or rank
+under it, From/Sent/Subject runs including the OCR form with each value on its own line, a
+first paragraph that opens with a public body). Text was tried first because the same code
+then serves native text, OCR read-back and a released PDF's text layer alike. On the
+corpus's text with its blocks removed it recovers every signature and email-header label
+and returns over-redaction from 41.7 to 22.4 percent, the native figure
+(`results/layout.md`, `sever eval-layout`). On the scanned track, office-scanner
+over-redaction falls from 39.9 to 23.1 percent against 22.1 native, with the leak rate
+unchanged (`results/scanned.md`). Both are scored on the six templates the recovery was
+written against, so they are upper bounds. Geometry stays the next step if an unseen layout
+says text is not enough.
+
+**The forces' vocabulary.** `sever/detect/military.py`: CAF ranks as a `JOB_TITLE`
+recogniser; a PERSON span with no name-shaped token dropped in any record; a PERSON span
+made only of ranks, appointments and units re-typed in a military record; ranks kept out of
+the name sweep and out of coreference parts, which had marked "McGuffin" ambiguous between
+"Chris McGuffin" and "McGuffin LCol". `ContextRecord.rank` carries a rank found beside a
+person, propagated through their cluster, only in a record with a Defence marker. A new rule,
+`military_rank`, proposes K2 at 0.75 (the staff directory's confidence, because it is
+evidence about the person and not the sentence) and stands aside where the sentence is
+about the member's own life; `docs/escalation.md` case 7.
+
+**The real-record track, over the same 538 spans** (533 in 12.32 was an older run; the code
+at the start of today gives 538): withheld 100 percent before, 95.7 with layout alone, 43.9
+with the vocabulary alone, 41.8 with both (32.8 to 63.4), 225 boxes where there were 538.
+**The track is no longer blind.** The unit list and the "Ce:" spelling of Cc were taken from
+these packages. A held-out check needs more packages scored once before anything changes in
+response; none have been added.
+
+**Left as found, and said where:** "Kandahar" read as a person (no gazetteer, because a
+gazetteer of towns is also a list of surnames), nationality words escalated as personal
+information (`docs/escalation.md`), French words read as names (the French track is
+deferred, section 11), and a unit's postal code and telephone numbers, which sit in letterhead
+blocks the recovery cannot find in a text layer with no blank lines.

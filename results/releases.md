@@ -6,15 +6,44 @@
 
 | Denominator | Spans | Over-redaction |
 |---|---:|---|
-| Spans that could be personal information | 533 | 100.0% (67.3% to 100.0%), n=533 |
-| Every detected span, including the types the tool releases by design | 1792 | 29.7% (16.2% to 37.4%), n=1792 |
+| Spans that could be personal information | 342 | 65.8% (56.8% to 81.5%), n=342 |
+| Every detected span, including the types the tool releases by design | 1747 | 12.9% (9.5% to 16.3%), n=1747 |
 
 **Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
-**Read this as a floor rather than as the tool's performance on a real record.** A released PDF is a flat text layer: nothing in the file says which paragraph was a signature block, so every block is body text and the rules lose the evidence they lean on hardest. `results/scanned.md` measures what that costs where the truth is known, and it is about twenty points. There is also no configured requester on a downloaded package, so every span that would have been the requester's own information is something else here. Both effects push the same way.
+**Read this as a floor rather than as the tool's performance on a real record.** A released PDF is a flat text layer: nothing in the file says which paragraph was a signature block, and the blocks are read back from the text by `recover_blocks`, which `results/layout.md` checks where the truth is known. These are OCR text layers of scanned forms and printed email, so much less comes back than on a clean page. There is also no configured requester on a downloaded package, so every span that would have been the requester's own information is something else here. Both effects push the same way.
+
+**What each change is worth, over the same spans**
+
+Every row is scored over the 538 spans the first row called possibly personal, so the denominators match. A span is withheld when any withholding box in that row overlaps it; a span a later row dropped or re-typed counts as released, because on the page it is.
+
+| Configuration | Of those spans, withheld | Withholding boxes over released text, any type |
+|---|---|---:|
+| as scored until 2026-10-17: flat text, no military vocabulary | 100.0% (67.3% to 100.0%), n=538 | 538 |
+| layout recovered (a rank under a signature counts as a title) | 95.7% (92.0% to 99.4%), n=538 | 515 |
+| military vocabulary | 43.9% (34.9% to 66.3%), n=538 | 236 |
+| both (the tool as it now ships) | 41.8% (32.8% to 63.4%), n=538 | 225 |
+
+The 41.8% here and the 65.8% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 342 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
+
+In the shipping configuration the screen dropped 29 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 22 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
+
+**The vocabulary was written after reading these packages.** The rank list is the Canadian Armed Forces' own and would be the same had they never been read; the list of units and headquarters is not, because the ones on it are the ones these packages use. So the rows below the first are no longer a blind test. The next packages added to the manifest are, and until there are some this table measures how far the changes go on records they were written against, not how well they generalise.
+
+**What the shipping configuration decides, by rule**
+
+| Rule | Spans that could be personal information |
+|---|---:|
+| `unresolved` | 220 |
+| `military_rank` | 90 |
+| `official_capacity_title` | 17 |
+| `official_capacity_contact` | 9 |
+| `family_relationship` | 5 |
+| `official_capacity_signature` | 1 |
 
 **What the tool would have withheld, by category**
 
 | Category | Spans withheld over text a reviewer released |
 |---|---:|
-| `E1` | 533 |
+| `E1` | 220 |
+| `R1` | 5 |

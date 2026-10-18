@@ -41,14 +41,20 @@ floor.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from sever.context.requester import RequestConfig
+from sever.decide import rules as rules_mod
 from sever.decide.pipeline import DecisionEngine, Proposal
+from sever.detect import recognisers as rec
 from sever.detect.engine import SeverDetector
+from sever.detect.military import has_name_shaped_token
 from sever.detect.types import Detector, EntityType
 from sever.eval.confusion import Interval, _rate
+from sever.ingest.document import Document, Offsets
+from sever.ingest.layout import recover_blocks
+from sever.ingest.ocr import paragraph_blocks
 from sever.ingest.releases import DEFAULT_DIR, DEFAULT_MANIFEST, Loaded, load
 from sever.taxonomy.loader import default_taxonomy
 
@@ -77,6 +83,49 @@ class VisibleSpan:
         return self.proposal.detection.entity_type not in RELEASED_BY_DESIGN
 
 
+@dataclass(frozen=True, slots=True)
+class Configuration:
+    """One row of the ablation: whether the layout is read back, and whether the tool
+    knows the forces' vocabulary (ranks, the rule that reads them, and the screen that
+    drops OCR noise and re-types units)."""
+
+    name: str
+    recover_layout: bool
+    vocabulary: bool
+
+
+CONFIGURATIONS: tuple[Configuration, ...] = (
+    Configuration("as scored until 2026-10-17: flat text, no military vocabulary", False, False),
+    # The signature reader takes a rank under a name as a title in every row, so this one
+    # already has that much of the vocabulary; what it lacks is the rest.
+    Configuration("layout recovered (a rank under a signature counts as a title)", True, False),
+    Configuration("military vocabulary", False, True),
+    Configuration("both (the tool as it now ships)", True, True),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class FixedSpan:
+    """One of the spans the first configuration called possibly personal, held fixed so
+    every row is scored over the same text. Withheld when any withholding box in that
+    configuration overlaps it: a span another row dropped or re-typed is released, which
+    is what a reader of the page would see."""
+
+    doc_id: str
+    withheld: bool
+
+
+@dataclass(frozen=True, slots=True)
+class AblationRow:
+    configuration: Configuration
+    fixed: tuple[FixedSpan, ...]
+    boxes: int
+
+    @property
+    def rate(self) -> Interval:
+        return _rate(list(self.fixed), lambda s: s.withheld, seed=20270816)
+
+
 @dataclass
 class ReleaseResult:
     packages: int = 0
@@ -84,6 +133,12 @@ class ReleaseResult:
     spans: tuple[VisibleSpan, ...] = ()
     excluded: tuple[str, ...] = ()
     institutions: tuple[str, ...] = ()
+    ablation: tuple[AblationRow, ...] = ()
+    # Of the shipping configuration's detections: PERSON spans the screen dropped for having
+    # no name-shaped token, and spans it re-typed as military vocabulary.
+    dropped_as_noise: int = 0
+    retyped_military: int = 0
+    by_rule: dict[str, int] = field(default_factory=dict)
 
     @property
     def personal_candidates(self) -> list[VisibleSpan]:
@@ -149,13 +204,64 @@ class ReleaseResult:
             "",
             "**Read this as a floor rather than as the tool's performance on a real record.** "
             "A released PDF is a flat text layer: nothing in the file says which paragraph "
-            "was a signature block, so every block is body text and the rules lose the "
-            "evidence they lean on hardest. `results/scanned.md` measures what that costs "
-            "where the truth is known, and it is about twenty points. There is also no "
-            "configured requester on a downloaded package, so every span that would have "
-            "been the requester's own information is something else here. Both effects push "
-            "the same way.",
+            "was a signature block, and the blocks are read back from the text by "
+            "`recover_blocks`, which `results/layout.md` checks where the truth is known. "
+            "These are OCR text layers of scanned forms and printed email, so much less "
+            "comes back than on a clean page. There is also no configured requester on a "
+            "downloaded package, so every span that would have been the requester's own "
+            "information is something else here. Both effects push the same way.",
         ]
+        if self.ablation:
+            first = self.ablation[0]
+            lines += [
+                "",
+                "**What each change is worth, over the same spans**",
+                "",
+                f"Every row is scored over the {len(first.fixed)} spans the first row called "
+                f"possibly personal, so the denominators match. A span is withheld when any "
+                f"withholding box in that row overlaps it; a span a later row dropped or "
+                f"re-typed counts as released, because on the page it is.",
+                "",
+                "| Configuration | Of those spans, withheld | Withholding boxes over released "
+                "text, any type |",
+                "|---|---|---:|",
+            ]
+            lines += [
+                f"| {row.configuration.name} | {row.rate} | {row.boxes} |"
+                for row in self.ablation
+            ]
+            shipping = self.ablation[-1]
+            lines += [
+                "",
+                f"The {shipping.rate.point:.1%} here and the "
+                f"{self.over_redaction().point:.1%} in the first table measure the same tool "
+                f"over different spans. The first table's denominator is what the tool as it "
+                f"ships calls possibly personal, {len(self.personal_candidates)} spans; a span "
+                f"it re-typed as a rank or a unit, or dropped as noise, has left it. This "
+                f"table holds the spans fixed, which is the only way to compare the rows.",
+                "",
+                f"In the shipping configuration the screen dropped {self.dropped_as_noise} "
+                f"person spans with no name-shaped token in them (\"wu\", \"pour lui\") and "
+                f"re-typed {self.retyped_military} as ranks, appointments or units (\"LCol\", "
+                f"\"KAF\", \"TFK Comd\").",
+                "",
+                "**The vocabulary was written after reading these packages.** The rank list is "
+                "the Canadian Armed Forces' own and would be the same had they never been "
+                "read; the list of units and headquarters is not, because the ones on it are "
+                "the ones these packages use. So the rows below the first are no longer a "
+                "blind test. The next packages added to the manifest are, and until there "
+                "are some this table measures how far the changes go on records they were "
+                "written against, not how well they generalise.",
+            ]
+        if self.by_rule:
+            lines += [
+                "",
+                "**What the shipping configuration decides, by rule**",
+                "",
+                "| Rule | Spans that could be personal information |",
+                "|---|---:|",
+            ]
+            lines += [f"| `{rule}` | {n} |" for rule, n in self.by_rule.items()]
         codes = self.by_code()
         if codes:
             lines += [
@@ -181,29 +287,115 @@ class ReleaseResult:
         return "\n".join(lines)
 
 
+def _blocks(document: Document, recover_layout: bool) -> Document:
+    make = recover_blocks if recover_layout else paragraph_blocks
+    return document.with_pages([replace(p, blocks=make(p.text)) for p in document])
+
+
+def _without_vocabulary(detector: SeverDetector) -> SeverDetector:
+    """The same detector as it was before the forces' vocabulary: no rank recogniser and
+    no screen."""
+    return SeverDetector(
+        model=detector.model,
+        use_presidio=detector.use_presidio,
+        require_presidio=detector.require_presidio,
+        pattern_recognisers=tuple(r for r in detector.pattern_recognisers if r is not rec.RANK),
+        min_score=detector.min_score,
+        sweep_names=detector.sweep_names,
+        screen_names=False,
+    )
+
+
+_RULES_WITHOUT_RANK = tuple(r for r in rules_mod.DEFAULT_RULES if r is not rules_mod.military_rank)
+
+
+def _propose(
+    data: Loaded, detector: Detector, configuration: Configuration
+) -> list[VisibleSpan]:
+    taxonomy = default_taxonomy()
+    det = detector
+    rules = rules_mod.DEFAULT_RULES
+    if not configuration.vocabulary:
+        if isinstance(detector, SeverDetector):
+            det = _without_vocabulary(detector)
+        rules = _RULES_WITHOUT_RANK
+    spans: list[VisibleSpan] = []
+    for release in data.releases:
+        # No requester: nobody knows who asked for a package downloaded from an archive.
+        # Stated in the table rather than papered over with a guess.
+        config = RequestConfig(request_id=release.record.file_name)
+        document = _blocks(release.document, configuration.recover_layout)
+        proposals = DecisionEngine(
+            config=config, detector=det, taxonomy=taxonomy, rules=rules
+        ).propose(document)
+        spans.extend(
+            VisibleSpan(doc_id=release.record.file_name, proposal=p) for p in proposals
+        )
+    return spans
+
+
+def _withheld_over(spans: list[VisibleSpan], fixed: list[VisibleSpan]) -> tuple[FixedSpan, ...]:
+    boxes: dict[tuple[str, int], list[Offsets]] = {}
+    for s in spans:
+        if s.withheld:
+            boxes.setdefault((s.doc_id, s.proposal.page), []).append(s.proposal.detection.offsets)
+    return tuple(
+        FixedSpan(
+            doc_id=f.doc_id,
+            withheld=any(
+                f.proposal.detection.offsets.overlaps(b)
+                for b in boxes.get((f.doc_id, f.proposal.page), ())
+            ),
+        )
+        for f in fixed
+    )
+
+
 def run(
     *,
     manifest: Path = DEFAULT_MANIFEST,
     root: Path = DEFAULT_DIR,
     detector: Detector | None = None,
     loaded: Loaded | None = None,
+    ablation: bool = True,
 ) -> ReleaseResult:
-    """Propose redactions over every visible span, and count the ones that would land."""
+    """Propose redactions over every visible span, and count the ones that would land.
+
+    With `ablation`, also score the configurations in `CONFIGURATIONS` over the spans the
+    first of them called possibly personal, so what the layout recovery and the military
+    vocabulary are each worth is a row rather than a claim.
+    """
     data = loaded if loaded is not None else load(manifest, root)
     det = detector or SeverDetector()
-    taxonomy = default_taxonomy()
 
-    spans: list[VisibleSpan] = []
-    for release in data.releases:
-        # No requester: nobody knows who asked for a package downloaded from an archive.
-        # Stated in the table rather than papered over with a guess.
-        config = RequestConfig(request_id=release.record.file_name)
-        proposals = DecisionEngine(config=config, detector=det, taxonomy=taxonomy).propose(
-            release.document
+    shipping = CONFIGURATIONS[-1]
+    spans = _propose(data, det, shipping)
+
+    rows: list[AblationRow] = []
+    dropped = 0
+    if ablation and data.releases:
+        runs = {c: (spans if c == shipping else _propose(data, det, c)) for c in CONFIGURATIONS}
+        fixed = [s for s in runs[CONFIGURATIONS[0]] if s.could_be_personal]
+        rows = [
+            AblationRow(
+                configuration=c,
+                fixed=_withheld_over(runs[c], fixed),
+                boxes=sum(1 for s in runs[c] if s.withheld),
+            )
+            for c in CONFIGURATIONS
+        ]
+        dropped = sum(
+            1
+            for s in runs[CONFIGURATIONS[1]]
+            if s.proposal.detection.entity_type is EntityType.PERSON
+            and not has_name_shaped_token(s.proposal.detection.text)
         )
-        spans.extend(
-            VisibleSpan(doc_id=release.record.file_name, proposal=p) for p in proposals
-        )
+
+    by_rule: dict[str, int] = {}
+    for s in spans:
+        if s.could_be_personal:
+            rule = s.proposal.rule or s.proposal.source.value
+            by_rule[rule] = by_rule.get(rule, 0) + 1
 
     return ReleaseResult(
         packages=len(data.releases),
@@ -213,6 +405,12 @@ def run(
         institutions=tuple(
             sorted({r.record.institution for r in data.releases if r.record.institution})
         ),
+        ablation=tuple(rows),
+        dropped_as_noise=dropped,
+        retyped_military=sum(
+            1 for s in spans if s.proposal.detection.recogniser.startswith("military:")
+        ),
+        by_rule=dict(sorted(by_rule.items(), key=lambda kv: -kv[1])),
     )
 
 
@@ -228,4 +426,13 @@ def write(result: ReleaseResult, path: Path) -> Path:
     return path
 
 
-__all__ = ["RELEASED_BY_DESIGN", "ReleaseResult", "VisibleSpan", "run", "write"]
+__all__ = [
+    "CONFIGURATIONS",
+    "RELEASED_BY_DESIGN",
+    "AblationRow",
+    "Configuration",
+    "ReleaseResult",
+    "VisibleSpan",
+    "run",
+    "write",
+]

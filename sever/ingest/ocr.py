@@ -317,10 +317,9 @@ def paragraph_blocks(text: str) -> tuple[Block, ...]:
     name in a signature block is an official signing in their official capacity, and on
     this track nothing is role-bearing, so the rules lose the evidence they lean on hardest.
 
-    A real product would recover structure from the word geometry Tesseract already
-    returns: position on the page, font size, indentation. That is a layout-analysis
-    project and it is not this one, so the track reports what the weak version costs
-    instead of implying the strong version exists.
+    Kept as the baseline. `sever.ingest.layout.recover_blocks` reads the structure back
+    from the text, and the scanned track reports both, so what the recovery is worth is a
+    row in a table rather than a claim.
     """
     blocks: list[Block] = []
     position = 0
@@ -377,8 +376,15 @@ def scan(
     pdf_path: Path,
     *,
     how: Degradation = SCANNER,
+    recover_layout: bool = True,
 ) -> Scanned:
-    """Render, scan, read back, and return a document whose text is what OCR produced."""
+    """Render, scan, read back, and return a document whose text is what OCR produced.
+
+    Its blocks are read back from that text by `recover_blocks`, or with
+    `recover_layout=False` are paragraphs of BODY, which is what every scan was until
+    2026-10-17.
+    """
+    from sever.ingest.layout import recover_blocks
     from sever.review.export import render_pdf
 
     render_pdf(document, pdf_path)
@@ -395,7 +401,9 @@ def scan(
             Page(
                 number=original.number,
                 text=recovered,
-                blocks=paragraph_blocks(recovered),
+                blocks=(
+                    recover_blocks(recovered) if recover_layout else paragraph_blocks(recovered)
+                ),
                 source=SourceKind.OCR,
                 ocr_confidence=confidence,
             )

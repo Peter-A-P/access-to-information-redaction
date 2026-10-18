@@ -151,6 +151,15 @@ solid boxes and reading the text layer inside each one. 106 boxes across the six
 none with a word under it. Its word threshold was chosen after looking at these packages,
 which PLAN.md 12.32 says.
 
+**These six are no longer a blind test (2026-10-17).** The military vocabulary in
+`sever/detect/military.py` and the layout recovery in `sever/ingest/layout.py` were written
+after reading what the tool withheld on these packages. The rank list is the Canadian Armed
+Forces' own and does not depend on them; the list of units and headquarters, and the OCR
+spelling of "Cc" as "Ce", came from them. `results/releases.md` scores the old and new
+configurations over the same spans and says this above the table. A held-out check needs
+more packages in the manifest, ideally from another institution and another decade, scored
+once before anything is changed in response.
+
 ## Planned, not present
 
 `PLAN.md` describes one further source.

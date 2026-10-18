@@ -380,22 +380,26 @@ def inspect_raster(path: Path) -> RedactionCheck | None:
     )
 
 
-def to_document(path: Path, doc_id: str) -> Document:
+def to_document(path: Path, doc_id: str, *, recover_layout: bool = True) -> Document:
     """The visible text of a released package, as a `Document`.
 
-    Blocks are paragraphs and every one is BODY, for the same reason as the scanned track:
-    nothing in a released PDF says which paragraph was a signature block. The consequence is
-    the same too, and it is stated in the generated table rather than left for a reader to
-    work out: the rules lose the evidence they lean on hardest, so this track's
-    over-redaction figure carries that handicap as well as everything else.
+    Nothing in a released PDF says which paragraph was a signature block, so the blocks are
+    read back from the text by `recover_blocks`, as for a scan. With
+    `recover_layout=False` every paragraph is BODY, which is how this track was scored
+    until 2026-10-17 and is kept so the table can show both.
     """
     import pymupdf
+
+    from sever.ingest.layout import recover_blocks
 
     pages: list[Page] = []
     doc = pymupdf.open(str(path))
     try:
         for number, pdf_page in enumerate(doc, start=1):
             text = pdf_page.get_text("text")
+            if recover_layout:
+                pages.append(Page(number=number, text=text, blocks=recover_blocks(text)))
+                continue
             blocks: list[Block] = []
             position = 0
             for part in text.split(PARAGRAPH_BREAK):

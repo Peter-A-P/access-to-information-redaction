@@ -15,7 +15,7 @@ import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from sever.detect.recognisers import JOB_TITLE
+from sever.detect.recognisers import JOB_TITLE, RANK_ALTERNATION, RANK_WORD
 from sever.ingest.document import Block, BlockKind, Document, Page
 
 # "Marie Doucette" but not "Dear Sir" or "IN CONFIDENCE". Two to four capitalised words,
@@ -25,7 +25,18 @@ _NAME_LINE = re.compile(
     r"{1,3})\s*[,.]?\s*$"
 )
 _EMAIL_HEADER_LINE = re.compile(
-    r"^\s*(From|To|Cc|Bcc|Sent|Subject)\s*:\s*(.*)$", re.IGNORECASE
+    r"^\s*(From|To|Cc|Ce|Cec|Bcc|Sent|Subject)\s*:\s*(.*)$", re.IGNORECASE
+)
+# The Government of Canada address book's display name, as Outlook prints it in a header:
+# "Gifford LCol SW@Deployed@KAF" is surname, rank, initials, then where the account sits.
+# The name is the surname, which is what the record repeats. The rank is deliberately not
+# made a title here: a title from a header would decide every mention of the person in the
+# record at the official-capacity rule's confidence, including the sentence about their
+# own compassionate leave. The rank reaches the decision through `ContextRecord.rank`
+# instead, where `rules.military_rank` can stand aside for a sentence like that.
+_ADDRESS_BOOK = re.compile(
+    rf"^\s*([A-Z][\w'\u2019-]+(?:[ -][A-Z][\w'\u2019-]+)?)\s+(?:{RANK_ALTERNATION})\s+"
+    r"[A-Z]{1,6}@"
 )
 _NAME_WITH_EMAIL = re.compile(r"([^<>,;]+?)\s*<([^<>@\s]+@[^<>\s]+)>")
 _NAME_COMMA_TITLE = re.compile(r"^\s*([A-Z][\w'\u2019-]+(?:\s+[A-Z][\w'\u2019-]+){1,3})\s*,\s*(.+?)\s*$")
@@ -64,7 +75,9 @@ def _looks_like_name(line: str) -> str | None:
 
 
 def _title_in(line: str) -> str | None:
-    m = JOB_TITLE.pattern.search(line)
+    """A job title in the line, or failing that a rank: "LCol (OF-4)" under "Chris
+    McGuffin" in a signature is the same evidence as "Policy Analyst" under a name."""
+    m = JOB_TITLE.pattern.search(line) or RANK_WORD.search(line)
     return m.group(0) if m else None
 
 
@@ -131,15 +144,37 @@ def from_email_header(block: Block, page: int) -> list[RoleMention]:
     matters because a quoted reply lower down has a different author and a signature
     inside a quote belongs to the quoted sender, not to the person who forwarded it."""
     out: list[RoleMention] = []
-    for line in block.text.splitlines():
+    lines = block.text.splitlines()
+    for i, line in enumerate(lines):
         m = _EMAIL_HEADER_LINE.match(line)
         if m is None:
             continue
         field_name, value = m.group(1).casefold(), m.group(2)
+        # "Cc" as OCR reads it off a printed header.
+        if field_name in ("ce", "cec"):
+            field_name = "cc"
         if field_name not in ("from", "to", "cc", "bcc"):
             continue
+        # A printed Outlook header read back by OCR puts the label on a line of its own
+        # and the value on the next.
+        if not value.strip() and i + 1 < len(lines) and not _EMAIL_HEADER_LINE.match(lines[i + 1]):
+            value = lines[i + 1]
         source = f"email_{field_name}"
         found_any = False
+        for entry in value.split(";"):
+            book = _ADDRESS_BOOK.match(entry)
+            if book is not None:
+                out.append(
+                    RoleMention(
+                        name=book.group(1),
+                        page=page,
+                        block_kind=block.kind,
+                        source=source,
+                    )
+                )
+                found_any = True
+        if found_any:
+            continue
         for pair in _NAME_WITH_EMAIL.finditer(value):
             name = pair.group(1).strip(" ,;\"'")
             if _looks_like_name(name):

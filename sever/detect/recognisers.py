@@ -222,6 +222,63 @@ JOB_TITLE = PatternRecogniser(
     score=0.7,
 )
 
+# Canadian Armed Forces ranks (2026-10-17). The real-record track is Defence records, and
+# on them the detector called "LCol", "Maj" and "Capt" people 42 times and the rules knew
+# no rank, so "LCol Kromrey" was a stranger with no title. The abbreviations are the CAF's
+# own short forms, English and French; a rank is case-sensitive because "col" and "lt" are
+# not ranks, and an all-capitals form is accepted because routing slips are typed that
+# way ("CAPT THORNE"). Full words are limited to the compound ranks and the six that read
+# as ranks beside a name: "General", "Private", "Commander" and "Admiral" are left out
+# because "Attorney General", "private citizen" and a ship's commander are not. A rank is
+# a JOB_TITLE, so on its own it is released as not personal information, which is what a
+# reviewer did with every bare rank in those releases. What a rank says about the person
+# beside it is `sever.context.ranks`, and it says it only in a military record.
+RANK_SHORT_FORMS: tuple[str, ...] = (
+    # Officers, army and air force, then navy, then cadets
+    "Gen", "LGen", "MGen", "BGen", "Col", "LCol", "Lcol", "Maj", "Capt", "Lt", "2Lt",
+    "Adm", "VAdm", "RAdm", "Cmdre", "Capt(N)", "Cdr", "LCdr", "SLt", "A/SLt",
+    "OCdt", "NCdt",
+    # Non-commissioned members
+    "CWO", "CPO1", "MWO", "CPO2", "WO", "PO1", "Sgt", "PO2", "MCpl", "Cpl", "Pte",
+    # French short forms
+    "Gén", "Lgén", "Mgén", "Bgén", "Capc", "Capf", "Ltv", "Adjuc", "Adjum", "Cplc", "Sdt",
+)
+_RANK_LONG: tuple[str, ...] = (
+    "Lieutenant-General", "Lieutenant General", "Major-General", "Major General",
+    "Brigadier-General", "Brigadier General", "Lieutenant-Colonel", "Lieutenant Colonel",
+    "Lieutenant-Commander", "Lieutenant Commander", "Sub-Lieutenant", "Second Lieutenant",
+    "Officer Cadet", "Chief Warrant Officer", "Master Warrant Officer", "Warrant Officer",
+    "Chief Petty Officer", "Petty Officer", "Master Corporal", "Master Seaman",
+    "Colonel", "Major", "Captain", "Lieutenant", "Sergeant", "Corporal",
+)
+
+
+def _rank_alternation() -> str:
+    forms: list[str] = []
+    for word in (*_RANK_LONG, *RANK_SHORT_FORMS):
+        forms.append(word)
+        # Not for two letters: "LT" in "Cormier Maj LT@Deployed@KAF" is initials.
+        if len(word) > 2 and word.upper() != word:
+            forms.append(word.upper())
+    # Longest first, so "LCol" is not read as "Col" with an L in front of it, and
+    # "Master Warrant Officer" is not read as "Warrant Officer".
+    forms = sorted(set(forms), key=lambda f: (-len(f), f))
+    return "|".join(re.escape(f) for f in forms)
+
+
+RANK_ALTERNATION = _rank_alternation()
+RANK_WORD = re.compile(rf"(?<![\w/@])(?:{RANK_ALTERNATION})(?![\w(@])")
+
+RANK = PatternRecogniser(
+    name="rank",
+    entity_type=EntityType.JOB_TITLE,
+    pattern=RANK_WORD,
+    # Above Presidio's 0.85 so that a bare "LCol" it calls a PERSON loses the tie on the
+    # same characters. A rank inside a longer person span still loses on length, which is
+    # right: "LCol Kromrey" is a person with a rank, not a rank.
+    score=0.9,
+)
+
 # Family relationships. "Partner" and "child" are left out: both are ordinary words in
 # government prose (partner organisations, child care) far more often than they point at
 # one person, and a term that withholds by default should not fire on the generic sense.
@@ -250,6 +307,7 @@ DEFAULT_RECOGNISERS: tuple[PatternRecogniser, ...] = (
     DATE_OF_BIRTH,
     BANK_ACCOUNT,
     JOB_TITLE,
+    RANK,
     KINSHIP,
 )
 

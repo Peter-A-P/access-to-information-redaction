@@ -197,14 +197,26 @@ Three more limitations, none of them small:
   also means the documents are template-shaped. The real-record test that checks this
   (published federal releases, where everything visible was judged releasable by a human)
   has now run, on six Library and Archives Canada packages, 82 pages of scanned Defence
-  records from 2001 to 2010, and it is unflattering: **the tool would have withheld every
-  one of the 533 spans that could be personal information**, all of them escalated rather
-  than decided ([`results/releases.md`](results/releases.md)). Most of the reason is
-  visible in the spans. The OCR is noisy, and the detector calls fragments of it and the
-  word "Kandahar" people. The flat text layer has no signature blocks. And military ranks
-  ("Major", "LCol") are not titles the rules know. It is a floor on six packages of one
-  kind, not a rate for real records, and it is the clearest pointer in the repository to
-  where the next work goes.
+  records from 2001 to 2010, and it was unflattering: **the tool withheld every one of the
+  538 spans that could be personal information**, all of them escalated rather than
+  decided. The spans said why. The detector called OCR fragments, ranks and units people
+  ("wu", "LCol", "KAF"), the flat text layer had no signature blocks, and the rules did
+  not know a rank is a title.
+
+  **On 2026-10-17 the tool learned the forces' vocabulary and to read layout back from
+  text, and over the same 538 spans it now withholds 41.8 percent** (32.8 to 63.4, six
+  packages, so the interval is wide), 225 boxes where there were 538
+  ([`results/releases.md`](results/releases.md)). Almost all of that is the vocabulary:
+  ranks as titles in a Defence record, units and headquarters re-typed, spans with no
+  name-shaped word in them dropped. Layout recovery alone moves it from 100 to 95.7
+  percent, because these text layers are scanned forms and printed email with no blank
+  lines to find paragraphs by. **This is no longer a blind test**: the unit list and some
+  of the layout rules were written after reading what these packages withheld, so the
+  number says how far the changes go on the records they were written against. More
+  packages, scored once before anything changes, are the held-out check, and none have
+  been added yet. What is still withheld is mostly a unit's postal code and telephone
+  numbers, "Kandahar", "Canadian", and names in sentences about a member's own complaint
+  or leave, which [`docs/escalation.md`](docs/escalation.md) case 7 escalates on purpose.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -303,6 +315,15 @@ decide, and why.
 ## How it works
 
 Documents are ingested with layout: headings, letterhead, signature blocks, email headers.
+A scan or a released PDF has no layout in the file, so it is read back from the text
+([`sever/ingest/layout.py`](sever/ingest/layout.py)): a closing word or a name with a title
+or rank under it starts a signature block, From, Sent and Subject lines are an email header
+even when OCR has put each value on a line of its own, and a short first paragraph opening
+with a public body's name is a letterhead. On the corpus's own text it recovers every
+signature and header label, and takes over-redaction from 41.7 percent with every block
+read as a paragraph to 22.4, the same as the native layout
+([`results/layout.md`](results/layout.md)); that is on the six layouts it was written
+against, so it is an upper bound.
 A detector finds candidate spans (Presidio and spaCy, plus recognisers for the identifiers
 a general PII engine does not know: medical care plan numbers, departmental file numbers,
 employee numbers).
@@ -376,23 +397,27 @@ it. A leak test that has never caught a leak is not evidence of anything.
 does, reads it back with Tesseract, re-projects every label through a character alignment
 and scores the pipeline on what the OCR produced.
 
-| Input | Character error rate | Labels that survived | Detector recall | Leak rate | Over-redaction |
-|---|---:|---:|---|---|---|
-| native (no OCR) | 0.0% | 100.0% | 98.0% | 3.0% | **28.7%** |
-| office scanner | 0.6% | 100.0% | 97.6% | 3.6% | **48.9%** |
-| photocopy | 0.9% | 99.9% | 96.8% | 3.9% | **48.1%** |
-| fax, 100 dpi | 65.1% | 45.2% | 52.9% | 69.2% | 36.7% |
+| Input | Character error rate | Labels that survived | Detector recall | Leak rate | Over-redaction, read as paragraphs | Over-redaction, layout read back |
+|---|---:|---:|---|---|---|---|
+| native (no OCR) | 0.0% | 100.0% | 98.1% | 3.0% | | **22.1%** |
+| office scanner | 0.6% | 100.0% | 97.4% | 3.8% | 39.9% | **23.1%** |
+| photocopy | 0.7% | 100.0% | 97.2% | 6.0% | 39.6% | **23.0%** |
+| fax, 100 dpi | 65.2% | 46.9% | 54.8% | 78.7% | 40.1% | 40.1% |
 
 The worry about OCR is that a misread name gets released. That barely happens until the page
-falls apart entirely. What happens first is that **the requester gets a blacker page**: a
-near-perfect scan costs a fifth of a point of recall and twenty points of over-redaction.
+falls apart entirely. What happened first, on 50 scanned records, was that **the requester
+got a blacker page**: a near-perfect scan cost a fifth of a point of recall and eighteen
+points of over-redaction.
 
-The characters survive; the layout does not. Every recovered block is body text, so nothing
-is role-bearing, and the rules lose the signature block and the letterhead, which is how
-they tell an official signing a letter from a third party named in it. Unable to place the
-person, they escalate, and escalation withholds. The three working profiles are
-indistinguishable from each other, so the effort does not belong in scan quality: it belongs
-in recovering structure from the word geometry Tesseract already returns.
+The characters survived; the layout did not. Every block came back as body text, so nothing
+was role-bearing, and the rules lost the signature block and the letterhead, which is how
+they tell an official signing a letter from a third party named in it. **Reading the layout
+back from the OCR text closes almost all of that gap** (2026-10-17): the three working
+profiles are within two points of the native row, and the leak rate does not move, because
+the blocks change and the text does not. The fax row does not recover, because at 100 dpi
+there is not enough text left to find a signature in. The recovery was written against the
+corpus's six layouts, so these rows are the most it can do, not what it does on a layout it
+has never seen; `results/releases.md` is that test, and it recovers much less there.
 
 ## The reviewer decides, and here is where they do it
 
@@ -462,6 +487,7 @@ sever study report                    # score it: minutes per page and accuracy,
 sever report --readme README.md       # every number above
 sever report --jurisdiction nl        # the same corpus under the NL statute
 sever eval-scanned --documents 50     # render, scan, read back, and score it (needs Tesseract)
+sever eval-layout                     # what the layout is worth, and how much reads back from text
 sever gate-export                     # the files project 03's release gate decides on
 ```
 
@@ -495,7 +521,8 @@ whatever the lock does not list, so re-sync with `uv sync --inexact` once they a
 |---|---|
 | `sever/taxonomy/` | The codes and their provisions, in YAML. `docs/taxonomy.md` is generated from it |
 | `sever/corpus/` | Personas with roles assigned first, six document templates, the renderer that emits labels with the text |
-| `sever/detect/` | Presidio plus the access-to-information recognisers, and within-document coreference |
+| `sever/ingest/` | The document model, OCR for the scanned track, released packages, and layout read back from text |
+| `sever/detect/` | Presidio plus the access-to-information recognisers, within-document coreference, the name sweep, and the military vocabulary |
 | `sever/context/` | Signature blocks, letterheads, public registers, requester matching, the context record |
 | `sever/decide/` | The rules in precedence order, the placeholder policy, the model layer |
 | `sever/review/` | The reviewer application, true-redaction export, the generated schedule, the append-only audit log |
@@ -510,6 +537,7 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [reviewer time study](results/reviewer.md) ·
 [the same corpus under ATIPPA](results/nl/results.md) ·
 [the scanned track](results/scanned.md) ·
+[layout read back from text](results/layout.md) ·
 [real released records](results/releases.md) · [plan](PLAN.md)
 
 ## Engineering
@@ -572,6 +600,8 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 | All four baselines (blunt, rules-only, sentence-only, model-only), with intervals | | |
 | The placeholders ablation, and the threshold sweep | | |
 | The scanned track, four degradation profiles, CER measured | |
+| Layout read back from text, scored against the native blocks | |
+| Canadian Armed Forces ranks, units and OCR noise, on the real-record track | |
 | True-redaction export, schedule, PDF leak test | |
 | Append-only hash-chained audit log | |
 | The reviewer application, with the release gate | |

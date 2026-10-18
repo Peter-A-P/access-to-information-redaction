@@ -20,6 +20,7 @@ from sever.context.register import PublicRegister, RegisterMatch
 from sever.context.requester import RequestConfig, RequesterMatch, RequesterMatcher
 from sever.context.roles import RoleIndex, RoleMention
 from sever.detect import coref
+from sever.detect.military import is_military_record, rank_beside
 from sever.detect.recognisers import JOB_TITLE
 from sever.detect.types import Detection, EntityType
 from sever.ingest.document import BlockKind, Document, DocumentType, Page
@@ -51,6 +52,10 @@ class ContextRecord:
     title: str | None = None
     title_source: str | None = None
     role_mentions: tuple[RoleMention, ...] = ()
+    # A Canadian Armed Forces rank written beside this person, or beside another mention
+    # of them, in a record the forces produced. Evidence that they are a member, which is
+    # weaker than a title in a signature block; see `rules.military_rank`.
+    rank: str | None = None
 
     cluster_id: str | None = None
     cluster_canonical: str | None = None
@@ -107,6 +112,7 @@ class ContextRecord:
             "heading": None,
             "title": None,
             "title_source": None,
+            "rank": None,
             "role_mentions": (),
             "register_match": None,
             "directory_match": None,
@@ -130,7 +136,7 @@ class ContextRecord:
             for f in (
                 "detection", "doc_id", "doc_type", "page_number", "pages_in_document",
                 "block_kind", "sentence", "heading", "message_index", "requester_match",
-                "register_match", "directory_match", "title", "title_source",
+                "register_match", "directory_match", "title", "title_source", "rank",
                 "role_mentions", "cluster_id", "cluster_canonical", "cluster_surface_forms",
                 "cluster_pages", "cluster_ambiguous", "co_mentions_in_sentence",
                 "complaint_party",
@@ -147,6 +153,7 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "heading",
     "title",
     "title_source",
+    "rank",
     "role_mentions",
     "register_match",
     "cluster_id",
@@ -215,6 +222,27 @@ class ContextBuilder:
         clusters = coref.build(detections, extra_names=roles.all_names())
 
         by_page = {p.number: p for p in document}
+
+        # Ranks, per mention and then per person: "LCol Kromrey" on page two says the bare
+        # "Kromrey" on page five is a member too. Only in a military record, where a rank
+        # is the forces' own; elsewhere "Capt" is as likely a ship's master.
+        ranks: dict[tuple[int, int, int], str] = {}
+        if is_military_record(document):
+            by_cluster: dict[str, str] = {}
+            for d in detections:
+                if d.entity_type is not EntityType.PERSON:
+                    continue
+                found = rank_beside(by_page[d.page].text, d.offsets)
+                if found is None:
+                    continue
+                ranks[d.key] = found
+                c = clusters.cluster_for(d)
+                if c is not None and not c.ambiguous:
+                    by_cluster.setdefault(c.cluster_id, found)
+            for d in detections:
+                c = clusters.cluster_for(d)
+                if d.key not in ranks and c is not None and c.cluster_id in by_cluster:
+                    ranks[d.key] = by_cluster[c.cluster_id]
 
         def sentence_of(det: Detection) -> str:
             page = by_page[det.page]
@@ -297,6 +325,7 @@ class ContextBuilder:
                     directory_match=directory_match,
                     title=title,
                     title_source=title_source,
+                    rank=ranks.get(det.key),
                     role_mentions=roles.for_name(name_for_role) or roles.for_name(det.text),
                     cluster_id=cluster.cluster_id if cluster else None,
                     cluster_canonical=cluster.canonical if cluster else None,

@@ -43,6 +43,7 @@ from sever.decide.pipeline import DecisionEngine
 from sever.detect.engine import SeverDetector
 from sever.detect.types import Detector
 from sever.eval.confusion import Interval, Scored, score
+from sever.eval.layout import flattened
 from sever.eval.report import config_for
 from sever.ingest.ocr import PROFILES, Degradation, TesseractMissing, available, scan
 from sever.taxonomy.loader import default_taxonomy
@@ -62,6 +63,9 @@ class TrackResult:
     labels_total: int
     labels_destroyed: int
     scored: Scored
+    # The same read-back with every paragraph BODY, which is how this track was scored
+    # until 2026-10-17. None when the run did not score it.
+    flat: Scored | None = None
 
     @property
     def survival(self) -> float:
@@ -109,6 +113,27 @@ class ScanTrack:
                 f"| {t.profile} | {t.cer:.1%} | {t.mean_confidence:.1%} | {t.survival:.1%} | "
                 f"{t.recall} | {t.leak} | {t.over} |"
             )
+        if any(t.flat is not None for t in self.tracks):
+            lines += [
+                "",
+                "**What reading the layout back is worth on a scan**",
+                "",
+                "The same read-back scored twice: with every paragraph BODY, which is how "
+                "this track was scored until 2026-10-17, and with the blocks read back from "
+                "the OCR text by `recover_blocks`. The text is identical, so the difference "
+                "is the blocks.",
+                "",
+                "| Input | Leak, paragraphs only | Leak, layout recovered | "
+                "Over-redaction, paragraphs only | Over-redaction, layout recovered |",
+                "|---|---|---|---|---|",
+            ]
+            for t in self.tracks:
+                if t.flat is None:
+                    continue
+                lines.append(
+                    f"| {t.profile} | {t.flat.leak_rate()} | {t.leak} | "
+                    f"{t.flat.over_redaction_rate()} | {t.over} |"
+                )
         lines += [
             "",
             "**What each profile is**",
@@ -127,22 +152,23 @@ class ScanTrack:
             ]
         lines += [
             "",
-            "**The column that moves is over-redaction, and it moves before the character "
-            "error rate does.** A near-perfect scan costs about a fifth of a point of "
-            "recall and twenty points of over-redaction. The characters are almost all "
-            "there; the structure is not. `paragraph_blocks` can recover where the "
-            "paragraphs are and nothing more, so every block is BODY, nothing is "
-            "role-bearing, and the rules lose the signature block and the letterhead, "
-            "which is the evidence they lean on hardest to tell an official acting in an "
-            "official capacity from a third party. Unable to place the person, the rules "
-            "escalate, and escalation withholds. So the scanned pages are not read less "
-            "accurately in any way a character error rate can show: they are read without "
-            "the layout, and the layout is where half the decision lives.",
+            "**What a scan cost was the layout, and the layout reads back from the text.** "
+            "Read as paragraphs, a near-perfect scan cost about a fifth of a point of recall "
+            "and some eighteen points of over-redaction: the characters were almost all there "
+            "and the structure was not, so nothing was role-bearing, the rules lost the "
+            "signature block and the letterhead, and a person they could not place was "
+            "escalated and withheld. With the blocks read back from the OCR text by "
+            "`recover_blocks`, the three working profiles are within two points of the native"
+            " row, and the leak rate does not move. The structure was in the text all along, "
+            "in the line breaks and in the words a signature block and an email header are "
+            "made of. That is on the six templates the recovery was written against, so it is"
+            " the most it can do; `results/releases.md` is a layout it was not written "
+            "against, and recovers much less there.",
             "",
             "That is worth stating plainly because the obvious worry about OCR is the "
             "opposite one. The fear is that a misread name gets released. On these numbers "
-            "that barely happens until the page falls apart entirely; what happens first is "
-            "that the requester gets a blacker page.",
+            "that barely happens until the page falls apart entirely; what happened first, "
+            "before the layout was read back, was that the requester got a blacker page.",
             "",
             "**Labels that survived** is the share of labelled values still present in the "
             "OCR output at all. A value the scan destroyed cannot be found by any detector, "
@@ -154,8 +180,8 @@ class ScanTrack:
             "A label none of whose characters survived is not in the leak pool either: "
             "there is nothing on the page to release. So the `fax` row's leak rate is over "
             "the labels that were still there to leak, which is why its n is smaller than "
-            "the rows above it. Reading 69 percent as though it were measured on the same "
-            "denominator as the 3 percent above would overstate it; reading it as a page "
+            "the rows above it. Reading it as though it were measured on the same "
+            "denominator as the rows above would overstate it; reading it as a page "
             "that has been destroyed rather than redacted is closer.",
             "",
             "The corpus renders in Courier at 9.5 point: monospaced, high contrast, one "
@@ -193,6 +219,7 @@ def run(
 
     native: dict[str, tuple[object, object]] = {}
     pools: dict[str, dict[str, tuple[object, object]]] = {p: {} for p in profiles}
+    flat_pools: dict[str, dict[str, tuple[object, object]]] = {p: {} for p in profiles}
     destroyed: dict[str, int] = dict.fromkeys(profiles, 0)
     total_labels = 0
     cer_weighted: dict[str, float] = dict.fromkeys(profiles, 0.0)
@@ -224,6 +251,12 @@ def run(
                     ).propose(scanned.document),
                     scanned.labels,
                 )
+                flat_pools[name][doc.doc_id] = (
+                    DecisionEngine(
+                        config=config, detector=det, taxonomy=taxonomy
+                    ).propose(flattened(scanned.document)),
+                    scanned.labels,
+                )
                 destroyed[name] += scanned.destroyed
                 cer_weighted[name] += scanned.cer * page_characters
                 conf_weighted[name] += (
@@ -243,6 +276,7 @@ def run(
                 labels_total=total_labels,
                 labels_destroyed=destroyed[name],
                 scored=score(pools[name], taxonomy=taxonomy),  # type: ignore[arg-type]
+                flat=score(flat_pools[name], taxonomy=taxonomy),  # type: ignore[arg-type]
             )
             for name in profiles
         ],

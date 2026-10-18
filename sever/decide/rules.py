@@ -21,6 +21,7 @@ it used, because a redaction schedule that says "R1" and a redaction schedule th
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -267,6 +268,52 @@ def staff_directory(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+# Words that make a sentence about the member rather than about the work. A rank says
+# someone is in the forces; it says nothing about whether this sentence is their job or
+# their life, and these are the sentences where it is their life.
+_PERSONAL_MATTER = re.compile(
+    r"harass|complain|grievance|medical|injur|wound|casualt|killed|\bdied\b|death|"
+    r"deceased|funeral|memorial|compassionate|sick|illness|diagnos|disciplin|"
+    r"court martial|summary trial|misconduct|pregnan|maternity|parental|divorce|"
+    r"next of kin|family|spouse|estate|\bleave\b",
+    re.IGNORECASE,
+)
+
+
+def military_rank(ctx: ContextRecord) -> RuleOutcome | None:
+    """K2 for a person the record gives a Canadian Armed Forces rank, in a record the forces
+    produced.
+
+    Added 2026-10-17 for the real-record track, where every one of 533 spans was withheld
+    and a good share of them were officers named with their rank in the forces' own
+    correspondence. A member of the forces is an officer or employee of the institution, so
+    a rank is evidence of the capacity the exclusion for officials turns on.
+
+    It is evidence about the person, not about the sentence, which is the same weakness the
+    staff directory has, so it sits beside that rule at the same confidence and after every
+    rule that reads the sentence: a requester, an identifier, a complaint, a title in a
+    signature block all win first. And it stands aside where the sentence is about the
+    member's own life rather than the work: a corporal's injury, a captain's compassionate
+    leave and a sergeant's memorial service are about them, and a rank does not make them
+    official business. Those escalate.
+    """
+    if ctx.rank is None or ctx.cluster_ambiguous:
+        return None
+    if ctx.entity_type is not EntityType.PERSON:
+        return None
+    if _PERSONAL_MATTER.search(ctx.sentence):
+        return None
+    return RuleOutcome(
+        code="K2",
+        confidence=0.75,
+        reason=(
+            f"Named with the rank {ctx.rank!r} in a Defence record, so a member of the "
+            f"Canadian Armed Forces; nothing in the sentence is about them personally."
+        ),
+        rule="military_rank",
+    )
+
+
 def deceased_over_twenty_years(ctx: ContextRecord) -> RuleOutcome | None:
     """K4, and only where the record itself carries the date of death.
 
@@ -274,8 +321,6 @@ def deceased_over_twenty_years(ctx: ContextRecord) -> RuleOutcome | None:
     text for this to fire; absent a date the person may be alive and the span is escalated
     by the fallthrough, which is why there is no "probably historical" branch here.
     """
-    import re
-
     if ctx.entity_type is not EntityType.PERSON:
         return None
     text = ctx.sentence
@@ -362,6 +407,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     official_capacity_contact,
     public_register,
     staff_directory,
+    military_rank,
     deceased_over_twenty_years,
 )
 

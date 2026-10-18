@@ -69,6 +69,24 @@ Not resolved silently in either direction. The proposal is the withholding one a
 reviewer is shown both answers, because a disagreement between a deterministic rule and a
 model is information about the document, not noise to be averaged away.
 
+### 7. A ranked member, in a sentence about their own life (`E1`)
+
+Since 2026-10-17, in a record the Canadian Armed Forces produced, a person the record gives
+a rank ("LCol Kromrey", "Gifford LCol SW@Deployed@KAF") is proposed for release as an
+official (`K2`, rule `military_rank`), at the staff directory's confidence of 0.75 rather
+than the 0.95 of a title in a signature block. A rank says the person is a member; it does
+not say the sentence is about their work.
+
+So the rule stands aside when the sentence is about the member rather than the job:
+harassment, a complaint or grievance, a medical matter or an injury, a death or a memorial,
+compassionate or sick leave, discipline, family. The span then falls through to case 1 and
+is withheld. The word list is deliberately broad: "discipline" in "the CAN or US specific
+training wrt discipline and finance" sends an officer doing their job to the reviewer, and
+that is the cost of the guard, paid in reviewer time rather than in a stranger's file.
+
+Outside a military record a rank means nothing to the rules. "Capt" in a fisheries record
+is a ship's master, and a ship's master is a third party.
+
 ## What is out of scope rather than escalated
 
 These are not escalations. The tool does not attempt them at all, and says so.
@@ -101,6 +119,16 @@ These are not escalations. The tool does not attempt them at all, and says so.
   backstop. The exception to the unique-office point above is this one: inside a
   complaint, the tool withholds the title rather than leaving it to the reviewer.
 - **Handwriting.** Scanned typed documents only.
+- **Nationality and religion words on their own.** "Canadian", "Afghan", "Muslim" come back
+  from the detector as a nationality or religion and are escalated, because a person's
+  national origin or religion is personal information when it is about an identifiable
+  person. Alone, as in "Canadian Forces", it is about nobody. On the real-record track the
+  detector's nationality-or-religion type is 37 escalations, 23 of them a form of
+  "Canadian" and most of the rest French words or OCR noise it mistook for one. Whether the
+  word is about someone is the reviewer's call for now.
+- **Place names the detector reads as people.** "Kandahar" is a PERSON 19 times on the
+  real-record track, counting "Aérodréme de Kandahar", and is withheld. A place gazetteer would fix it and is not built: a
+  gazetteer that knew "Kandahar" would also know every town that is somebody's surname.
 - **Release.** There is no code path from a proposal to a released document without a
   reviewer action on every page.
 

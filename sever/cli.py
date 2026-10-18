@@ -956,6 +956,28 @@ def eval_releases(
         typer.echo(f"wrote {releases_eval.write(result, out)}")
 
 
+@app.command("eval-layout")
+def eval_layout(
+    documents: Annotated[int, typer.Option(help="Corpus size.")] = 210,
+    seed: Annotated[int, typer.Option()] = 20270802,
+    out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
+        "results/layout.md"
+    ),
+) -> None:
+    """What the layout is worth, and how much of it reads back from text alone.
+
+    Scores the corpus three ways, with the rendered blocks, with every paragraph BODY, and
+    with the blocks read back by `recover_blocks`, and says per labelled span whether the
+    recovery put it in the right kind of block. Native text, rules only, spends nothing.
+    """
+    from sever.eval import layout as layout_eval
+
+    result = layout_eval.run(documents=documents, seed=seed)
+    typer.echo(result.to_markdown())
+    if out is not None:
+        typer.echo(f"wrote {layout_eval.write(result, out)}")
+
+
 @app.command("eval-scanned")
 def eval_scanned(
     documents: Annotated[int, typer.Option(help="Documents to scan. This track is slow.")] = 50,

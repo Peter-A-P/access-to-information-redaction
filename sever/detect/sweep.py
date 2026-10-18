@@ -44,7 +44,7 @@ What this module is careful about, and why:
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 from sever.detect.types import Detection, EntityType
 from sever.ingest.document import Document, Offsets
@@ -87,8 +87,17 @@ def _name_parts(name: str) -> list[str]:
     return out
 
 
-def _is_sweepable(part: str) -> bool:
-    """Whether a name part may be searched for across the document."""
+def _is_sweepable(part: str, *, not_names: Callable[[str], bool] | None = None) -> bool:
+    """Whether a name part may be searched for across the document.
+
+    `not_names` says which parts the record's vocabulary rules out. The detector passes
+    the military vocabulary for a Defence record and the ranks alone for any other:
+    without it "LCol Kromrey" licensed every "LCol" in the record as a person, and
+    re-typed the rank recogniser's own spans back to PERSON. None is the behaviour before
+    either existed, kept for the ablation in `results/releases.md`.
+    """
+    if not_names is not None and not_names(part):
+        return False
     from sever.decide.placeholders import NOT_NAME_PARTS, SAFE_CAPITALISED
 
     if len(part) < MIN_PART:
@@ -98,12 +107,15 @@ def _is_sweepable(part: str) -> bool:
     folded = part.casefold()
     if folded in NOT_NAME_PARTS:
         return False
+
     # A single word that is also ordinary vocabulary: a month, a job title, the name of a
     # public body, "Minutes". Substituting it is harmless; sweeping it is not.
     return not (" " not in part and folded in SAFE_CAPITALISED)
 
 
-def sweepable_parts(detections: Iterable[Detection]) -> list[str]:
+def sweepable_parts(
+    detections: Iterable[Detection], *, not_names: Callable[[str], bool] | None = None
+) -> list[str]:
     """Every surface form the document has already told us is part of a person's name,
     longest first so the longest claim is made first."""
     seen: set[str] = set()
@@ -111,18 +123,20 @@ def sweepable_parts(detections: Iterable[Detection]) -> list[str]:
         if d.entity_type is not EntityType.PERSON:
             continue
         for part in _name_parts(d.text):
-            if _is_sweepable(part):
+            if _is_sweepable(part, not_names=not_names):
                 seen.add(part)
     return sorted(seen, key=lambda p: (-len(p), p))
 
 
-def sweep(document: Document, detections: Sequence[Detection]) -> tuple[Detection, ...]:
+def sweep(
+    document: Document, detections: Sequence[Detection], *, not_names: Callable[[str], bool] | None = None
+) -> tuple[Detection, ...]:
     """The spans a document-wide sweep adds to what the page detectors found.
 
     Returns only the new ones; the caller merges. Nothing here overlaps an existing
     detection or another swept span.
     """
-    parts = sweepable_parts(detections)
+    parts = sweepable_parts(detections, not_names=not_names)
     if not parts:
         return ()
 
@@ -172,7 +186,7 @@ _RELEASING_TYPES = frozenset(
 
 
 def retype_known_people(
-    document: Document, detections: Sequence[Detection]
+    document: Document, detections: Sequence[Detection], *, not_names: Callable[[str], bool] | None = None
 ) -> tuple[Detection, ...]:
     """Re-type a span the document has already told us is a person's name.
 
@@ -193,7 +207,7 @@ def retype_known_people(
     because a name token inside a longer ADDRESS or ORGANISATION span is usually doing
     honest work there: "Hearn" inside "Hearn Building" is a place.
     """
-    parts = set(sweepable_parts(detections))
+    parts = set(sweepable_parts(detections, not_names=not_names))
     if not parts:
         return tuple(detections)
     out: list[Detection] = []
@@ -214,12 +228,14 @@ def retype_known_people(
     return tuple(out)
 
 
-def with_sweep(document: Document, detections: Sequence[Detection]) -> tuple[Detection, ...]:
+def with_sweep(
+    document: Document, detections: Sequence[Detection], *, not_names: Callable[[str], bool] | None = None
+) -> tuple[Detection, ...]:
     """`detections`, re-typed where the document contradicts them, plus what the sweep adds.
 
     Re-typing runs first so that the sweep does not then skip the span it would have added,
     and so that the added spans are decided by the same rule as the re-typed ones.
     """
-    corrected = retype_known_people(document, detections)
-    merged = [*corrected, *sweep(document, corrected)]
+    corrected = retype_known_people(document, detections, not_names=not_names)
+    merged = [*corrected, *sweep(document, corrected, not_names=not_names)]
     return tuple(sorted(merged, key=lambda d: (d.page, d.offsets.start)))

@@ -26,6 +26,7 @@ import pytest
 
 from sever.eval.releases import RELEASED_BY_DESIGN, ReleaseResult, VisibleSpan
 from sever.eval.releases import run as run_releases
+from sever.ingest.document import BlockKind
 from sever.ingest.releases import (
     ManifestError,
     add,
@@ -202,15 +203,38 @@ def test_the_document_carries_the_visible_text_and_not_the_redacted_text(
     assert doc.page(1).blocks, "paragraphs are recovered as blocks"
 
 
-def test_every_block_is_body_because_a_released_pdf_says_nothing_about_structure(
-    tmp_path: Path,
-) -> None:
-    """The handicap this track carries and states. Nothing in the file says which paragraph
-    was a signature block, so the rules lose the evidence they lean on hardest, and the
-    scanned track measures what that costs where the truth is known."""
-    doc = to_document(a_pdf(tmp_path / "one.pdf"), "one.pdf")
+def test_without_recovery_every_block_is_body(tmp_path: Path) -> None:
+    """How this track was scored until 2026-10-17, kept so the ablation in
+    results/releases.md can show what the recovery is worth. Nothing in the file says which
+    paragraph was a signature block, so a flat reading has none."""
+    doc = to_document(a_pdf(tmp_path / "one.pdf"), "one.pdf", recover_layout=False)
 
-    assert not any(b.kind.is_role_bearing for b in doc.page(1).blocks)
+    assert doc.page(1).blocks
+    assert all(b.kind is BlockKind.BODY for b in doc.page(1).blocks)
+
+
+def test_a_released_signature_block_is_read_back_from_the_text(tmp_path: Path) -> None:
+    """The point of recovering the layout: a name on its own line with a title under it is
+    a signature in a released PDF as much as in a native one."""
+    path = tmp_path / "signed.pdf"
+    doc = pymupdf.open()
+    page = doc.new_page(width=612, height=792)
+    page.insert_text(
+        (54, 90),
+        "I write to confirm the arrangements described in your letter of 3 May,\n"
+        "which are acceptable to the Department.\n\n"
+        "Chris McGuffin\nLCol (OF-4)\nCO TFK HQ & Sig Sqn",
+        fontname="cour",
+        fontsize=10,
+    )
+    doc.save(str(path))
+    doc.close()
+
+    blocks = to_document(path, "signed.pdf").page(1).blocks
+
+    signature = [b for b in blocks if b.kind is BlockKind.SIGNATURE]
+    assert signature and "Chris McGuffin" in signature[0].text
+    assert "LCol" in signature[0].text
 
 
 # --- the measurement -----------------------------------------------------------------

@@ -21,6 +21,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
 from sever.context.requester import normalise
+from sever.detect.recognisers import RANK_SHORT_FORMS
 from sever.detect.types import Detection, EntityType
 
 
@@ -66,12 +67,22 @@ class CorefIndex:
 
 
 def _parts(name: str) -> frozenset[str]:
-    return frozenset(p for p in normalise(name).split() if len(p) > 1 and p not in _HONORIFICS)
+    return frozenset(
+        p
+        for p in normalise(name).split()
+        if len(p) > 1 and p not in _HONORIFICS and p not in _RANKS
+    )
 
 
 _HONORIFICS = frozenset(
     {"mr", "mrs", "ms", "miss", "dr", "prof", "hon", "sir", "madam", "rev", "mx"}
 )
+
+# Military ranks in their short forms, for the same reason as an honorific: "McGuffin LCol"
+# and "Chris McGuffin" are one person, and with "lcol" counted as a name part the bare
+# "McGuffin" belonged to both and its cluster was marked ambiguous. The full words are left
+# out because Major and Sargent are surnames.
+_RANKS = frozenset(normalise(r) for r in RANK_SHORT_FORMS)
 
 
 def build(
