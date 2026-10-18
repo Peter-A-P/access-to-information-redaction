@@ -1692,3 +1692,37 @@ What is withheld points at the next work more clearly than the Defence track did
 
 Nothing is changed in response here. Whatever is built from this list is measured on the
 next held-out set, not on this one.
+
+### 12.40 The archival 110-year rule and the release stamp, built before the fresh set is opened
+
+2026-10-18, after 12.39. Peter asked for the archive's age rule and whatever else made
+sense, tested on a fresh set. The fresh set was chosen, downloaded and checksummed first
+(`docs/data.md`, commit `87c5cbb`); this commit adds the code, and the next one scores it.
+
+**K7, a new taxonomy code.** Personal information in a record an archives holds, about an
+individual the record shows was born more than 110 years ago. Federally: Access to
+Information Act 19(2)(c), Privacy Act 8(3), Privacy Regulations 6(c), all quoted and checked
+on 2026-10-18. Under ATIPPA it escalates, because no provision was found for it. The rule
+(`rules.archival_age`) runs only when `RequestConfig.archival` is set, after the requester
+rules and before anything that withholds, on two kinds of evidence only: the latest year on
+the page (everyone a page names was born before it was written), or a birth stated straight
+after a name ("born 1897", or "aged 54" on a page with a year). A year inside an identifier
+("CH-1-1910", "A-2026-01845") is not read, and the latest year wins, so every guess errs late.
+The releases track sets `archival` for packages from Library and Archives Canada and counts
+from each package's retrieval year, so the number does not drift with the calendar.
+
+**The release stamp.** "Document disclosed under the Access to Information Act" and its
+French half, read by OCR, were people 26 times on the held-out set. `sever/detect/stamps.py`
+drops detections on a stamp line, before and after the name sweep (the sweep had put them
+back).
+
+**On the development data.** Defence: 41.8 to 41.6 percent withheld, from the stamp. The
+held-out set, which is development data for these two changes: 95.2 to 89.1, of which 2.4
+points are the archival rule and the rest the stamp. The archival rule decides little on
+those files because most of their pages are dated in the 1950s and their ages sit in form
+fields, not after names; it releases what the record proves and no more.
+`results/releases-heldout.md` is left as published at `48a1c4d`, because it reports the
+held-out test of 12.37's changes and these were written after reading it.
+
+The synthetic corpus is unchanged: archival is off for it and it has no stamps, and all
+7,627 proposals were checked identical.

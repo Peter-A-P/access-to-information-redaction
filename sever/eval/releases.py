@@ -85,13 +85,16 @@ class VisibleSpan:
 
 @dataclass(frozen=True, slots=True)
 class Configuration:
-    """One row of the ablation: whether the layout is read back, and whether the tool
-    knows the forces' vocabulary (ranks, the rule that reads them, and the screen that
-    drops OCR noise and re-types units)."""
+    """One row of the ablation: whether the layout is read back, whether the tool knows
+    the forces' vocabulary and screens out OCR noise and the release stamp, and whether
+    the archival 110-year rule applies."""
 
     name: str
     recover_layout: bool
     vocabulary: bool
+    # The 110-year rule (K7), for packages an archives released. Applied only where the
+    # package's institution is Library and Archives Canada.
+    archival: bool = False
 
 
 CONFIGURATIONS: tuple[Configuration, ...] = (
@@ -99,8 +102,9 @@ CONFIGURATIONS: tuple[Configuration, ...] = (
     # The signature reader takes a rank under a name as a title in every row, so this one
     # already has that much of the vocabulary; what it lacks is the rest.
     Configuration("layout recovered (a rank under a signature counts as a title)", True, False),
-    Configuration("military vocabulary", False, True),
-    Configuration("both (the tool as it now ships)", True, True),
+    Configuration("vocabulary and screens: ranks, units, OCR noise, the stamp", False, True),
+    Configuration("layout and vocabulary, no archival rule", True, True),
+    Configuration("all of it, with the 110-year archival rule (as it now ships)", True, True, True),
 )
 
 
@@ -335,7 +339,16 @@ def _propose(
     for release in data.releases:
         # No requester: nobody knows who asked for a package downloaded from an archive.
         # Stated in the table rather than papered over with a guess.
-        config = RequestConfig(request_id=release.record.file_name)
+        config = RequestConfig(
+            request_id=release.record.file_name,
+            # An archives' release, and counted from the year it was retrieved, so the
+            # number does not drift as the calendar does.
+            archival=configuration.archival
+            and release.record.institution.startswith("Library and Archives Canada"),
+            as_of_year=int(release.record.retrieved_on[:4])
+            if release.record.retrieved_on
+            else None,
+        )
         document = _blocks(release.document, configuration.recover_layout)
         proposals = DecisionEngine(
             config=config, detector=det, taxonomy=taxonomy, rules=rules

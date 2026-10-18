@@ -11,7 +11,7 @@
 jurisdiction: federal
 name: Canada (federal)
 version: 1
-updated: 2026-09-13
+updated: 2026-10-18
 
 statutes:
   atia:
@@ -24,6 +24,11 @@ statutes:
     citation: R.S.C., 1985, c. P-21
     url: https://laws-lois.justice.gc.ca/eng/acts/P-21/
     consolidated_to: 2026-07-21
+  privacy_regs:
+    title: Privacy Regulations
+    citation: SOR/83-508
+    url: https://laws-lois.justice.gc.ca/eng/regulations/SOR-83-508/
+    consolidated_to: 2026-09-30
 
 mappings:
   R1:
@@ -188,6 +193,44 @@ mappings:
       Two different mechanisms share one code because they share one reviewer question
       ("is there a reason on the file that this may be released"). The generated schedule
       cites whichever provision the rule fired on, not both.
+
+  K7:
+    provisions:
+      - statute: atia
+        section: 19(2)(c)
+        heading: Where disclosure authorized, in accordance with section 8 of the Privacy Act
+        quote: >-
+          the disclosure is in accordance with section 8 of the Privacy Act.
+        checked_on: 2026-10-18
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/A-1/section-19.html
+      - statute: privacy
+        section: 8(3)
+        heading: Personal information disclosed by Library and Archives of Canada
+        quote: >-
+          Subject to any other Act of Parliament, personal information under the custody or
+          control of the Library and Archives of Canada that has been transferred there by
+          a government institution for historical or archival purposes may be disclosed in
+          accordance with the regulations to any person or body for research or statistical
+          purposes.
+        checked_on: 2026-10-18
+        checked_against: https://laws-lois.justice.gc.ca/eng/acts/P-21/section-8.html
+      - statute: privacy_regs
+        section: 6(c)
+        heading: Personal information under the control of the Archives, 110 years
+        quote: >-
+          110 years have elapsed following the birth of the individual to whom the
+          information relates
+        checked_on: 2026-10-18
+        checked_against: https://laws-lois.justice.gc.ca/eng/regulations/SOR-83-508/FullText.html
+    note: >
+      Added 2026-10-18 for archival release packages, where Library and Archives Canada
+      releases what the federal Act would otherwise withhold because enough time has
+      passed. The chain is three links: the Access to Information Act permits a disclosure
+      that section 8 of the Privacy Act permits, 8(3) lets the archives disclose in
+      accordance with the regulations, and section 6(c) of the regulations names 110 years
+      from birth. Like K3 it is discretionary ("may be disclosed"), so K7 is a proposal to
+      exercise a discretion that the reviewer holds. It applies only when the request
+      configuration says the records are archival.
 
   K6:
     provisions:

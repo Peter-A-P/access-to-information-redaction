@@ -11,7 +11,7 @@ escalation code rather than on a guess.
 proposal a reviewer applies. A public body brings its own interpretation, and the
 mapping is a YAML file precisely so that it can.
 
-Generated 2026-10-08 from `sever/taxonomy/`, the date of its last update.
+Generated 2026-10-18 from `sever/taxonomy/`, the date of its last update.
 
 ## How much of this has been checked
 
@@ -22,7 +22,7 @@ marked unverified with a reason, and the counts are printed here.
 
 | Jurisdiction | Provisions verified against the consolidated text |
 |---|---|
-| Canada (federal) | 18 of 18 (100%) |
+| Canada (federal) | 21 of 21 (100%) |
 | Newfoundland and Labrador | 18 of 18 (100%) |
 
 Unchecked rows are listed in full in the jurisdiction sections below, each with
@@ -39,6 +39,7 @@ the reason it has not been checked. Nothing defaults to verified.
 | `K3` | Keep | Already publicly available |
 | `K4` | Keep | An individual dead more than twenty years |
 | `K5` | Keep | Consent given, or a discretionary benefit of a financial nature |
+| `K7` | Keep | An archival record, about an individual born more than 110 years ago |
 | `K6` | Keep | Not personal information |
 | `E1` | Escalate | Role undeterminable from the record |
 | `E2` | Escalate | Mixed span the rules cannot sever cleanly |
@@ -270,6 +271,34 @@ Traps:
 
 > Letters confirmed on 2026-09-20: (b) for consent, (l) for a discretionary benefit of a financial nature. Paragraph (l) carves out more than the federal equivalent and the carve-out is the part that matters. The information supplied in support of an application, and anything about eligibility for or the level of income and employment support, stays withheld. A record about a benefit is therefore usually a mixture, one part releasable under (l) and the rest not, and K5 cannot make that split. The tool proposes K5 for the fact and the amount of a discretionary benefit only.
 
+### `K7`: An archival record, about an individual born more than 110 years ago
+
+**Keep.** Personal information in a record transferred to an archives for archival or historical purposes, about an individual born more than 110 years ago. Federally the archives may disclose it for research or statistical purposes once 110 years have elapsed since the birth.
+
+*The question behind it:* Is this an archival record, and does the record itself show that this person was born more than 110 years ago?
+
+Examples:
+
+- A 1913 immigration certificate naming the applicant, their father and their son: everyone named in a record written in 1913 was born before 1913.
+- A 1951 interview with a man the record gives as aged 54.
+
+Traps:
+
+- The birth has to be shown by the record: a stated year of birth, an age on a dated page, or the page's own date. A file title's date range is not the date of the page, and a record that merely looks old is not evidence.
+- Only for records an archives holds. The same 1913 certificate in a department's active file is not archival, and K7 does not apply to it.
+
+*Canada (federal):*
+
+| Provision | Heading | Verification | Text or reason |
+|---|---|---|---|
+| Access to Information Act, s. 19(2)(c) | Where disclosure authorized, in accordance with section 8 of the Privacy Act | checked 2026-10-18 | "the disclosure is in accordance with section 8 of the Privacy Act." |
+| Privacy Act, s. 8(3) | Personal information disclosed by Library and Archives of Canada | checked 2026-10-18 | "Subject to any other Act of Parliament, personal information under the custody or control of the Library and Archives of Canada that has been transferred there by a government institution for historical or archival purposes may be disclosed in accordance with the regulations to any person or body for research or statistical purposes." |
+| Privacy Regulations, s. 6(c) | Personal information under the control of the Archives, 110 years | checked 2026-10-18 | "110 years have elapsed following the birth of the individual to whom the information relates" |
+
+> Added 2026-10-18 for archival release packages, where Library and Archives Canada releases what the federal Act would otherwise withhold because enough time has passed. The chain is three links: the Access to Information Act permits a disclosure that section 8 of the Privacy Act permits, 8(3) lets the archives disclose in accordance with the regulations, and section 6(c) of the regulations names 110 years from birth. Like K3 it is discretionary ("may be disclosed"), so K7 is a proposal to exercise a discretion that the reviewer holds. It applies only when the request configuration says the records are archival.
+
+*Newfoundland and Labrador:* No provision is cited because none was found that this code could rest on; the escalation is the answer. If the provincial archives' own practice turns out to rest on a provision, it belongs here with its quote.
+
 ### `K6`: Not personal information
 
 **Keep.** The detector flagged a span that is not personal information about an identifiable individual: an organisation, a place, a date, a generic role, a program name, a statute.
@@ -382,6 +411,7 @@ overrides nothing, so no result table is affected by the rows below.
 |---|---|---|---|---|
 | Newfoundland and Labrador | `K3` | keep | **escalate** | ATIPPA has no general publicly-available exception. Paragraph 40(2)(m) releases two enumerated things, attendance at a public event and receipt of an honour, and only where the disclosure is not contrary to the public interest under subsection (3). A name that is public for any other reason is not released by it, so the federal meaning of K3 has no equivalent here and the span goes to a person. |
 | Newfoundland and Labrador | `K4` | keep | **escalate** | ATIPPA 40(5)(j) makes the time since a death a circumstance the head of a public body weighs and states no period, where the federal Act excludes a person dead more than twenty years from the definition outright. Releasing on a fixed number of years would perform a weighing the Act reserves to a person, against a threshold this project invented. |
+| Newfoundland and Labrador | `K7` | keep | **escalate** | The 110-year rule is a federal regulation for records transferred to Library and Archives Canada. This project has not found an ATIPPA provision that releases a record's personal information on the age of the record or of the person, and 40(5)(j) makes even the time since a death a circumstance to weigh. So under this configuration the archival rule escalates rather than releases. |
 
 ## The statutes
 
@@ -389,6 +419,7 @@ overrides nothing, so no result table is affected by the rows below.
 
 - [Access to Information Act](https://laws-lois.justice.gc.ca/eng/acts/A-1/) (R.S.C., 1985, c. A-1); consolidation read: 2026-07-21
 - [Privacy Act](https://laws-lois.justice.gc.ca/eng/acts/P-21/) (R.S.C., 1985, c. P-21); consolidation read: 2026-07-21
+- [Privacy Regulations](https://laws-lois.justice.gc.ca/eng/regulations/SOR-83-508/) (SOR/83-508); consolidation read: 2026-09-30
 
 **Newfoundland and Labrador**
 

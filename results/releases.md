@@ -6,8 +6,8 @@
 
 | Denominator | Spans | Over-redaction |
 |---|---:|---|
-| Spans that could be personal information | 342 | 65.8% (56.8% to 81.5%), n=342 |
-| Every detected span, including the types the tool releases by design | 1747 | 12.9% (9.5% to 16.3%), n=1747 |
+| Spans that could be personal information | 341 | 65.7% (56.8% to 81.5%), n=341 |
+| Every detected span, including the types the tool releases by design | 1679 | 13.3% (9.9% to 17.1%), n=1679 |
 
 **Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
@@ -21,10 +21,11 @@ Every row is scored over the 538 spans the first row called possibly personal, s
 |---|---|---:|
 | as scored until 2026-10-17: flat text, no military vocabulary | 100.0% (67.3% to 100.0%), n=538 | 538 |
 | layout recovered (a rank under a signature counts as a title) | 95.7% (92.0% to 99.4%), n=538 | 515 |
-| military vocabulary | 43.9% (34.9% to 66.3%), n=538 | 236 |
-| both (the tool as it now ships) | 41.8% (32.8% to 63.4%), n=538 | 225 |
+| vocabulary and screens: ranks, units, OCR noise, the stamp | 43.7% (34.8% to 66.3%), n=538 | 235 |
+| layout and vocabulary, no archival rule | 41.6% (32.7% to 63.4%), n=538 | 224 |
+| all of it, with the 110-year archival rule (as it now ships) | 41.6% (32.7% to 63.4%), n=538 | 224 |
 
-The 41.8% here and the 65.8% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 342 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
+The 41.6% here and the 65.7% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 341 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
 
 In the shipping configuration the screen dropped 29 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 22 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
 
@@ -34,7 +35,7 @@ In the shipping configuration the screen dropped 29 person spans with no name-sh
 
 | Rule | Spans that could be personal information |
 |---|---:|
-| `unresolved` | 220 |
+| `unresolved` | 219 |
 | `military_rank` | 90 |
 | `official_capacity_title` | 17 |
 | `official_capacity_contact` | 9 |
@@ -45,5 +46,5 @@ In the shipping configuration the screen dropped 29 person spans with no name-sh
 
 | Category | Spans withheld over text a reviewer released |
 |---|---:|
-| `E1` | 220 |
+| `E1` | 219 |
 | `R1` | 5 |

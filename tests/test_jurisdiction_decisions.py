@@ -27,7 +27,9 @@ from pydantic import ValidationError
 
 from sever.taxonomy.loader import CodeMapping, Decision, default_taxonomy
 
-OVERRIDDEN = ("K3", "K4")
+# K7, the federal 110-year archival rule, joined on 2026-10-18: no ATIPPA provision was
+# found for it, so under NL it escalates.
+OVERRIDDEN = ("K3", "K4", "K7")
 
 
 def test_the_federal_configuration_overrides_nothing() -> None:
@@ -43,7 +45,7 @@ def test_every_code_decides_federally_exactly_as_categories_yaml_says() -> None:
 
 
 @pytest.mark.parametrize("code", OVERRIDDEN)
-def test_the_two_codes_the_statutes_disagree_about_escalate_under_atippa(code: str) -> None:
+def test_the_codes_the_statutes_disagree_about_escalate_under_atippa(code: str) -> None:
     t = default_taxonomy()
     assert t.decision(code, "federal") is Decision.KEEP
     assert t.decision(code, "nl") is Decision.ESCALATE

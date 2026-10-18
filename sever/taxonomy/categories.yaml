@@ -7,7 +7,7 @@
 # reviewer approves or rejects. See the README's first screen.
 
 version: 1
-updated: 2026-10-08
+updated: 2026-10-18
 
 # Every code carries one of these decisions. The set is closed: sever.decide may not
 # invent a decision that is not here, and the loader rejects a code that uses another.
@@ -160,6 +160,31 @@ codes:
       - The name of a grant recipient and the amount of the grant.
     traps:
       - A benefit that is an entitlement rather than discretionary is not K5.
+
+  - code: K7
+    decision: keep
+    name: An archival record, about an individual born more than 110 years ago
+    definition: >
+      Personal information in a record transferred to an archives for archival or
+      historical purposes, about an individual born more than 110 years ago. Federally the
+      archives may disclose it for research or statistical purposes once 110 years have
+      elapsed since the birth.
+    reviewer_question: >
+      Is this an archival record, and does the record itself show that this person was born
+      more than 110 years ago?
+    examples:
+      - >
+        A 1913 immigration certificate naming the applicant, their father and their son:
+        everyone named in a record written in 1913 was born before 1913.
+      - A 1951 interview with a man the record gives as aged 54.
+    traps:
+      - >
+        The birth has to be shown by the record: a stated year of birth, an age on a dated
+        page, or the page's own date. A file title's date range is not the date of the
+        page, and a record that merely looks old is not evidence.
+      - >
+        Only for records an archives holds. The same 1913 certificate in a department's
+        active file is not archival, and K7 does not apply to it.
 
   - code: K6
     decision: keep

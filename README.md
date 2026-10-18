@@ -301,8 +301,9 @@ Three more limitations, none of them small:
   nine, because an employee who files a grievance is in the directory too.
   [docs/rejected.md](docs/rejected.md) entry 6 has the account. The headline tables use no
   directory, because a directory is something a public body supplies.
-- **All 36 statutory provisions are verified** against the consolidated texts, federal
-  current to 2026-07-21 and ATIPPA to 2026-09-20: each carries the quote, the date it was
+- **All 39 statutory provisions are verified** against the consolidated texts, federal
+  current to 2026-07-21 (2026-09-30 for the three added on 2026-10-18 for the archival
+  rule, K7) and ATIPPA to 2026-09-20: each carries the quote, the date it was
   checked and the URL it was checked against. Nothing defaults to verified, and the format
   refuses a provision that is neither verified nor explicitly excused with a reason.
   Reading them changed three mappings; [docs/escalation.md](docs/escalation.md) says which
@@ -632,7 +633,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
-| Taxonomy, two jurisdictions, all 36 provisions verified | Reviewer time study: two reviewers of the three it needs (2.1 times faster with proposals, records held fixed) | |
+| Taxonomy, two jurisdictions, all 39 provisions verified | Reviewer time study: two reviewers of the three it needs (2.1 times faster with proposals, records held fixed) | |
 | 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |

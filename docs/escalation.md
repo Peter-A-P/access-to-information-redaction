@@ -134,8 +134,8 @@ These are not escalations. The tool does not attempt them at all, and says so.
 
 ## Questions that were open, and what the statute said
 
-All 36 provisions in the taxonomy are now verified against the consolidated texts, federal
-on 2026-07-21 and ATIPPA on 2026-09-20. Reading them closed three questions and opened a
+All 36 provisions in the taxonomy were verified against the consolidated texts, federal on
+2026-07-21 and ATIPPA on 2026-09-20 (three more, for the archival rule K7, on 2026-10-18). Reading them closed three questions and opened a
 fourth, and none of the three closed in the direction that was guessed.
 
 - **The K2 paragraph letters under ATIPPA** are **(f), (g) and (h)**, confirmed rather than

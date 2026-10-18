@@ -14,6 +14,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from sever.context.age import ARCHIVAL_YEARS, birth_year_beside, page_year
 from sever.context.complaint import ComplaintParties, is_party_sentence
 from sever.context.directory import DirectoryMatch, StaffDirectory
 from sever.context.register import PublicRegister, RegisterMatch
@@ -56,6 +57,14 @@ class ContextRecord:
     # of them, in a record the forces produced. Evidence that they are a member, which is
     # weaker than a title in a signature block; see `rules.military_rank`.
     rank: str | None = None
+
+    # The archival rule (K7). Set only when the request says the records are archival:
+    # the latest birth year that is 110 years ago, the latest year on this page, and the
+    # latest year this person can have been born by what the record says beside their
+    # name or any other mention of them. See sever.context.age.
+    archival_cutoff: int | None = None
+    page_year: int | None = None
+    birth_year: int | None = None
 
     cluster_id: str | None = None
     cluster_canonical: str | None = None
@@ -113,6 +122,7 @@ class ContextRecord:
             "title": None,
             "title_source": None,
             "rank": None,
+            "birth_year": None,
             "role_mentions": (),
             "register_match": None,
             "directory_match": None,
@@ -137,7 +147,7 @@ class ContextRecord:
                 "detection", "doc_id", "doc_type", "page_number", "pages_in_document",
                 "block_kind", "sentence", "heading", "message_index", "requester_match",
                 "register_match", "directory_match", "title", "title_source", "rank",
-                "role_mentions", "cluster_id", "cluster_canonical", "cluster_surface_forms",
+                "archival_cutoff", "page_year", "birth_year", "role_mentions", "cluster_id", "cluster_canonical", "cluster_surface_forms",
                 "cluster_pages", "cluster_ambiguous", "co_mentions_in_sentence",
                 "complaint_party",
             )
@@ -154,6 +164,7 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "title",
     "title_source",
     "rank",
+    "birth_year",
     "role_mentions",
     "register_match",
     "cluster_id",
@@ -222,6 +233,36 @@ class ContextBuilder:
         clusters = coref.build(detections, extra_names=roles.all_names())
 
         by_page = {p.number: p for p in document}
+
+        # The archival rule's evidence: each page's latest year, and a birth stated beside a
+        # person, carried to every mention of them as ranks are below.
+        cutoff: int | None = None
+        page_years: dict[int, int | None] = {}
+        births: dict[tuple[int, int, int], int] = {}
+        if self.config.archival:
+            as_of = self.config.year
+            cutoff = as_of - ARCHIVAL_YEARS
+            page_years = {p.number: page_year(p.text, as_of=as_of) for p in document}
+            births_by_cluster: dict[str, int] = {}
+            for d in detections:
+                if d.entity_type is not EntityType.PERSON:
+                    continue
+                born = birth_year_beside(
+                    by_page[d.page].text, d.offsets, page_year=page_years[d.page]
+                )
+                if born is None:
+                    continue
+                births[d.key] = born
+                c = clusters.cluster_for(d)
+                if c is not None and not c.ambiguous:
+                    # The latest of the births stated, which is the careful one.
+                    births_by_cluster[c.cluster_id] = max(
+                        born, births_by_cluster.get(c.cluster_id, born)
+                    )
+            for d in detections:
+                c = clusters.cluster_for(d)
+                if c is not None and c.cluster_id in births_by_cluster:
+                    births[d.key] = births_by_cluster[c.cluster_id]
 
         # Ranks, per mention and then per person: "LCol Kromrey" on page two says the bare
         # "Kromrey" on page five is a member too. Only in a military record, where a rank
@@ -326,6 +367,9 @@ class ContextBuilder:
                     title=title,
                     title_source=title_source,
                     rank=ranks.get(det.key),
+                    archival_cutoff=cutoff,
+                    page_year=page_years.get(det.page),
+                    birth_year=births.get(det.key),
                     role_mentions=roles.for_name(name_for_role) or roles.for_name(det.text),
                     cluster_id=cluster.cluster_id if cluster else None,
                     cluster_canonical=cluster.canonical if cluster else None,

@@ -9,7 +9,7 @@ current in the same commit as any change to what the project reads.
 | Source | What it is | Size | Terms |
 |---|---|---|---|
 | Generated personas and documents | Invented people rendered into six document templates written for this project | 210 pages, 5,355 labelled spans | Written here. No real person |
-| Consolidated statute texts | Section numbers and quoted provisions in `sever/taxonomy/*.yaml` | 4 statutes, 36 provisions (18 federal, 18 NL), every one verified | Public legislation; each quote records the URL it was read from and the date |
+| Consolidated statute texts | Section numbers and quoted provisions in `sever/taxonomy/*.yaml` | 5 statutes and regulations, 39 provisions (21 federal, 18 NL), every one verified | Public legislation; each quote records the URL it was read from and the date |
 
 The scanned track renders and degrades the synthetic corpus itself, so it reads nothing
 from outside. The published-federal-releases track reads six Library and Archives Canada

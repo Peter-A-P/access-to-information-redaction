@@ -84,6 +84,42 @@ def requester_ambiguous(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def archival_age(ctx: ContextRecord) -> RuleOutcome | None:
+    """K7 for an archival record about someone the record shows was born more than 110
+    years ago.
+
+    Added 2026-10-18 for the held-out release packages, where Library and Archives Canada
+    released the families in immigration case files and the tool withheld every "son" and
+    "wife". It runs only when the request says the records are archival
+    (`RequestConfig.archival`), and only on evidence in the record: the page's own latest
+    year, or a birth stated beside the person's name. It runs after the requester rules and
+    before everything that withholds, because 110 years from birth covers a health number
+    and a family relationship as much as a name: none of them is withheld for privacy once
+    the person it is about is past the rule.
+    """
+    if ctx.archival_cutoff is None or not ctx.entity_type.is_about_a_person:
+        return None
+    cutoff = ctx.archival_cutoff
+    if ctx.birth_year is not None and ctx.birth_year <= cutoff:
+        why = (
+            f"the record puts this person's birth in or before {ctx.birth_year}, more than "
+            f"110 years ago"
+        )
+    elif ctx.page_year is not None and ctx.page_year <= cutoff:
+        why = (
+            f"the latest year on this page is {ctx.page_year}, so everyone it names was born "
+            f"more than 110 years ago"
+        )
+    else:
+        return None
+    return RuleOutcome(
+        code="K7",
+        confidence=0.85,
+        reason=f"An archival record, and {why}; the archives may disclose it.",
+        rule="archival_age",
+    )
+
+
 def inherently_sensitive(ctx: ContextRecord) -> RuleOutcome | None:
     """R1 for health numbers, insurance numbers, dates of birth and financial details,
     whoever they belong to. Runs before the capacity rules on purpose."""
@@ -398,6 +434,7 @@ def unresolved(ctx: ContextRecord) -> RuleOutcome:
 DEFAULT_RULES: tuple[Rule, ...] = (
     requester_ambiguous,
     requester_own_information,
+    archival_age,
     inherently_sensitive,
     family_relationship,
     complaint_party,

@@ -10,7 +10,7 @@
 jurisdiction: nl
 name: Newfoundland and Labrador
 version: 1
-updated: 2026-09-13
+updated: 2026-10-18
 
 statutes:
   atippa:
@@ -237,6 +237,20 @@ mappings:
       withheld. A record about a benefit is therefore usually a mixture, one part
       releasable under (l) and the rest not, and K5 cannot make that split. The tool
       proposes K5 for the fact and the amount of a discretionary benefit only.
+
+  K7:
+    decision: escalate
+    decision_reason: >-
+      The 110-year rule is a federal regulation for records transferred to Library and
+      Archives Canada. This project has not found an ATIPPA provision that releases a
+      record's personal information on the age of the record or of the person, and
+      40(5)(j) makes even the time since a death a circumstance to weigh. So under this
+      configuration the archival rule escalates rather than releases.
+    provisions: []
+    note: >
+      No provision is cited because none was found that this code could rest on; the
+      escalation is the answer. If the provincial archives' own practice turns out to rest
+      on a provision, it belongs here with its quote.
 
   K6:
     provisions:

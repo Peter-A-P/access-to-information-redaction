@@ -223,8 +223,9 @@ class SeverDetector:
             # Before the sweep, so that "KAF" typed as a person does not license every
             # other "KAF" in the record as one.
             from sever.detect.military import screen
+            from sever.detect.stamps import drop_stamp_spans
 
-            out = list(screen(document, out))
+            out = list(drop_stamp_spans(document, screen(document, out)))
         if not self.sweep_names:
             return tuple(out)
         # Document-wide, and therefore here rather than in detect_page: a name found on
@@ -237,7 +238,14 @@ class SeverDetector:
             from sever.detect.military import is_military_record, is_rank, is_vocabulary
 
             not_names = is_vocabulary if is_military_record(document) else is_rank
-        return with_sweep(document, out, not_names=not_names)
+        swept = with_sweep(document, out, not_names=not_names)
+        if self.screen_names:
+            # Again after the sweep: a stamp word detected once elsewhere would otherwise
+            # be swept back onto every stamp in the package.
+            from sever.detect.stamps import drop_stamp_spans
+
+            swept = drop_stamp_spans(document, swept)
+        return swept
 
     def detect_page(self, page: Page) -> list[Detection]:
         if not page.text.strip():

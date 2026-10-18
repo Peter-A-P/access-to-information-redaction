@@ -79,6 +79,20 @@ class RequestConfig:
     # Set when the requester is acting for someone else (a solicitor, a parent). The
     # subject's information is then K1 and the agent's own is not.
     subject_name: str | None = None
+    # The records are archival: held by an archives that received them for archival or
+    # historical purposes. Turns on the 110-year rule (K7); see sever.context.age. Off by
+    # default, because it is a fact about the records a public body states, not one the
+    # tool can infer from how old a page looks.
+    archival: bool = False
+    # The year "110 years ago" is counted from. None is this year; a fixed year makes a
+    # published number reproducible next year.
+    as_of_year: int | None = None
+
+    @property
+    def year(self) -> int:
+        import datetime as dt
+
+        return self.as_of_year if self.as_of_year is not None else dt.date.today().year
 
     @property
     def names(self) -> tuple[str, ...]:
