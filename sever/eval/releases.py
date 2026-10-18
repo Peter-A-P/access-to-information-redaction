@@ -258,7 +258,7 @@ class ReleaseResult:
                     "before any was downloaded (docs/data.md), from record groups other than "
                     "Defence, and scored once with the code as it stood; nothing was changed "
                     "in response before this table was published. So the rows below the "
-                    "first say how far the 2026-10-17 changes carry to records nobody tuned "
+                    "first say how far the changes in them carry to records nobody tuned "
                     "them against."
                     if self.held_out
                     else "**The vocabulary was written after reading these packages.** The "

@@ -233,6 +233,8 @@ package is an RG10 Indian Affairs audit report filed under the same request; the
 packages in listed order and did not say same record group, so it stands). None from
 External Affairs ranks 16 to 28 or from RCMP. 132 pages. All six passed the redaction guard.
 
-**How they will be scored.** Once with the code that adds the new rules, and once with
-`48a1c4d` for comparison, into `results/releases-fresh.md`. Nothing is changed in response
-before that table is published.
+**How they were scored.** Once with `f61f56b`, the commit that added the archival rule and
+the stamp screen, into `results/releases-fresh.md`, and once with `48a1c4d` for comparison.
+Both withhold 88.0 percent of 483 spans (81.2 to 94.4), against 99.8 with the code from
+before 2026-10-17. After scoring, one sentence of the page's wording was made generic and
+the tables were checked identical. Nothing else was changed in response.

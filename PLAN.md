@@ -1726,3 +1726,29 @@ held-out test of 12.37's changes and these were written after reading it.
 
 The synthetic corpus is unchanged: archival is off for it and it has no stamps, and all
 7,627 proposals were checked identical.
+
+### 12.41 The fresh set: today's rules decide nothing on it
+
+Scored once at `f61f56b`: **88.0 percent of 483 spans a reviewer released are withheld**
+(81.2 to 94.4), against 99.8 with the code from before 12.37. The commit before 12.40,
+`48a1c4d`, scores the same 88.0, so all of the gain is 12.37's noise screen and none of it is
+12.40.
+
+Why, from the packages, read only after the number was fixed:
+
+- **No page in the six is dated 1916 or earlier.** The immigration files run from the 1920s
+  to the 1980s, and about half the pages carry no year at all. The 110-year rule needs one
+  of the two kinds of evidence it accepts and these files offered neither. It is correct
+  and inert here, which is the cost of reading only what the record proves.
+- **LAC's longer stamp.** "Document disclosed by the ATIP Branch of Library and Archives
+  Canada / Document divulgué par la direction générale de l'AIPRP de Bibliothèque et
+  Archives Canada" wraps over four lines, and the screen matches the lines that carry the
+  stamp's wording, not "de Bibliothèque et Archives Canada" on its own. 26 boxes.
+- **Families.** "wife", "son", "father", "mother": 58 boxes from reviewer 1's family rule,
+  in files LAC opened for reasons the record does not state.
+
+Neither the stamp nor anything else is fixed against this set. The next change is measured
+on the next set. Three held-out results now point the same way: the tool's real-record gap
+outside Defence is not vocabulary, it is that archival release turns on facts about people
+(dead, or old enough) that the pages rarely state, and a reviewer at an archives decides
+them from knowledge the record does not carry.

@@ -256,6 +256,20 @@ Three more limitations, none of them small:
   first, and only when the sentence states a date of death. And "Soviet", "German" and "Chinese"
   are escalated as nationality. So the Defence number is a result about Defence records,
   and archival records need the archive's own age rules before anything else.
+
+  **The archive's age rule was then built, and on a fresh set it decided nothing.** K7
+  releases what an archival record shows is about someone born more than 110 years ago
+  (Privacy Regulations s. 6(c)), from the page's own latest year or a birth stated beside a
+  name; a screen drops the release stamp the institution printed. Six more packages were
+  chosen by a rule, downloaded and committed before either was written, then scored once:
+  Immigration, Health, Justice and an Indian Affairs audit, 1920s to 1990s, 123 pages
+  ([`results/releases-fresh.md`](results/releases-fresh.md)). **The tool withholds 88.0
+  percent of the 483 spans a reviewer released** (81.2 to 94.4), down from 99.8, and all of
+  that drop is the noise screen from 2026-10-17. The commit before today's work scores the
+  same 88.0 on them. No page in the six is dated 1916 or earlier, so the 110-year rule had
+  nothing to read; and LAC's longer stamp ("Bibliothèque et Archives Canada" on a line of its
+  own) was a person 26 times, a form of the stamp the screen was not written for. Both are
+  findings about the fresh set, so neither is fixed against it.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -579,7 +593,8 @@ Docs: [taxonomy](docs/taxonomy.md) (generated) · [escalation](docs/escalation.m
 [the scanned track](results/scanned.md) ·
 [layout read back from text](results/layout.md) ·
 [real released records](results/releases.md) ·
-[held-out releases](results/releases-heldout.md) · [plan](PLAN.md)
+[held-out releases](results/releases-heldout.md) ·
+[fresh releases](results/releases-fresh.md) · [plan](PLAN.md)
 
 ## Engineering
 
