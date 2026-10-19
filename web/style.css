@@ -1487,3 +1487,8 @@ kbd { font: 600 0.74rem/1 var(--mono); border: 1px solid var(--line-2); border-b
 .record-status { font-size: 0.8rem; font-weight: 600; color: var(--accent-ink); }
 .record-card.done .record-status { color: var(--good); }
 @media (prefers-reduced-motion: reduce) { .record-card { transition: none; } .record-card:hover { transform: none; } }
+
+/* A fourth colour for a headline figure in money: the escalation amber, a dark gold on paper
+   and a soft gold in the dark, so a dollar figure never reads as one more green. */
+.hero .point.gold { border-top-color: var(--escalate); }
+.point.gold .point-figure { color: var(--escalate); }

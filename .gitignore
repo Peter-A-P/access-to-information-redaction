@@ -27,6 +27,9 @@ data/releases/*
 !data/releases/manifest.json
 !data/releases/heldout.json
 !data/releases/fresh.json
+# The demonstration's excerpts of those packages, rebuilt from them by data/demo/manifest.json.
+data/demo/*
+!data/demo/manifest.json
 corpus/generated/
 corpus/scans/
 

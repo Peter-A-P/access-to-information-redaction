@@ -1,0 +1,42 @@
+{
+  "_comment": "Excerpts of published federal release packages for the demonstration's 'try it on a real release' records. Every page here was released to the public by Library and Archives Canada; nothing under its black boxes is recoverable, and the demonstration adds nothing to what LAC published. The excerpt PDFs are not committed, for the same reason the packages are not (docs/data.md): each is rebuilt from the package named in data/releases by taking the listed pages, and the source's sha256 is checked first. Chosen 2026-10-18 for readable OCR and for showing four different behaviours of the tool, the weak ones included.",
+  "terms": "Government of Canada material, reproduced for non-commercial purposes with the source identified (https://www.canada.ca/en/library-archives/terms-conditions.html, read 2026-10-01). Not an official version.",
+  "records": [
+    {
+      "file_name": "briefing-note-2001.pdf",
+      "title": "Briefing note for the Minister, alternative service delivery, 2001",
+      "source": "A-2014-00356_02.pdf",
+      "source_sha256": "e8e7870924d5d61d237a43e8a42dae26a14b82bdfd812f0f79375205a9a65e6b",
+      "pages": [3],
+      "lac_disposition": "All disclosed",
+      "shows": "A record released in full. The two officers who sign it are kept as officials acting in their official capacity (K2), from their ranks, so the tool agrees with the public body's reviewer and proposes nothing to withhold."
+    },
+    {
+      "file_name": "kandahar-email-chain-2010.pdf",
+      "title": "Email chain, executive officer position at the Role 3 medical unit, Kandahar, 2010",
+      "source": "A-2025-03134_10.pdf",
+      "source_sha256": "4beb3c5b9413e613ffb41287b7a29299b8af53c47eaf6f40dae3b1db63a20e3a",
+      "pages": [7, 10],
+      "lac_disposition": "Disclosed in part",
+      "shows": "Officers in From, To and Cc lines and signature blocks kept as officials (K2). A surname met once with no rank beside it is escalated rather than released, and the same officer is kept on the next page where the rank appears. OCR noise is visible and so are its effects."
+    },
+    {
+      "file_name": "complaint-acknowledgement-2010.pdf",
+      "title": "A complaint and its acknowledgement by the commanding officer, Kandahar, 2010",
+      "source": "A-2025-03134_07.pdf",
+      "source_sha256": "77d97f35bc5ffbb8ded383df43888dd5e13caf29d6605ee7b090c5c6ed6afdf5",
+      "pages": [14, 16],
+      "lac_disposition": "Disclosed in part, s.19(1)",
+      "shows": "The gaps where LAC withheld the people involved, next to what it released: a Major named as a witness and the commanding officer's signature block with his business telephone and email, all kept by the tool as official capacity. A first name with no context is escalated."
+    },
+    {
+      "file_name": "immigration-case-file-1913-1962.pdf",
+      "title": "Chinese immigration case file, 1913 to 1962",
+      "source": "A-2026-03227_01.pdf",
+      "source_sha256": "7a45a148acdc83e2a52cf6ffe75022b5c2c9fe1132498e09f5f1439b29c0b474",
+      "pages": [13, 26],
+      "lac_disposition": "Disclosed in part",
+      "shows": "The tool at its weakest and at its archival rule. On the first page every family member is escalated and every kinship word withheld, where LAC released them: over-redaction on a real record. On the second, dated 1903, the 110-year archival rule (K7) keeps everything, OCR fragments included."
+    }
+  ]
+}

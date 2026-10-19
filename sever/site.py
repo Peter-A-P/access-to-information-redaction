@@ -43,7 +43,9 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 REPOSITORY = "https://github.com/Peter-A-P/access-to-information-redaction"
-PROJECT_PAGE = "https://peterparker.ca/projects/access-to-information-redaction/"
+# The project's card on peterparker.ca. Its own page there is built from the README, which
+# the portfolio reads only once the repository is public; until then the card is the page.
+PROJECT_PAGE = "https://peterparker.ca/#access-to-information-redaction"
 TITLE = "Hundreds of Pages, Redacted in an Afternoon"
 
 # The templates, filled with tokens, and the files copied as they are.
