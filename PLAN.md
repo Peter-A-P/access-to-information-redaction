@@ -1847,3 +1847,12 @@ into the repository render as plain text until it is public (`--public`). Two th
 build found: a derived count (the model's correct releases) could not be read exactly from
 rounded rates, so the page quotes the rates instead; and the letter's own output shows the
 inspector escalated though "the inspecting officer" names the role, which the page now says.
+
+The same day Peter reordered the overview's four headline figures: speed (2.3 times), what
+that adds up to in a year, quality (2.8 times fewer leaks than by hand), and over-redaction
+against the blunt tool. The PDF leak test moved down to its own section. The yearly figure
+is the one estimate on the site and says so: the study's 74 seconds a page times the
+10,326,722 pages federal institutions processed in 2023-24 (Treasury Board's statistical
+report, IRCC excluded), about 212,000 hours or 118 people reviewing full time. A headcount
+of ATIP staff was considered as the base instead, and rejected: no published figure, where
+the page count is published and checkable.

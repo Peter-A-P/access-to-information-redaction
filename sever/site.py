@@ -272,6 +272,8 @@ def reviewer_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
     f["study_over_with"], f["study_over_unaided"] = over_with.pct, over_un.pct
     f["study_tool_leak"] = rate(tool_alone[1], "tool alone leak").pct
     f["study_tool_over"] = rate(tool_alone[3], "tool alone over").pct
+    f.update(savings(int(f["secs_unaided"]), int(f["secs_with"])))
+    f["leak_ratio"] = f"{leak_un.value / leak_with.value:.1f}"
     reviewers = [r for r in rows if r and re.fullmatch(r"reviewer-\d+", r[0])]
     if len(reviewers) < 1:
         raise SiteError("results/reviewer.md has no per-reviewer rows")
@@ -286,6 +288,35 @@ def reviewer_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
         "leak": {"with": leak_with.as_json(), "unaided": leak_un.as_json()},
     }
     return f, chart
+
+
+# What the measured saving would add up to, at a volume someone else published. Not a
+# measurement: the seconds are the study's, on one-page invented records, and the volume is
+# the federal government's, on real ones. The page says both.
+FEDERAL_PAGES = 10_326_722
+FEDERAL_PAGES_YEAR = "2023-24"
+FEDERAL_PAGES_SOURCE = (
+    "https://www.canada.ca/en/treasury-board-secretariat/services/access-information-privacy/"
+    "statistics-atip/information-privacy-statistical-report-2023-2024.html"
+)
+# "Pages processed increased by 25% from the previous year, to 10,326,722." IRCC excluded.
+FEDERAL_PAGES_CHECKED = "2026-10-18"
+# A full-time year of reviewing: 37.5 hours a week for 48 weeks.
+HOURS_PER_YEAR = 1_800
+
+
+def savings(secs_unaided: int, secs_with: int) -> dict[str, str]:
+    saved = secs_unaided - secs_with
+    hours = FEDERAL_PAGES * saved / 3600
+    return {
+        "secs_saved": str(saved),
+        "hours_saved": f"{round(hours, -3):,.0f}",
+        "people_saved": f"{round(hours / HOURS_PER_YEAR):,}",
+        "federal_pages": f"{FEDERAL_PAGES:,}",
+        "federal_pages_year": FEDERAL_PAGES_YEAR,
+        "federal_pages_source": FEDERAL_PAGES_SOURCE,
+        "hours_per_year": f"{HOURS_PER_YEAR:,}",
+    }
 
 
 def _number_word(n: int) -> str:

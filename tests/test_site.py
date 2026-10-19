@@ -122,3 +122,17 @@ def test_every_provision_is_in_the_law_table(built: Path) -> None:
         for j in ("federal", "nl"):
             for p in taxonomy.provisions(c.code, j):
                 assert f"{site.STATUTE_SHORT[p.statute]} {p.section}" in text
+
+
+def test_the_hours_are_the_measured_saving_times_the_published_volume() -> None:
+    s = site.savings(130, 56)
+    assert s["secs_saved"] == "74"
+    # 10,326,722 pages at 74 seconds is 212,271 hours, quoted to the thousand.
+    assert s["hours_saved"] == "212,000"
+    assert s["people_saved"] == "118"
+
+
+def test_the_estimate_is_called_an_estimate(built: Path) -> None:
+    text = page(built, "index.html")
+    assert "an estimate, not a measurement" in text
+    assert site.FEDERAL_PAGES_SOURCE in text
