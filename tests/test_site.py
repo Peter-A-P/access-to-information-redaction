@@ -155,3 +155,11 @@ def test_what_the_page_says_about_the_memorandum_is_what_the_engine_did(built: P
     assert kinds("Director of Operations") == {"none", "withhold"}
     assert kinds("Bernadette Halleran") == {"release"}
     assert kinds("Desmond Okonkwo") == {"escalate"}
+
+
+@pytest.mark.parametrize("name", site.PAGES)
+def test_the_sites_own_files_carry_their_fingerprint(built: Path, name: str) -> None:
+    """A changed stylesheet must not wait out a browser's cache."""
+    text = page(built, name)
+    assert '"/style.css"' not in text
+    assert f'"/style.css?v={site.asset_version("style.css")}"' in text

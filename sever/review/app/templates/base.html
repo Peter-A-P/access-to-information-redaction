@@ -15,8 +15,8 @@
 {# The public demonstration wears the project site's stylesheet and menu, so the reviewer's
    screen is a page of redaction.peterparker.ca rather than a separate tool. review.css is
    the screen's own rules in the site's palette, dark mode included. #}
-<link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/review.css">
+<link rel="stylesheet" href="/style.css?v={{ style_v }}">
+<link rel="stylesheet" href="/review.css?v={{ review_v }}">
 {% else %}
 <style>
   :root {

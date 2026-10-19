@@ -186,9 +186,11 @@ def create_app(
     templates.env.globals["study"] = study
     templates.env.globals["demo"] = demo
     if demo:
-        from sever.site import masthead
+        from sever.site import asset_version, masthead
 
         templates.env.globals["masthead"] = masthead("/review")
+        templates.env.globals["style_v"] = asset_version("style.css")
+        templates.env.globals["review_v"] = asset_version("review.css")
     if study is not None:
         _study_routes(app, templates, study)
 

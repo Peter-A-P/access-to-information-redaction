@@ -695,6 +695,23 @@ _TOKEN = re.compile(r"\{\{([a-z0-9_]+)\}\}")
 _REPO_LINK = re.compile(r'<a data-repo href="[^"]*">(.*?)</a>', re.S)
 
 
+def asset_version(*names: str) -> str:
+    """A short fingerprint of the site's own files, put on their URLs, so a browser holding a
+    cached stylesheet fetches the new one the moment it changes rather than an hour later."""
+    import hashlib
+
+    h = hashlib.sha256()
+    for name in names:
+        h.update((WEB / name).read_bytes())
+    return h.hexdigest()[:10]
+
+
+def versioned(text: str) -> str:
+    for name in ASSETS:
+        text = text.replace(f'"/{name}"', f'"/{name}?v={asset_version(name)}"')
+    return text
+
+
 def fill(template: str, values: Mapping[str, str], *, page: str) -> str:
     missing = sorted({m.group(1) for m in _TOKEN.finditer(template)} - set(values))
     if missing:
@@ -782,7 +799,7 @@ def build(
     (out / "data").mkdir(parents=True)
     for name in PAGES:
         text = fill((WEB / name).read_text(encoding="utf-8"), values, page=name)
-        (out / name).write_text(repository_links(text, public=public), encoding="utf-8")
+        (out / name).write_text(versioned(repository_links(text, public=public)), encoding="utf-8")
     for name in ASSETS:
         shutil.copy2(WEB / name, out / name)
     shutil.copytree(WEB / "fonts", out / "fonts")
