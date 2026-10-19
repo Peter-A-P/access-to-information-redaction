@@ -602,15 +602,26 @@ def _kind(p: Any) -> str:
 
 
 def example(items: Iterable[Item]) -> Example:
-    """The demonstration's letter, as the tool proposes it: every span marked by what the
+    """One of the demonstration's records, as the tool proposes it: every span marked by what the
     tool would do with it, with the category and the reason on the mark."""
     from sever.ingest.document import DocumentType
     from sever.taxonomy.loader import default_taxonomy
 
     taxonomy = default_taxonomy()
-    item = next((i for i in items if i.document.doc_type is DocumentType.CORRESPONDENCE), None)
+    # The memorandum, because it is the record where context decides most visibly: the same
+    # job title withheld for one person and released for another, and the requester named in
+    # a file about someone else. The letter if a smaller set of records has no memorandum.
+    item = next(
+        (
+            i
+            for kind in (DocumentType.HR_MEMORANDUM, DocumentType.CORRESPONDENCE)
+            for i in items
+            if i.document.doc_type is kind
+        ),
+        None,
+    )
     if item is None:
-        raise SiteError("the demonstration has no letter to show")
+        raise SiteError("the demonstration has no record to show")
     page = item.document.page(1)
     parts: list[str] = []
     cursor = 0

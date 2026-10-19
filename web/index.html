@@ -66,7 +66,7 @@
     <p class="eyebrow">On this page</p>
     <ol>
       <li><a href="#problem">Why it is still done by hand</a></li>
-      <li><a href="#example">One letter, read the way a reviewer reads it</a></li>
+      <li><a href="#example">One memorandum, read the way a reviewer reads it</a></li>
       <li><a href="#pipeline">One page, in seven steps</a></li>
       <li><a href="#tradeoff">Withholding what must go, releasing what must stay</a></li>
       <li><a href="#context">The context is the whole argument</a></li>
@@ -127,12 +127,14 @@
   <!-- ============================================================== the example -->
 
   <section class="section" id="example">
-    <h2>One letter, read the way a reviewer reads it</h2>
+    <h2>One memorandum, read the way a reviewer reads it</h2>
     <p class="section-lead">
-      This is the tool's own output, produced when this page was built, on an invented letter
-      from the demonstration. Every highlight is a proposal: the colour is what the tool would
-      do, and pointing at one, or tabbing to it, shows the category and the reason. The
-      request was made by <strong>{{example_requester}}</strong>.
+      This is the tool's own output, produced when this page was built, on an invented
+      human-resources memorandum from the demonstration: the findings of a confidential
+      workplace complaint. The request was made by <strong>{{example_requester}}</strong>, a
+      member of the public who is named in it. Every highlight is a proposal: the colour is
+      what the tool would do, and pointing at one, or tabbing to it, shows the category and the
+      reason.
     </p>
     <div class="letter-wrap">
       <figure class="letter">
@@ -149,18 +151,24 @@
       </aside>
     </div>
     <details class="disclose">
-      <summary>Every category on this letter, with the tool's reason for its first use</summary>
+      <summary>Every category in this memorandum, with the tool's reason for its first use</summary>
       <ul class="reasons">
 {{example_reasons}}
       </ul>
     </details>
     <div class="verdict">
-      <p><strong>When it is unsure, it withholds and asks.</strong> The neighbour who made the
-      report is withheld and sent to a person. So is the inspector, whom a reviewer would
-      release: "the inspecting officer" is a title, but not one the rules pair with a name in
-      the middle of a sentence. That is the direction the tool errs in on purpose. There is no
-      rule that releases something because nothing matched, and the reviewer releases the
-      inspector with one key.</p>
+      <p><strong>The same words, different answers, because of who they belong to.</strong>
+      "Director of Operations" appears twice. On the To: line it is the recipient's title, which
+      says nothing about a person, so it stays. In the body it is the complainant's, and it is
+      withheld with "Regional Director", the respondent's: they are the titles of the two
+      parties to a confidential complaint, and a title released beside a severed name
+      identifies the one person who holds it. The Program Officer who wrote the memorandum is an
+      official doing their job, so their name and work email are released. The requester gets their
+      own name back and nothing else of a file about other people.</p>
+      <p><strong>When it is unsure, it withholds and asks.</strong> The memorandum's recipient,
+      Desmond Okonkwo, is escalated, though a reviewer would release him: his title sits beside
+      his name on the To: line, and the rules do not yet pair the two there. That is the
+      direction the tool errs in on purpose, and the reviewer releases him with one key.</p>
     </div>
   </section>
 

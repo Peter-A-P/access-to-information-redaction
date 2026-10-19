@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope="module")
 def items() -> tuple[Item, ...]:
-    return demo_items(documents=2)
+    return demo_items(documents=4)
 
 
 @pytest.fixture(scope="module")
@@ -104,8 +104,8 @@ def test_a_rule_the_site_does_not_describe_fails_the_build(monkeypatch: pytest.M
         site.rule_steps()
 
 
-def test_the_letter_is_the_engines_own_output(built: Path, items: tuple[Item, ...]) -> None:
-    letter = next(i for i in items if i.document.doc_type.value == "correspondence")
+def test_the_example_is_the_engines_own_output(built: Path, items: tuple[Item, ...]) -> None:
+    letter = next(i for i in items if i.document.doc_type.value == "hr_memorandum")
     text = page(built, "index.html")
     marks = re.findall(r'<mark class="x-[a-z]+"[^>]*>', text)
     proposed = {(p.detection.offsets.start, p.detection.offsets.end) for p in letter.on_page(1)}
@@ -136,3 +136,20 @@ def test_the_estimate_is_called_an_estimate(built: Path) -> None:
     text = page(built, "index.html")
     assert "an estimate, not a measurement" in text
     assert site.FEDERAL_PAGES_SOURCE in text
+
+
+def test_what_the_page_says_about_the_memorandum_is_what_the_engine_did(built: Path) -> None:
+    """The verdict under the example names spans and what happened to them; if the engine
+    changes its mind, this fails before the page says something untrue."""
+    text = page(built, "index.html")
+
+    def kinds(span: str) -> set[str]:
+        found = set(re.findall(r'<mark class="x-([a-z]+)"[^>]*>' + re.escape(span) + "</mark>", text))
+        assert found, span
+        return found
+
+    assert kinds("Regional Director") == {"withhold"}
+    # The recipient's title on the To: line, and the complainant's in the body.
+    assert kinds("Director of Operations") == {"none", "withhold"}
+    assert kinds("Bernadette Halleran") == {"release"}
+    assert kinds("Desmond Okonkwo") == {"escalate"}
