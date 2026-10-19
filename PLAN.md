@@ -1863,3 +1863,76 @@ full-time years at the top step of PM-04 ($87,108, Program and Administrative Se
 agreement, effective 2024-06-21), the level federal ATIP analysts are most often classified
 at, before benefits or overhead, so the figure is the low end. The over-redaction figure
 left the cards and stays in its section.
+
+### 12.46 Real released records in the demonstration: the plan
+
+2026-10-18. Peter asked whether visitors could upload their own PDF or Word file. It would
+work technically: `to_document` already reads a PDF's text layer, python-docx is pinned, and
+the demonstration's export and leak test would run unchanged. It is not built, for one
+reason that is not code. An upload box on a public site invites real records with real
+third parties in them, which this repository's first rule forbids, and colleagues in public
+bodies, the audience the demonstration is for, are the people most likely to try a real
+file. `docs/deploy.md`'s claim that a compromise "reaches six invented records" would stop
+being true. Peter chose instead to show the tool on records a public body has already
+released. Uploads stay a possible addition to the local `sever review`, where nothing
+leaves the machine.
+
+**The records, chosen 2026-10-18.** Every page of the fifteen packages in `data/releases`
+was run through the tool as the demonstration runs it (rules only, the archival
+configuration `eval-releases` uses, no requester) and scored for OCR readability and for
+the mix of proposals. The best candidates were then read. Four records, seven pages, are
+named in `data/demo/manifest.json` with their source package, its sha256, the pages, and
+what each one shows:
+
+| Record | Source, pages | What it shows |
+|---|---|---|
+| Briefing note for the Minister, 2001 | A-2014-00356_02, p.3 | Released in full; both signing officers kept as K2 from their ranks, nothing proposed for withholding |
+| Kandahar email chain, 2010 | A-2025-03134_10, pp.7, 10 | Officers in header lines and signature blocks kept; a surname with no rank escalated, then kept where the rank appears |
+| A complaint and its acknowledgement, 2010 | A-2025-03134_07, pp.14, 16 | LAC's own gaps beside what it released; a Major named as a witness and a signature block with business phone and email kept |
+| Chinese immigration case file, 1913 to 1962 | A-2026-03227_01, pp.13, 26 | The weak case: every relative escalated and every kinship word withheld where LAC released them; on the 1903 page the archival rule keeps everything, OCR fragments included |
+
+Left out: A-2025-06543 (no text layer, and patients' records), the audit and epidemiology
+packages (OCR too poor; nearly everything escalated), the East German file (about thirty
+escalations on one page), and the other two immigration files (the same story, noisier).
+Picking pages to show is not a change to any scored set: nothing in the tool changes in
+response, so the held-out and fresh tables are unaffected.
+
+The complaint record is a harassment complaint, released by LAC with the people involved
+removed. It is the clearest official-capacity example on a real page; if it reads wrong on
+a public site, the acknowledgement page alone keeps that example.
+
+**Data handling.** The excerpt PDFs are gitignored like the packages they come from, and the
+manifest is committed. The demonstration will serve these pages publicly, which LAC's terms
+allow for non-commercial use with the source cited; `docs/data.md` says so beside the
+packages, replacing its earlier "reproduces nothing publicly".
+
+**What is to be built.**
+
+1. `sever demo-records build`: rebuild the excerpts from `data/releases` by the manifest,
+   checking each source's sha256 against the release manifests first and failing on a
+   mismatch. It replaces the one-off script that made them.
+2. A loader in `sever/review/demo.py` that turns each excerpt into an `Item` with
+   `to_document` and `recover_blocks`, the archival `RequestConfig`, and no requester, and
+   proposes with the same engine as the six invented records.
+3. The reviewer's index at `/review` lists them in their own section, "Records a public
+   body released", each with LAC's title, request number, disposition and a link to the
+   details page, and a line saying what a visitor is looking at: everything visible was
+   released by a person, so every withholding proposal on it is an over-redaction against
+   that person's decision, and there is no requester.
+4. The dashboard counts decisions on these records apart from the invented ones, since
+   they have no labels and a visitor's agreement with the tool means something different.
+5. `.dockerignore` lets `data/demo` through and the Dockerfile copies it; the image build
+   fails if a listed excerpt is missing.
+6. Tests: the loader reads every listed record; a record's pages match the manifest; the
+   released PDF from each passes the leak test; the build command refuses a source with
+   the wrong checksum.
+7. `docs/deploy.md`, `docs/data.md`, the site's "How it's built" page, and a line in this
+   section when it ships.
+
+**Open: where the boxes go on the released PDF.** The demonstration's download re-lays a
+record's text into a new PDF and redacts that. For an invented record that is the record;
+for a scanned release it throws away the page a visitor was shown. The better output
+redacts the original scan: map each withheld span's offsets onto the OCR layer's word
+boxes (`get_text("words")`), redact those rectangles with image pixels removed, and run the
+leak test with its raster channel on. Roughly half a day more. First version re-lays, as
+now, and says so on the page; boxes on the scan follow if Peter wants them.

@@ -104,8 +104,9 @@ Government of Canada material "may be reproduced in whole or in part for non-com
 purposes, and in any format, without charge or further permission", subject to exercising
 due diligence in ensuring accuracy, identifying the source, and not representing the
 reproduction as an official version. Commercial redistribution needs written permission and
-is not in scope here. This project is non-commercial, it reproduces nothing publicly in any
-case, and it records the source URL of every package it measures.
+is not in scope here. This project is non-commercial, it reproduces nothing publicly except
+the demonstration's excerpts below, and it records the source URL of every package it
+measures.
 
 **There is no fetcher, on purpose.** The LAC search runs on an undocumented endpoint behind
 a JavaScript front end. Reverse-engineering it was attempted on 2026-09-21 and abandoned: it
@@ -187,6 +188,18 @@ committed, for 12.28's reasons; the manifest records each package's details page
 URL, which is all a reproducer needs. The site's certificate chain ends in a Sectigo root the
 macOS system bundle did not have, so the requests used the `certifi` bundle from the
 project's environment rather than turning verification off.
+
+## Excerpts for the demonstration
+
+`data/demo/manifest.json` names four records, seven pages, taken from four of the release
+packages above for the hosted demonstration's "records a public body released" section
+(PLAN.md 12.46). The manifest gives each excerpt's source package, the source's sha256, the
+pages and what the record shows; the excerpt PDFs are gitignored and rebuilt from the
+packages. Unlike the measured tracks, these pages will be served publicly by the
+demonstration. LAC's terms, read 2026-10-01, allow non-commercial reproduction with the
+source cited, and every record is shown with its title, request number and details page.
+Nothing on them is changed: what LAC removed under its boxes is not recoverable, and the
+demonstration adds nothing to what LAC published.
 
 ## Planned, not present
 
