@@ -1856,3 +1856,10 @@ is the one estimate on the site and says so: the study's 74 seconds a page times
 report, IRCC excluded), about 212,000 hours or 118 people reviewing full time. A headcount
 of ATIP staff was considered as the base instead, and rejected: no published figure, where
 the page count is published and checkable.
+
+Later the same day the cards became: 2.3 times faster, 2.8 times fewer leaks, about 212,000
+hours of review saved a year, and about $10.3 million a year. The dollars are the 118
+full-time years at the top step of PM-04 ($87,108, Program and Administrative Services
+agreement, effective 2024-06-21), the level federal ATIP analysts are most often classified
+at, before benefits or overhead, so the figure is the low end. The over-redaction figure
+left the cards and stays in its section.

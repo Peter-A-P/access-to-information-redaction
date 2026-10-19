@@ -31,20 +31,20 @@
         <span class="point-unit">faster review with the tool's proposals</span>
         <span class="point-label">{{secs_with}} seconds a page against {{secs_unaided}} by hand, {{reviewers_word}} timed reviewers, the same records both ways; 95% interval {{speedup_ci}}</span>
       </div>
-      <div class="point good">
-        <span class="point-figure">{{hours_saved}}</span>
-        <span class="point-unit">hours of reading a year, at federal volumes</span>
-        <span class="point-label">an estimate, not a measurement: {{secs_saved}} seconds saved a page, on the {{federal_pages}} pages federal institutions processed in {{federal_pages_year}}; about {{people_saved}} full-time reviewers</span>
-      </div>
       <div class="point violet">
         <span class="point-figure">{{leak_ratio}}&times;</span>
         <span class="point-unit">fewer leaks than reviewing by hand</span>
         <span class="point-label">{{study_leak_with}} of third parties' details released with proposals, against {{study_leak_unaided}} by hand, the same reviewers; the two intervals do not overlap</span>
       </div>
       <div class="point good">
-        <span class="point-figure">{{rules_over}}</span>
-        <span class="point-unit">of what must be released, withheld, against {{blunt_over}}</span>
-        <span class="point-label">the {{blunt_over}} is a blunt privacy tool, which blacks out almost everything the requester is owed; over {{must_release}} labelled spans, 95% interval {{rules_over_ci}}</span>
+        <span class="point-figure">{{hours_saved}}</span>
+        <span class="point-unit">hours of review saved a year, at federal volumes</span>
+        <span class="point-label">an estimate: {{secs_saved}} seconds saved a page, on the {{federal_pages}} pages federal institutions processed in {{federal_pages_year}}; about {{people_saved}} full-time reviewers</span>
+      </div>
+      <div class="point good">
+        <span class="point-figure">${{dollars_saved}}M</span>
+        <span class="point-unit">a year in reviewers' time saved</span>
+        <span class="point-label">an estimate: those {{people_saved}} full-time years at a federal ATIP analyst's salary, ${{analyst_salary}} (PM-04, top step), before benefits or overhead</span>
       </div>
     </div>
     <div class="cta">
@@ -54,9 +54,9 @@
     <p class="live" id="live" aria-live="polite">Reading this server's live count of decisions.</p>
     <p class="hero-note">
       Every measured figure on this page is read from a table the measurement commands write,
-      and carries a 95% confidence interval there; nothing is typed by hand. The one estimate,
-      hours a year, multiplies the measured saving by the government's own published page count,
-      and <a href="#reviewers">the study</a> says how. The button above
+      and carries a 95% confidence interval there; nothing is typed by hand. The two estimates,
+      hours and dollars a year, multiply the measured saving by the government's own published
+      page count and pay scale, and <a href="#reviewers">the study</a> says how. The button above
       is the reviewer's own screen over {{demo_records_word}} invented records, with nothing kept
       once you leave. <a href="/how">See how it's built</a>.
     </p>
@@ -338,8 +338,12 @@
       requests in {{federal_pages_year}}, by the <a href="{{federal_pages_source}}">Treasury Board's
       statistical report</a> (Immigration, Refugees and Citizenship Canada excluded, as the report
       excludes it). At the {{secs_saved}} seconds a page the study measured, that is about
-      <strong>{{hours_saved}} hours of reading a year</strong>, or {{people_saved}} people reviewing
-      full time ({{hours_per_year}} hours a year each).
+      <strong>{{hours_saved}} hours of review saved a year</strong>, or {{people_saved}} people reviewing
+      full time ({{hours_per_year}} hours a year each). At the top-step salary of a PM-04 analyst,
+      the level federal ATIP analysts are most often classified at, ${{analyst_salary}} in the
+      <a href="{{analyst_salary_source}}">Program and Administrative Services agreement</a>
+      (effective June 2024), that time is worth about <strong>${{dollars_saved}} million a
+      year</strong>, before benefits or overhead, so the real cost is higher.
     </p>
     <p class="note">
       This is arithmetic on a measurement, not a measurement. The seconds come from one-page

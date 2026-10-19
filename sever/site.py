@@ -303,6 +303,14 @@ FEDERAL_PAGES_SOURCE = (
 FEDERAL_PAGES_CHECKED = "2026-10-18"
 # A full-time year of reviewing: 37.5 hours a week for 48 weeks.
 HOURS_PER_YEAR = 1_800
+# What a year of that costs: the top step of PM-04, the level federal ATIP analysts are most
+# often classified at, in the Program and Administrative Services agreement, effective
+# 2024-06-21 with the wage adjustment. Salary alone, before benefits or overhead, so the
+# dollar figure is the low end.
+ANALYST_SALARY = 87_108
+ANALYST_SALARY_SOURCE = (
+    "https://www.canada.ca/en/treasury-board-secretariat/topics/pay/collective-agreements/pa.html"
+)
 
 
 def savings(secs_unaided: int, secs_with: int) -> dict[str, str]:
@@ -316,6 +324,9 @@ def savings(secs_unaided: int, secs_with: int) -> dict[str, str]:
         "federal_pages_year": FEDERAL_PAGES_YEAR,
         "federal_pages_source": FEDERAL_PAGES_SOURCE,
         "hours_per_year": f"{HOURS_PER_YEAR:,}",
+        "dollars_saved": f"{hours / HOURS_PER_YEAR * ANALYST_SALARY / 1e6:.1f}",
+        "analyst_salary": f"{ANALYST_SALARY:,}",
+        "analyst_salary_source": ANALYST_SALARY_SOURCE,
     }
 
 

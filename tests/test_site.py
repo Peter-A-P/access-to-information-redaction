@@ -130,12 +130,14 @@ def test_the_hours_are_the_measured_saving_times_the_published_volume() -> None:
     # 10,326,722 pages at 74 seconds is 212,271 hours, quoted to the thousand.
     assert s["hours_saved"] == "212,000"
     assert s["people_saved"] == "118"
+    # 117.9 full-time years at $87,108.
+    assert s["dollars_saved"] == "10.3"
 
 
 def test_the_estimate_is_called_an_estimate(built: Path) -> None:
     text = page(built, "index.html")
-    assert "an estimate, not a measurement" in text
-    assert site.FEDERAL_PAGES_SOURCE in text
+    assert text.count("an estimate:") == 2
+    assert site.FEDERAL_PAGES_SOURCE in text and site.ANALYST_SALARY_SOURCE in text
 
 
 def test_what_the_page_says_about_the_memorandum_is_what_the_engine_did(built: Path) -> None:
