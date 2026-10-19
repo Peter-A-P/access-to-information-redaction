@@ -1877,23 +1877,33 @@ being true. Peter chose instead to show the tool on records a public body has al
 released. Uploads stay a possible addition to the local `sever review`, where nothing
 leaves the machine.
 
-**The records, chosen 2026-10-18.** Every page of the fifteen packages in `data/releases`
-was run through the tool as the demonstration runs it (rules only, the archival
-configuration `eval-releases` uses, no requester) and scored for OCR readability and for
-the mix of proposals. The best candidates were then read. Four records, seven pages, are
-named in `data/demo/manifest.json` with their source package, its sha256, the pages, and
-what each one shows:
+**The records, chosen 2026-10-18 and widened to ten on 2026-10-19.** Every page of the
+fifteen packages in `data/releases` was run through the tool as the demonstration runs it
+(rules only, the archival configuration `eval-releases` uses, no requester) and scored for
+OCR readability and for the mix of proposals. The best candidates were then read. Peter
+asked for a choice of ten, none longer than a few pages: ten records, one to three pages
+each and nineteen in all, from ten packages and six record groups, are named in
+`data/demo/manifest.json` with their source package, its sha256, the pages, and what each
+one shows. They are listed in the order a visitor will see them, cleanest first:
 
 | Record | Source, pages | What it shows |
 |---|---|---|
-| Briefing note for the Minister, 2001 | A-2014-00356_02, p.3 | Released in full; both signing officers kept as K2 from their ranks, nothing proposed for withholding |
+| Briefing note for the Minister, alternative service delivery, 2001 | A-2014-00356_02, p.3 | Released in full; both signing officers kept as K2 from their ranks, nothing proposed for withholding |
+| Briefing note for the Minister, contractor support in the Balkans, 2001 | A-2014-00356_03, pp.4, 5 | A reporter named in a news story escalated; three officials in a "Prepared by" block escalated, because the block is not read as a signature and carries no rank |
 | Kandahar email chain, 2010 | A-2025-03134_10, pp.7, 10 | Officers in header lines and signature blocks kept; a surname with no rank escalated, then kept where the rank appears |
 | A complaint and its acknowledgement, 2010 | A-2025-03134_07, pp.14, 16 | LAC's own gaps beside what it released; a Major named as a witness and a signature block with business phone and email kept |
+| Religious accommodation of detainees, Kandahar, 2010 | A-2025-03134_11, pp.5, 6 | A policy paper with almost no personal information; the two officers named kept from their ranks |
+| Reply to a member of the public about impetigo, 1969 | A-2026-00453_01, pp.5, 8 | LAC's "19(1)" where the correspondent's name was; the signing physician escalated; "Wash" detected as a person four times on a pamphlet |
+| Audit report, Prince Edward Island Indian Agency, 1968 | A-2025-04321_03, pp.28, 29 | An auditor and his director escalated because each title sits on the line below the name; staff named by role only, and nothing proposed for them |
+| The Lieutenant Governor of Alberta, 1938 | A-2026-00638_01, pp.3, 7, 8 | Public office holders of 1938 escalated: no register of historical office holders, and 88 years is short of the archival rule |
+| Telegram on the East German leadership, 1970s | A-2026-01845_01, p.27 | All-capitals telegram text: Honecker escalated, and "MOSCO" and "CONFD" detected as people |
 | Chinese immigration case file, 1913 to 1962 | A-2026-03227_01, pp.13, 26 | The weak case: every relative escalated and every kinship word withheld where LAC released them; on the 1903 page the archival rule keeps everything, OCR fragments included |
 
-Left out: A-2025-06543 (no text layer, and patients' records), the audit and epidemiology
-packages (OCR too poor; nearly everything escalated), the East German file (about thirty
-escalations on one page), and the other two immigration files (the same story, noisier).
+Left out: A-2025-06543 (no text layer, and patients' records), A-2025-03134_05 (the travel
+request; its OCR is the poorest of the Defence packages), and the other two immigration
+files, A-2026-01110 and A-2026-01517 (the same story as the case file chosen, with noisier
+OCR). From the packages used, the pages left out are long, nearly blank, or OCR noise; the
+East German file's report pages, for instance, carry about thirty escalations each.
 Picking pages to show is not a change to any scored set: nothing in the tool changes in
 response, so the held-out and fresh tables are unaffected.
 

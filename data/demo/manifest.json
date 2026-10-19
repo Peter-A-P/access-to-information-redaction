@@ -1,22 +1,39 @@
 {
-  "_comment": "Excerpts of published federal release packages for the demonstration's 'try it on a real release' records. Every page here was released to the public by Library and Archives Canada; nothing under its black boxes is recoverable, and the demonstration adds nothing to what LAC published. The excerpt PDFs are not committed, for the same reason the packages are not (docs/data.md): each is rebuilt from the package named in data/releases by taking the listed pages, and the source's sha256 is checked first. Chosen 2026-10-18 for readable OCR and for showing four different behaviours of the tool, the weak ones included.",
+  "_comment": "Excerpts of published federal release packages for the demonstration's 'try it on a real release' records. Every page here was released to the public by Library and Archives Canada; nothing under its black boxes is recoverable, and the demonstration adds nothing to what LAC published. The excerpt PDFs are not committed, for the same reason the packages are not (docs/data.md): each is rebuilt from the package named in data/releases by taking the listed pages, and the source's sha256 is checked first. Chosen 2026-10-18 and 2026-10-19: ten records of one to three pages each, from ten packages and six record groups, for readable OCR and for the range of what the tool does on a real record, the weak cases included.",
   "terms": "Government of Canada material, reproduced for non-commercial purposes with the source identified (https://www.canada.ca/en/library-archives/terms-conditions.html, read 2026-10-01). Not an official version.",
   "records": [
     {
-      "file_name": "briefing-note-2001.pdf",
+      "file_name": "briefing-note-service-delivery-2001.pdf",
       "title": "Briefing note for the Minister, alternative service delivery, 2001",
       "source": "A-2014-00356_02.pdf",
       "source_sha256": "e8e7870924d5d61d237a43e8a42dae26a14b82bdfd812f0f79375205a9a65e6b",
-      "pages": [3],
+      "pages": [
+        3
+      ],
       "lac_disposition": "All disclosed",
       "shows": "A record released in full. The two officers who sign it are kept as officials acting in their official capacity (K2), from their ranks, so the tool agrees with the public body's reviewer and proposes nothing to withhold."
+    },
+    {
+      "file_name": "briefing-note-balkans-2001.pdf",
+      "title": "Briefing note for the Minister, contractor support in the Balkans, 2001",
+      "source": "A-2014-00356_03.pdf",
+      "source_sha256": "d508acf7fe98a438d48df6aa741a5301c6a3d930bd8ebb6f1d464fedbfdce3fa",
+      "pages": [
+        4,
+        5
+      ],
+      "lac_disposition": "All disclosed",
+      "shows": "A reporter named in a newspaper story is escalated, as a person with no official role in the record. The three officials in the 'Prepared by' block are escalated too: they have no rank and the block is not recognised as a signature, so the tool asks where LAC released them."
     },
     {
       "file_name": "kandahar-email-chain-2010.pdf",
       "title": "Email chain, executive officer position at the Role 3 medical unit, Kandahar, 2010",
       "source": "A-2025-03134_10.pdf",
       "source_sha256": "4beb3c5b9413e613ffb41287b7a29299b8af53c47eaf6f40dae3b1db63a20e3a",
-      "pages": [7, 10],
+      "pages": [
+        7,
+        10
+      ],
       "lac_disposition": "Disclosed in part",
       "shows": "Officers in From, To and Cc lines and signature blocks kept as officials (K2). A surname met once with no rank beside it is escalated rather than released, and the same officer is kept on the next page where the rank appears. OCR noise is visible and so are its effects."
     },
@@ -25,16 +42,82 @@
       "title": "A complaint and its acknowledgement by the commanding officer, Kandahar, 2010",
       "source": "A-2025-03134_07.pdf",
       "source_sha256": "77d97f35bc5ffbb8ded383df43888dd5e13caf29d6605ee7b090c5c6ed6afdf5",
-      "pages": [14, 16],
+      "pages": [
+        14,
+        16
+      ],
       "lac_disposition": "Disclosed in part, s.19(1)",
       "shows": "The gaps where LAC withheld the people involved, next to what it released: a Major named as a witness and the commanding officer's signature block with his business telephone and email, all kept by the tool as official capacity. A first name with no context is escalated."
+    },
+    {
+      "file_name": "detainee-religious-accommodation-2010.pdf",
+      "title": "Religious accommodation of detainees, Kandahar, 2010",
+      "source": "A-2025-03134_11.pdf",
+      "source_sha256": "6789efdcc1dc81adb4c5377feeb4bb1ef8eb87feb53dd4a25e130a1437c5ae96",
+      "pages": [
+        5,
+        6
+      ],
+      "lac_disposition": "Disclosed in part",
+      "shows": "A policy paper with almost no personal information. The two officers named at its end are kept from their ranks; 'Muslim' and 'Mullah' are escalated, a religion being personal information when it attaches to someone, which here it does not."
+    },
+    {
+      "file_name": "impetigo-reply-1969.pdf",
+      "title": "Reply to a member of the public about impetigo, Epidemiology Division, 1969",
+      "source": "A-2026-00453_01.pdf",
+      "source_sha256": "d370c52bd4bf1304f71a5f9d13a5a139d209e06d789cf2c22a9f7001447a29bd",
+      "pages": [
+        5,
+        8
+      ],
+      "lac_disposition": "Disclosed in part, s.19(1)",
+      "shows": "LAC's own severance is visible as '19(1)' where the correspondent's name was. The medical consultant who signs is escalated, and on the pamphlet page the word 'Wash' is detected as a person four times: false positives a reviewer clears in seconds, shown as they are."
+    },
+    {
+      "file_name": "indian-agency-audit-1968.pdf",
+      "title": "Audit report, Prince Edward Island Indian Agency, 1968",
+      "source": "A-2025-04321_03.pdf",
+      "source_sha256": "edd8c96dc13235e065d0f25acc3fa764cb42f1fc3862fdf1fe9f363e3559a25b",
+      "pages": [
+        28,
+        29
+      ],
+      "lac_disposition": "Disclosed in part",
+      "shows": "A treasury auditor writing to his director, both named with their titles on the next line, and both escalated because the title is not beside the name. The Superintendent and the clerk are referred to by role only, and the tool proposes nothing for them."
+    },
+    {
+      "file_name": "lieutenant-governor-alberta-1938.pdf",
+      "title": "The Lieutenant Governor of Alberta, Prime Minister's Office correspondence, 1938",
+      "source": "A-2026-00638_01.pdf",
+      "source_sha256": "1472a84a5c03d33b0e9dd7b66739b85686940c7fcd88c2013ab1f42850d0626d",
+      "pages": [
+        3,
+        7,
+        8
+      ],
+      "lac_disposition": "Disclosed in part",
+      "shows": "Public office holders of 1938 (the Premier of Alberta, the Prime Minister's private secretary, the acting deputy minister) all escalated: the tool has no register of historical office holders, and at 88 years the record is short of the 110-year archival rule."
+    },
+    {
+      "file_name": "east-german-leadership-telegram-1970s.pdf",
+      "title": "Telegram on the East German leadership, External Affairs, 1970s",
+      "source": "A-2026-01845_01.pdf",
+      "source_sha256": "e0df0b249aa45f207647f289353108660d020caf0d0c5207d7c37c90e78ea73f",
+      "pages": [
+        27
+      ],
+      "lac_disposition": "Disclosed in part",
+      "shows": "Leaders of a foreign state discussed by name in an all-capitals telegram. Honecker is escalated, and OCR and capitals turn 'MOSCO' and 'CONFD' into people: what the tool does with text that has no case to lean on."
     },
     {
       "file_name": "immigration-case-file-1913-1962.pdf",
       "title": "Chinese immigration case file, 1913 to 1962",
       "source": "A-2026-03227_01.pdf",
       "source_sha256": "7a45a148acdc83e2a52cf6ffe75022b5c2c9fe1132498e09f5f1439b29c0b474",
-      "pages": [13, 26],
+      "pages": [
+        13,
+        26
+      ],
       "lac_disposition": "Disclosed in part",
       "shows": "The tool at its weakest and at its archival rule. On the first page every family member is escalated and every kinship word withheld, where LAC released them: over-redaction on a real record. On the second, dated 1903, the 110-year archival rule (K7) keeps everything, OCR fragments included."
     }
