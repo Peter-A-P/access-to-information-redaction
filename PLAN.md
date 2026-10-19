@@ -282,7 +282,7 @@ published, not when the code for it exists.
       Three reviewers, 2026-10-10, 10-17 and 10-18; 2.3 times faster; see 12.36, 12.38, 12.42)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
-- [ ] Hosted demo with synthetic documents at redaction.peterparker.ca
+- [x] Hosted demo with synthetic documents at redaction.peterparker.ca
 - [x] One rejected approach documented with evidence (Rule C)
 - [ ] Repository public, `v0.1.0` tagged
 
@@ -1795,3 +1795,24 @@ a question rather than a decision.
 Off in `sever study` and the trial, so the three timed reviewers stay comparable with any
 later one; on in `sever review` and the demonstration. Not measured: it would need a fourth
 study arm. What it would have caught in the study is one of reviewer 3's nine unaided misses.
+
+### 12.44 The demonstration is live
+
+2026-10-18. The three blockers in 12.33 are cleared: Peter added the DNS record, the site
+block is in 04's Caddyfile (04's commit 864fdad, which also changes its "runs nothing else"
+note and says its published load test predates the demo), and the container runs on the
+shared host beside 04, read-only, capped at one CPU and 2 GB, on no published port.
+
+One deploy defect was found before it could bite: `deploy/compose.yaml` named 04's network
+`deploy_default`, and on the host it is `boundary_default`, because 04's compose file names
+its project. The container would have started and Caddy could not have reached it.
+
+Checked on the public URL the same day: the health check, a first visit's cookie
+(`HttpOnly`, `Secure`, `SameSite=Lax`), the content security policy and HSTS, a Let's
+Encrypt certificate, a withheld value spread to its other occurrence, a released PDF whose
+text layer does not hold the withheld value, and a second visitor refused the first
+visitor's release. 04's gateway answered throughout, apart from Caddy's restart.
+
+Unlike 01, 08 and 12, this demonstration is not a static site on Azure Static Web Apps,
+because it is a server: spaCy's model, a session and audit log per visitor, and a PDF built
+and leak-tested on request. Section 7 always put it on the shared host.

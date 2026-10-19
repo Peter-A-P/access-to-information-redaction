@@ -10,6 +10,10 @@ and how often it keeps what must stay. Days of reading become hours of review.
 **The tool proposes; a person decides.** There is no path from a proposal to a released
 document without a reviewer action on every page.
 
+**Try it at https://redaction.peterparker.ca**: the reviewer's screen over six invented
+records, rules only, one private session per visitor, and a truly redacted PDF of the
+record once you have decided every page.
+
 ## Result
 
 Measured on a 210-page synthetic corpus whose labels are known by construction. Every
@@ -675,7 +679,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 |---|---|---|
 | Taxonomy, two jurisdictions, all 39 provisions verified | | |
 | Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
-| 210-page labelled corpus, labels by construction | Hosted demo: `sever demo` and its image are built and tested; not deployed | |
+| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: six invented records, rules only | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
 | The model layer, through the gateway on placeholders | | |

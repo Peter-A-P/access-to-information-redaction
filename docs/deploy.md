@@ -1,6 +1,6 @@
 # The public demonstration
 
-`redaction.peterparker.ca` is meant to run `sever demo`: the reviewer's screen over six
+`redaction.peterparker.ca` runs `sever demo`, live since 2026-10-18: the reviewer's screen over six
 invented records, one private session per visitor, forgotten after two hours, rules only
 and no model. A visitor who completes a record can download its PDF, built from their own
 decisions and leak-tested before it is served. `sever/review/demo.py` says what the
@@ -17,6 +17,12 @@ The image holds no credential and the demonstration calls nothing outside itself
 compromise of it reaches six invented records.
 
 ## Standing it up
+
+Done 2026-10-18 (PLAN.md 12.44). The host's 04 checkout stays at the tag it runs, with
+`deploy/Caddyfile` taken from 04's commit 864fdad (`git checkout 864fdad --
+deploy/Caddyfile`), until 04's next tagged deploy carries it. To update the demo, repeat the
+laptop half of the commands below and `sudo docker compose up -d --no-build` on the host;
+Caddy needs no restart for that.
 
 Three things only Peter can do, in this order:
 
