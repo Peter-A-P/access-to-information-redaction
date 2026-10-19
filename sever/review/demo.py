@@ -18,10 +18,19 @@ be made to spend money. The records are generated from a seed at start.
 **The redacted PDF is real.** A visitor who completes a record can download it, built from
 their own decisions by the same export that `sever export` uses, with the leak test run on
 it before it is served. That is the one claim worth demonstrating that a screenshot cannot.
+
+**The website and the dashboard are served without a session.** The project's site (built
+by `sever.site` into `site`) is at `/`, `/how` and their files; the live dashboard is
+`/dashboard`, reading `/dashboard.json`, the counts `sever.review.stats` keeps across every
+visitor. Neither sets a cookie: a visitor is given a session the first time they open the
+reviewer's screen, at `/review`, and not for reading about it.
 """
 
 from __future__ import annotations
 
+import json
+import mimetypes
+import re
 import secrets
 import shutil
 import tempfile
@@ -37,6 +46,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 
 from sever.review.session import Item, Mode, Session, build_session
+from sever.review.stats import DemoStats, tool_counts
 
 COOKIE = "sever_demo"
 IDLE = 2 * 60 * 60
@@ -77,17 +87,65 @@ class _Visitor:
     seen: float
 
 
+# The site's pages by the path they are served at, and the content types of its files.
+PAGES = {"/": "index.html", "/index.html": "index.html", "/how": "how.html",
+         "/dashboard": "dashboard.html"}
+_ASSET = re.compile(r"^/(?:[a-z]+\.(?:css|js)|fonts/[A-Za-z0-9-]+\.(?:woff2|txt)|data/site\.json)$")
+
+
+@dataclass(frozen=True, slots=True)
+class _File:
+    body: bytes
+    content_type: str
+    cache: str
+
+
+def load_site(directory: Path) -> dict[str, _File]:
+    """Every file of the built site, in memory, by the path it is served at. The site is a
+    few hundred kilobytes and never changes while the process runs."""
+    files: dict[str, _File] = {}
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = "/" + path.relative_to(directory).as_posix()
+        kind = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        if path.suffix == ".woff2":
+            kind = "font/woff2"
+        if kind.startswith("text/") or kind in ("application/javascript", "application/json"):
+            kind += "; charset=utf-8"
+        cache = "no-cache" if path.suffix in (".html", ".json") else "public, max-age=3600"
+        files[rel] = _File(path.read_bytes(), kind, cache)
+    for route, name in PAGES.items():
+        if f"/{name}" not in files:
+            raise FileNotFoundError(f"the built site has no {name}; run `sever site`")
+        files[route] = files[f"/{name}"]
+    return files
+
+
 @dataclass
 class DemoServer:
-    """The ASGI application: routes each request to its visitor's own reviewer app."""
+    """The ASGI application: the website and dashboard for everyone, and each visitor's
+    own reviewer app for the rest."""
 
     items: Sequence[Item]
+    site: Path | None = None
     idle: float = IDLE
     max_sessions: int = MAX_SESSIONS
     clock: Callable[[], float] = time.monotonic
     secure_cookie: bool = True
+    stats: DemoStats | None = None
     _visitors: OrderedDict[str, _Visitor] = field(default_factory=OrderedDict, init=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
+    _files: dict[str, _File] = field(default_factory=dict, init=False)
+
+    def __post_init__(self) -> None:
+        if self.stats is None:
+            from sever.taxonomy.loader import default_taxonomy
+
+            taxonomy = default_taxonomy()
+            self.stats = DemoStats(taxonomy=taxonomy, tool=tool_counts(self.items, taxonomy))
+        if self.site is not None:
+            self._files = load_site(self.site)
 
     def __len__(self) -> int:
         return len(self._visitors)
@@ -111,8 +169,20 @@ class DemoServer:
             mode=Mode.PROPOSALS,
             actor="visitor",
         )
-        visitor = _Visitor(session=session, app=_visitor_app(session), folder=folder, seen=now)
+        stats = self.stats
+        assert stats is not None
+        session.observer = stats.observe
+        stats.visitor()
+        visitor = _Visitor(
+            session=session, app=_visitor_app(session, stats), folder=folder, seen=now
+        )
         return key, visitor
+
+    def live(self) -> int:
+        """Sessions not yet evicted: active in the last `idle` seconds."""
+        with self._lock:
+            self._evict(self.clock())
+            return len(self._visitors)
 
     def visitor(self, key: str | None) -> tuple[str, _Visitor, bool]:
         """The visitor for a cookie value, or a new one. True when it was created."""
@@ -132,8 +202,24 @@ class DemoServer:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             return
-        if scope.get("path") == "/healthz":
+        path = scope.get("path", "/")
+        if path == "/healthz":
             await _plain(send, 200, b"ok")
+            return
+        if path == "/dashboard.json":
+            assert self.stats is not None
+            body = json.dumps(self.stats.snapshot(live=self.live())).encode()
+            await _send(send, 200, body, "application/json", "no-store")
+            return
+        if path in self._files or (self._files and _ASSET.match(path)):
+            if scope.get("method") not in ("GET", "HEAD"):
+                await _plain(send, 405, b"method not allowed")
+                return
+            f = self._files.get(path)
+            if f is None:
+                await _plain(send, 404, b"not found")
+                return
+            await _send(send, 200, f.body, f.content_type, f.cache)
             return
         key, visitor, created = self.visitor(_cookie(scope, COOKIE))
         if not created:
@@ -142,7 +228,7 @@ class DemoServer:
         # A new visitor: set the cookie and send them where they asked to go, so the
         # first request after the cookie is set is the one that reaches their session.
         flags = "; Secure" if self.secure_cookie else ""
-        location = scope.get("path", "/") if scope.get("method") == "GET" else "/"
+        location = path if scope.get("method") == "GET" else "/review"
         await send(
             {
                 "type": "http.response.start",
@@ -160,15 +246,15 @@ class DemoServer:
         await send({"type": "http.response.body", "body": b""})
 
 
-def _visitor_app(session: Session) -> ASGIApp:
+def _visitor_app(session: Session, stats: DemoStats | None = None) -> ASGIApp:
     from sever.review.app import create_app
 
     app = create_app(session, demo=True)
-    _add_pdf_route(app, session)
+    _add_pdf_route(app, session, stats)
     return app
 
 
-def _add_pdf_route(app: FastAPI, session: Session) -> None:
+def _add_pdf_route(app: FastAPI, session: Session, stats: DemoStats | None = None) -> None:
     @app.get("/doc/{doc_id}/released.pdf")
     def released_pdf(doc_id: str) -> Response:
         """The visitor's own decisions, truly redacted, leak-tested before it is served."""
@@ -195,7 +281,10 @@ def _add_pdf_route(app: FastAPI, session: Session) -> None:
             result = apply_redactions(source, Path(tmp) / "released.pdf", item.document, applied)
             checker = LeakChecker(use_ocr=False)
             checker.check(result.path, result.regions, document=doc_id)
-            if not checker.report().clean:
+            clean = checker.report().clean
+            if stats is not None:
+                stats.pdf(clean=clean, boxes=len(result.regions))
+            if not clean:
                 raise HTTPException(
                     status_code=500,
                     detail="the leak test found recoverable text under a box; not served",
@@ -218,6 +307,21 @@ def _cookie(scope: Scope, name: str) -> str | None:
             if k == name and v:
                 return v
     return None
+
+
+async def _send(send: Send, status: int, body: bytes, content_type: str, cache: str) -> None:
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", content_type.encode()),
+                (b"cache-control", cache.encode()),
+                (b"content-length", str(len(body)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
 
 
 async def _plain(send: Send, status: int, body: bytes) -> None:

@@ -1,0 +1,125 @@
+/* The reviewer's screen, as a page of the project's site. Loaded after style.css on the
+   public demonstration only; `sever review` on a laptop keeps base.html's own inline rules.
+
+   The rules are base.html's, rewritten in the site's palette so the screen follows the
+   site into dark mode. The record itself stays a sheet of white paper in both themes,
+   because the highlights were chosen against white and a record is printed on white. */
+
+body.reviewing main { padding-top: 0.5rem; }
+
+/* ------------------------------------------------------------- the bar under the menu */
+
+.review-bar { border-bottom: 1px solid var(--line); background: var(--paper); }
+.review-bar-inner {
+  max-width: var(--column); margin: 0 auto; padding: 0.45rem 1.5rem; display: flex; gap: 1rem;
+  align-items: baseline; justify-content: space-between; flex-wrap: wrap; font-size: 0.86rem;
+}
+.review-bar .proposes { color: var(--ink-soft); }
+.review-bar nav { display: flex; gap: 1.1rem; }
+.demo-banner {
+  max-width: calc(var(--column) - 3rem); margin: 0.9rem auto 0; padding: 0.55rem 0.9rem; font-size: 0.84rem; color: var(--ink-soft);
+  border-left: 3px solid var(--escalate); background: var(--escalate-soft); border-radius: 0 var(--radius) var(--radius) 0;
+}
+@media (max-width: 66rem) { .demo-banner { margin-left: 1.5rem; margin-right: 1.5rem; } }
+@media (max-width: 34rem) { .review-bar-inner { padding: 0.45rem 1rem; } .demo-banner { margin-left: 1rem; margin-right: 1rem; } }
+
+body.reviewing h2 { margin-top: 1rem; }
+body.reviewing h3 { margin-top: 1.6rem; }
+
+/* ------------------------------------------------------------- the record */
+
+.record {
+  background: #fffefb; color: #1d1f24; border: 1px solid var(--line-2); border-radius: 4px;
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.45); padding: 1.6rem 1.9rem;
+  white-space: pre-wrap; word-break: break-word; font: 0.84rem/1.8 var(--mono);
+}
+@media (max-width: 34rem) { .record { padding: 1rem; font-size: 0.76rem; } }
+
+.record mark { background: none; color: inherit; padding: 0.05em 0.1em; border-radius: 2px; border-bottom: 2px solid; cursor: pointer; }
+/* Proposed: tinted, dashed underline, outlined letter. Decided: solid, filled letter. */
+mark.p-withhold { color: #8c1d18; background: #fbe0dd; border-color: #b3261e; border-bottom-style: dashed; }
+mark.p-release { color: #17603b; background: #dcefe3; border-color: #1e7a4c; border-bottom-style: dashed; }
+mark.p-escalate { color: #6e4a00; background: #fdeec9; border-color: #b07800; border-bottom-style: dashed; }
+mark.d-withhold { color: #fff; background: #23252b; border-color: #b3261e; }
+mark.d-release { color: #17603b; background: #c5e6d2; border-color: #1e7a4c; }
+mark.d-escalate { color: #4d3400; background: #f8dc91; border-color: #b07800; }
+mark.focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+mark[data-badge]::after, .key {
+  content: attr(data-badge); display: inline-block; font: 700 0.6rem/1.3 var(--sans);
+  vertical-align: 0.5em; margin-left: 0.15em; padding: 0 0.25em; border-radius: 3px; border: 1px solid;
+}
+mark.p-withhold::after, .key.p-withhold { color: #b3261e; border-color: #b3261e; background: #fff; }
+mark.p-release::after, .key.p-release { color: #1e7a4c; border-color: #1e7a4c; background: #fff; }
+mark.p-escalate::after, .key.p-escalate { color: #9a6200; border-color: #b07800; background: #fff; }
+mark.d-withhold::after { color: #fff; background: #b3261e; border-color: #b3261e; }
+mark.d-release::after { color: #fff; background: #1e7a4c; border-color: #1e7a4c; }
+mark.d-escalate::after { color: #fff; background: #9a6200; border-color: #9a6200; }
+
+/* The key above the record: the site's .legend is a flex row of swatches, this is a line. */
+p.legend { display: block; margin: 0 0 0.6rem; }
+p.legend .key { vertical-align: baseline; margin: 0 0.25em 0 0.7em; }
+p.legend .key:first-child { margin-left: 0; }
+
+/* ------------------------------------------------------------- controls */
+
+body.reviewing button, body.reviewing select, body.reviewing input[type="text"] {
+  font: inherit; font-size: 0.88rem; padding: 0.32rem 0.75rem; color: var(--ink);
+  background: var(--paper-soft); border: 1px solid var(--line-2); border-radius: 999px;
+}
+body.reviewing select { border-radius: 6px; width: auto; max-width: 100%; }
+body.reviewing input[type="text"] { border-radius: 6px; }
+body.reviewing button { cursor: pointer; }
+body.reviewing button:hover { border-color: var(--accent); color: var(--accent-ink); }
+body.reviewing button.primary { background: var(--accent); color: var(--paper-soft); border-color: var(--accent); font-weight: 600; }
+body.reviewing button.primary:hover { background: var(--accent-ink); color: var(--paper-soft); }
+body.reviewing button[disabled] { opacity: 0.45; cursor: not-allowed; }
+body.reviewing .big { font-size: 1rem; padding: 0.5rem 1.2rem; }
+
+.error, .ok { padding: 0.65rem 0.9rem; margin: 0.8rem 0; border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.92rem; }
+.error { border-left: 3px solid var(--withhold); background: var(--withhold-soft); }
+.ok { border-left: 3px solid var(--release); background: var(--release-soft); }
+.requester {
+  border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.55rem 0.9rem;
+  margin: 0 0 0.9rem; border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.92rem;
+}
+
+.pager { display: flex; gap: 0.8rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+.pill { font-size: 0.76rem; padding: 0.08rem 0.55rem; border: 1px solid var(--line-2); border-radius: 999px; color: var(--ink-faint); }
+.pill.done { border-color: var(--release); color: var(--release); }
+.how { margin: 0.2rem 0 0.6rem; }
+.quote { font-family: var(--mono); font-weight: 600; font-size: 0.9em; }
+.code { font-family: var(--mono); font-size: 0.85em; background: var(--line-soft); padding: 0 0.3em; border-radius: 3px; }
+.why { color: var(--ink-faint); font-size: 0.86rem; margin: 0.35rem 0 0.5rem; line-height: 1.5; }
+.actions { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+
+details.spans { margin-top: 1rem; }
+details.spans summary, details.reference summary { cursor: pointer; color: var(--ink-faint); font-size: 0.9rem; }
+.span-row { border: 1px solid var(--line); background: var(--paper-soft); padding: 0.55rem 0.8rem; margin-bottom: 0.4rem; border-radius: 6px; display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap; }
+.span-row.done { opacity: 0.6; }
+
+/* ------------------------------------------------------------- the decision panel */
+
+.pop {
+  position: absolute; z-index: 20; width: min(31rem, calc(100vw - 16px));
+  background: var(--paper-soft); color: var(--ink); border: 1px solid var(--line-2); border-radius: var(--radius);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.35); padding: 0.8rem 0.95rem; font-size: 0.9rem; line-height: 1.5;
+}
+.pop[hidden] { display: none; }
+.pop-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.35rem; }
+body.reviewing .pop .close { border: none; background: none; font-size: 1.3rem; line-height: 1; padding: 0 0.25rem; color: var(--ink-faint); }
+.pop .proposal { margin: 0.2rem 0 0.3rem; }
+.pop .decided { margin: 0.4rem 0; color: var(--release); }
+.pop .actions { margin: 0.55rem 0; }
+.pop .actions form { display: inline; }
+.pop .recode { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; font-size: 0.86rem; color: var(--ink-soft); }
+.pop-foot { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.pop details.meaning { margin: 0.3rem 0; color: var(--ink-faint); font-size: 0.85rem; }
+.pop details.meaning summary { cursor: pointer; }
+#addbar label { display: block; margin: 0.3rem 0; font-size: 0.86rem; }
+#addbar input[type="text"] { margin: 0.3rem 0; width: 100%; }
+
+/* ------------------------------------------------------------- the audit log and the schedule */
+
+body.reviewing table { font-size: 0.86rem; }
+body.reviewing td.note { font-size: 0.8rem; }

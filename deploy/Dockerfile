@@ -14,6 +14,15 @@ RUN uv sync --frozen --extra detect --no-dev \
  && uv pip install --python .venv/bin/python \
     "en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl"
 
+# The website, built here from the committed results so the image serves exactly what the
+# repository measured (sever/site.py). The tests and the results are read for their figures;
+# the build fails if any figure cannot be read, which fails the image.
+COPY web ./web
+COPY results ./results
+COPY gate ./gate
+COPY tests ./tests
+RUN .venv/bin/sever site --out /app/site
+
 # The checkout's own permissions come across with COPY, and a private checkout is often
 # owner-only, which the unprivileged user below could not read.
 RUN chmod -R a+rX /app
@@ -21,4 +30,4 @@ RUN useradd --system --uid 10007 --home /nonexistent sever
 USER sever
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"
-CMD [".venv/bin/sever", "demo", "--host", "0.0.0.0", "--port", "8000"]
+CMD [".venv/bin/sever", "demo", "--host", "0.0.0.0", "--port", "8000", "--site", "/app/site"]

@@ -11,6 +11,13 @@
   party it did not choose. This way the application runs with the network cable out, which
   is where records like these are usually read. See PLAN 12.16.
 #}
+{% if demo %}
+{# The public demonstration wears the project site's stylesheet and menu, so the reviewer's
+   screen is a page of redaction.peterparker.ca rather than a separate tool. review.css is
+   the screen's own rules in the site's palette, dark mode included. #}
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/review.css">
+{% else %}
 <style>
   :root {
     --ink: #16181d;
@@ -124,8 +131,21 @@
   .big { font-size: 1.05rem; padding: .5rem 1.2rem; }
   .demo-banner { background: #fff4d6; border-bottom: 1px solid var(--rule); padding: .5rem 1.2rem; font-size: .88rem; }
 </style>
+{% endif %}
 </head>
-<body>
+<body{% if demo %} class="reviewing"{% endif %}>
+{% if demo %}
+{{ masthead|safe }}
+<div class="review-bar">
+  <div class="review-bar-inner">
+    <span class="proposes">The tool proposes; <strong>you decide</strong>.</span>
+    <nav aria-label="Your review">
+      <a href="/review">Your records</a>
+      <a href="/log">Your audit log</a>
+    </nav>
+  </div>
+</div>
+{% else %}
 <header>
   <h1><a href="/" style="text-decoration:none;color:inherit">sever</a></h1>
   <span class="proposes">The tool proposes; a person decides.</span>
@@ -139,6 +159,7 @@
     {% endif %}
   </nav>
 </header>
+{% endif %}
 {% if demo %}
 <div class="demo-banner">
   A demonstration. Every person and record here is invented, the tool runs its rules only

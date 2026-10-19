@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hundreds of Pages, Redacted in an Afternoon: access-to-information review, measured</title>
+<meta name="description" content="A tool that proposes every redaction in an access-to-information release with the provision it rests on, lets a person approve or overrule it page by page with a tamper-evident log, and publishes how often it withholds what must go and how often it keeps what must stay. Measured on labelled records, timed with real reviewers, and tested on published federal releases.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+{{masthead_index}}
+<main>
+
+  <header class="hero">
+    <p class="eyebrow">Access to information, with every number measured</p>
+    <h1>Hundreds of pages, <span class="hl">redacted in an afternoon</span>, and a&nbsp;person still decides every line</h1>
+    <p class="lead">
+      When someone asks a public body for its records, staff read every page and decide, line
+      by line, what must be withheld and what must be released. The law turns on context:
+      <strong>the requester's own details go back to them</strong>, <strong>an official
+      signing a letter stays</strong>, <strong>a neighbour who made a complaint is
+      withheld</strong>. Off-the-shelf privacy tools black out every name and number, which
+      answers the request in form and refuses it in substance, so the reading is still done by
+      hand. This tool reads the record the way a reviewer does, proposes every redaction with
+      the section of the law it rests on, and leaves the decision on every page to a person,
+      with a log nobody can quietly edit.
+    </p>
+    <div class="hero-points">
+      <div class="point good">
+        <span class="point-figure">{{rules_over}}</span>
+        <span class="point-unit">of what must be released, withheld</span>
+        <span class="point-label">against {{blunt_over}} for a blunt privacy tool, over {{must_release}} labelled spans that belong in the released record; 95% interval {{rules_over_ci}}</span>
+      </div>
+      <div class="point">
+        <span class="point-figure">{{speedup}}&times;</span>
+        <span class="point-unit">faster review with the proposals</span>
+        <span class="point-label">{{secs_with}} seconds a page against {{secs_unaided}} unaided, {{reviewers_word}} timed reviewers, the same records in both arms; 95% interval {{speedup_ci}}</span>
+      </div>
+      <div class="point violet">
+        <span class="point-figure">{{study_leak_with}}</span>
+        <span class="point-unit">leaked with proposals, against {{study_leak_unaided}} by hand</span>
+        <span class="point-label">the same reviewers, scored against labels known by construction; the first pair of intervals in the study that do not overlap</span>
+      </div>
+      <div class="point good">
+        <span class="point-figure">{{pdf_recoverable}} of {{pdf_boxes}}</span>
+        <span class="point-unit">redaction boxes with text still under them</span>
+        <span class="point-label">every box on {{pdf_documents}} exported records, checked in the PDF's text layer and by reading the rendered page back with OCR</span>
+      </div>
+    </div>
+    <div class="cta">
+      <a class="button" href="/review">Review a record yourself</a>
+      <a class="button ghost" href="/dashboard">See every decision, live</a>
+    </div>
+    <p class="live" id="live" aria-live="polite">Reading this server's live count of decisions.</p>
+    <p class="hero-note">
+      Every figure on this page is read from a table the measurement commands write, and
+      carries a 95% confidence interval there. Nothing here is typed by hand. The button above
+      is the reviewer's own screen over {{demo_records_word}} invented records, with nothing kept
+      once you leave. <a href="/how">See how it's built</a>.
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="On this page">
+    <p class="eyebrow">On this page</p>
+    <ol>
+      <li><a href="#problem">Why it is still done by hand</a></li>
+      <li><a href="#example">One letter, read the way a reviewer reads it</a></li>
+      <li><a href="#pipeline">One page, in seven steps</a></li>
+      <li><a href="#tradeoff">Withholding what must go, releasing what must stay</a></li>
+      <li><a href="#context">The context is the whole argument</a></li>
+      <li><a href="#leaks">Where every leak comes from</a></li>
+      <li><a href="#reviewers">Three people, timed</a></li>
+      <li><a href="#pdf">A black box is not a redaction</a></li>
+      <li><a href="#scans">Scanned paper</a></li>
+      <li><a href="#real">Real released records</a></li>
+      <li><a href="#model">The language model, measured and switched off</a></li>
+      <li><a href="#law">The law, as data</a></li>
+      <li><a href="#rejected">What did not work</a></li>
+      <li><a href="#limits">What this does not do</a></li>
+      <li><a href="#engineering">How it is engineered</a></li>
+      <li><a href="#built">How this was built</a></li>
+    </ol>
+  </nav>
+
+  <noscript>
+    <p class="warning">
+      The charts on this page are drawn in the browser, so they need JavaScript. The words and
+      every number work without it.
+    </p>
+  </noscript>
+
+  <p class="warning" id="failure" hidden></p>
+
+  <!-- ============================================================== the problem -->
+
+  <section class="section" id="problem">
+    <h2>Why it is still done by hand</h2>
+    <p class="section-lead">
+      The same kind of detail, a name or a telephone number, is released on one line and
+      withheld on the next, and nothing in the name says which. What decides it is who the
+      person is in this record. That is the judgement privacy tools do not attempt, so they
+      withhold everything, and a public body that used one would be refusing most of what the
+      law says it must release.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Who is named</th><th scope="col">What the law says</th><th scope="col">A blunt privacy tool</th><th scope="col">This tool</th></tr></thead>
+        <tbody>
+          <tr><th scope="row" class="wrap">The person who asked</th><td class="wrap">Their own information goes back to them</td><td class="wrap worse">Withholds it from them</td><td class="wrap better">Releases it, matched to the request</td></tr>
+          <tr><th scope="row" class="wrap">An official signing a letter</th><td class="wrap">Name, title and work contact relate to the position, so they stay</td><td class="wrap worse">Withholds them</td><td class="wrap better">Releases them, from the title in the signature block</td></tr>
+          <tr><th scope="row" class="wrap">The minister on the letterhead</th><td class="wrap">Already public</td><td class="wrap worse">Withholds it</td><td class="wrap better">Releases it, from the letterhead</td></tr>
+          <tr><th scope="row" class="wrap">A neighbour who complained</th><td class="wrap">A third party's personal information is withheld</td><td class="wrap better">Withholds it</td><td class="wrap better">Withholds it</td></tr>
+          <tr><th scope="row" class="wrap">"The client's sibling"</th><td class="wrap">Identifies the sibling to a requester who knows the family</td><td class="wrap worse">Releases it: no name, so nothing to find</td><td class="wrap better">Withholds it with the name</td></tr>
+          <tr><th scope="row" class="wrap">Someone the record cannot place</th><td class="wrap">It depends, and a person has to decide</td><td class="wrap">Withholds it, silently</td><td class="wrap">Withholds it and says it needs a decision</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Federally this is the Access to Information Act and the Privacy Act; in Newfoundland and
+      Labrador, ATIPPA. The categories and the sections they rest on are in
+      <a href="#law">The law, as data</a>.
+    </p>
+  </section>
+
+  <!-- ============================================================== the example -->
+
+  <section class="section" id="example">
+    <h2>One letter, read the way a reviewer reads it</h2>
+    <p class="section-lead">
+      This is the tool's own output, produced when this page was built, on an invented letter
+      from the demonstration. Every highlight is a proposal: the colour is what the tool would
+      do, and pointing at one, or tabbing to it, shows the category and the reason. The
+      request was made by <strong>{{example_requester}}</strong>.
+    </p>
+    <div class="letter-wrap">
+      <figure class="letter">
+        <pre id="letter">{{example_letter}}</pre>
+      </figure>
+      <aside class="letter-side">
+        <ul class="legend-list">
+{{example_legend}}
+        </ul>
+        <div class="why-box" id="why" aria-live="polite">
+          <p class="why-title">Point at a highlight</p>
+          <p class="why-text">Each one carries the category it rests on and the reason, in the words the reviewer sees.</p>
+        </div>
+      </aside>
+    </div>
+    <details class="disclose">
+      <summary>Every category on this letter, with the tool's reason for its first use</summary>
+      <ul class="reasons">
+{{example_reasons}}
+      </ul>
+    </details>
+    <div class="verdict">
+      <p><strong>When it is unsure, it withholds and asks.</strong> The neighbour who made the
+      report is withheld and sent to a person. So is the inspector, whom a reviewer would
+      release: "the inspecting officer" is a title, but not one the rules pair with a name in
+      the middle of a sentence. That is the direction the tool errs in on purpose. There is no
+      rule that releases something because nothing matched, and the reviewer releases the
+      inspector with one key.</p>
+    </div>
+  </section>
+
+  <section class="section" id="pipeline">
+    <h2>One page, in seven steps</h2>
+    <p class="section-lead">
+      The order is the design. The context is built before anything is decided, the rules
+      decide what has a settled answer, and nothing is released until a person has acted on
+      every page.
+    </p>
+    <ol class="pipeline">
+      <li><span class="step">1</span><strong>Read</strong><span>Recover the layout: letterhead, email headers, signature blocks, even from a scan.</span></li>
+      <li><span class="step">2</span><strong>Find</strong><span>Every name, number, address and title that could be personal information.</span></li>
+      <li><span class="step">3</span><strong>Place</strong><span>Build each person's context: their title, their block, every other mention of them.</span></li>
+      <li><span class="step">4</span><strong>Decide</strong><span>Fixed rules in a fixed order, each tied to a section of the law.</span></li>
+      <li><span class="step">5</span><strong>Ask</strong><span>Optionally, a model on what is left, seeing placeholders, never a name.</span></li>
+      <li><span class="step">6</span><strong>Review</strong><span>A person approves or overrules every proposal, page by page, all of it logged.</span></li>
+      <li><span class="step">7</span><strong>Release</strong><span>Remove the text under every box, then test that nothing is left.</span></li>
+    </ol>
+    <p class="note">Step 6 is highlighted because it is the only one that can release anything. <a href="/how">How it's built</a> follows a span through all seven.</p>
+  </section>
+
+  <!-- ============================================================== the results -->
+
+  <div class="part">
+    <p class="eyebrow">Does it work?</p>
+    <h2 class="part-title">Two rates, published side by side, because either alone can be gamed</h2>
+    <p class="lead">
+      Measured on {{corpus_documents}} invented records holding {{corpus_spans}} labelled spans.
+      The people were cast before the documents were written, so the right answer for every
+      span is known by construction rather than by someone's opinion. Each part starts in
+      plain language; the detail for someone who builds these systems is folded under
+      <strong>For the technical reader</strong>.
+    </p>
+  </div>
+
+  <section class="section" id="tradeoff">
+    <h2>Withholding what must go, releasing what must stay</h2>
+    <p class="section-lead">
+      A <strong>leak</strong> is a third party's information released. <strong>Over-redaction</strong>
+      is something the requester was entitled to, withheld. A tool can drive the first to zero by
+      withholding everything, and the blunt tool nearly does; the price is the second number,
+      which is the one nobody publishes. Lower and further left is better on both.
+    </p>
+    <figure class="chart-figure">
+      <div id="tradeoff-chart" class="chart"></div>
+      <figcaption>Each configuration with its 95% interval on both rates, resampled over documents. The tool ships as the rules alone.</figcaption>
+    </figure>
+    <div class="headline">
+      <div class="stat up"><span class="figure">{{rules_over}}</span><span class="caption">of what must be released, withheld by the tool ({{rules_over_ci}}), against {{blunt_over}} for the blunt tool</span></div>
+      <div class="stat"><span class="figure">{{rules_leak}}</span><span class="caption">of what must be withheld, released ({{rules_leak_ci}}), against {{blunt_leak}} for the blunt tool</span></div>
+      <div class="stat"><span class="figure">{{rules_esc}}</span><span class="caption">of spans sent to a person as undecidable ({{rules_esc_ci}}); every one is withheld until they say otherwise</span></div>
+      <div class="stat"><span class="figure">{{recall}}</span><span class="caption">of labelled spans found by the detector at all; a span never found cannot be decided</span></div>
+    </div>
+    <div class="verdict">
+      <p><strong>The leak rate is above the blunt tool's, and it is meant to be visible.</strong>
+      The gap, {{rules_leak}} against {{blunt_leak}}, is what releasing anything at all costs. A
+      tool that never released a span would have the lowest leak rate on the page and no reason
+      to exist. A person reviews every proposal precisely because of that gap, and
+      <a href="#reviewers">the study</a> measures what is left after they do.</p>
+    </div>
+    <details class="disclose">
+      <summary>For the technical reader: the five configurations and the interval</summary>
+      <div class="table-wrap">
+        <table class="tight">
+          <thead><tr><th scope="col">Configuration</th><th scope="col">Leak rate</th><th scope="col">Over-redaction</th><th scope="col">Escalated</th></tr></thead>
+          <tbody>
+            <tr class="reference"><th scope="row" class="wrap">The tool: rules only, as it ships</th><td>{{rules_leak}} <span class="interval">{{rules_leak_ci}}</span></td><td>{{rules_over}} <span class="interval">{{rules_over_ci}}</span></td><td>{{rules_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">Rules, then a model on the rest</th><td>{{full_leak}} <span class="interval">{{full_leak_ci}}</span></td><td>{{full_over}} <span class="interval">{{full_over_ci}}</span></td><td>{{full_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">A model on everything, no rules</th><td>{{model_only_leak}} <span class="interval">{{model_only_leak_ci}}</span></td><td>{{model_only_over}} <span class="interval">{{model_only_over_ci}}</span></td><td>{{model_only_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">The rules, with the document's context blanked</th><td>{{sentence_leak}} <span class="interval">{{sentence_leak_ci}}</span></td><td>{{sentence_over}} <span class="interval">{{sentence_over_ci}}</span></td><td>{{sentence_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">Blunt: withhold every detected span</th><td>{{blunt_leak}} <span class="interval">{{blunt_leak_ci}}</span></td><td>{{blunt_over}} <span class="interval">{{blunt_over_ci}}</span></td><td>{{blunt_esc}}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Denominators.</strong> The leak rate is over the {{must_withhold}} spans that must be withheld; over-redaction over the {{must_release}} that must be released. Escalations withhold, so they count against over-redaction and never against the leak rate.</li>
+        <li><strong>A partial box counts the way a reader would.</strong> A span is withheld only when every letter and digit of it is under a box, or what shows identifies nobody: four or fewer digits of a long number, or a job title with its role word withheld.</li>
+        <li><strong>Intervals are bootstrap percentiles resampled over the {{corpus_documents}} documents</strong>, not over spans, because one invented person produces many spans and resampling them would count one fact many times. Project 03 implemented the same estimator independently; a test pins that the two agree.</li>
+        <li>Tables generated {{results_date}} by <code>sever report</code>, spliced into the <a data-repo href="{{repository}}#result">README</a> by the same command.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="context">
+    <h2>The context is the whole argument</h2>
+    <p class="section-lead">
+      A person's capacity is almost never in the sentence that names them. It is three inches
+      lower, in the signature block, or at the top, on the letterhead. So for every span the
+      tool builds a <strong>context record</strong>: the kind of block it sits in, the heading
+      above it, whether a title is paired with this person anywhere in the record, whether
+      they are on a public register, every other mention of the same person, and whether they
+      are the requester. Blank that record and keep the same rules, and over-redaction more than
+      doubles.
+    </p>
+    <div class="headline">
+      <div class="stat up"><span class="figure">{{rules_over}}</span><span class="caption">over-redaction with the document's context ({{rules_over_ci}})</span></div>
+      <div class="stat down"><span class="figure">{{sentence_over}}</span><span class="caption">the same rules judging each name from its sentence alone ({{sentence_over_ci}})</span></div>
+      <div class="stat"><span class="figure">{{layout_flat_over}}</span><span class="caption">if every block is read as a paragraph, as on a flat scan; reading the layout back from the text restores {{layout_recovered_over}}</span></div>
+    </div>
+    <h3>Category by category</h3>
+    <p>
+      What each kind of release costs. Officials are most of what must be released, so theirs is
+      the figure to watch, and most of it is escalation rather than a wrong answer: a name or a
+      work address the record never pairs with a title, which the tool will not guess at. The
+      twenty-year rule withholds about half of what it should release, because it acts only when
+      the record states a date of death.
+    </p>
+    <figure class="chart-figure">
+      <div id="category-chart" class="chart"></div>
+      <figcaption>Rules only. Bars are over-redaction for each category that must be released, and the leak rate for the one that must be withheld, with 95% intervals.</figcaption>
+    </figure>
+    <details class="disclose">
+      <summary>For the technical reader: what a published staff directory would do to the officials' figure</summary>
+      <ul>
+        <li><strong>Matched on the work email address alone</strong>, a directory takes the officials' over-redaction from {{dir_k2_none}} to {{dir_k2_email}} with the leak rate unmoved at {{dir_leak_email}}: the address is on the public body's own domain and nobody outside the directory shares it.</li>
+        <li><strong>Matched on names it multiplies the leak rate by {{dir_leak_factor_word}}</strong>, from {{dir_leak_none}} to {{dir_leak_names}}. See <a href="#rejected">What did not work</a>.</li>
+        <li>The headline tables use no directory, because a directory is something a public body supplies. <a data-repo href="{{repository}}/blob/main/results/directory.md">results/directory.md</a>.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="leaks">
+    <h2>Where every leak comes from</h2>
+    <p class="section-lead">
+      A leak can only happen four ways: the detector never found the span; it found it and
+      called it a place or an organisation, which is not personal information; the box was
+      too short; or the decision was wrong. Counting them separately says which part to fix,
+      and a two-way split once pointed a fix at the wrong module.
+    </p>
+    <figure class="chart-figure">
+      <div id="leak-chart" class="chart"></div>
+      <div class="legend" id="leak-legend"></div>
+      <figcaption>Leaked spans per configuration, out of {{must_withhold}} that must be withheld.</figcaption>
+    </figure>
+    <div class="verdict">
+      <p><strong>The rules themselves leak nothing.</strong> Of the rules-only row's
+      {{rules_leaks}} leaks, {{rules_never_found}} were never found, {{rules_mislabelled}} were
+      found and typed as a place or an organisation, {{rules_box_short}} left part of a name showing,
+      and <strong>{{rules_decision_wrong}}</strong> were a wrong decision. The weak part is
+      detection, and that is where the work goes.</p>
+    </div>
+  </section>
+
+  <section class="section" id="reviewers">
+    <h2>{{reviewers_word_cap}} people, timed</h2>
+    <p class="section-lead">
+      The claim in the title is about people, so it was measured on people. Each reviewer did
+      twenty records: ten by hand, finding and categorising every severance themselves, and ten
+      with the tool's proposals, with a practice page before each half. The halves were swapped
+      between reviewers, so every record was reviewed both ways.
+    </p>
+    <figure class="chart-figure">
+      <div id="reviewer-chart" class="chart"></div>
+      <div class="legend" id="reviewer-legend"></div>
+      <figcaption>Minutes per page for each reviewer, by hand and with proposals.</figcaption>
+    </figure>
+    <div class="headline">
+      <div class="stat up"><span class="figure">{{speedup}}&times;</span><span class="caption">as fast with proposals, holding the {{study_records}} records fixed ({{speedup_ci}})</span></div>
+      <div class="stat"><span class="figure">{{secs_with}} s</span><span class="caption">a page with proposals ({{secs_with_ci}}), against {{secs_unaided}} s by hand ({{secs_unaided_ci}})</span></div>
+      <div class="stat up"><span class="figure">{{study_leak_with}}</span><span class="caption">leaked with proposals ({{study_leak_with_ci}}), against {{study_leak_unaided}} by hand ({{study_leak_unaided_ci}})</span></div>
+      <div class="stat up"><span class="figure">{{study_over_with}}</span><span class="caption">over-redacted with proposals, against {{study_tool_over}} for the tool's proposals with nobody reviewing</span></div>
+    </div>
+    <div class="verdict">
+      <p><strong>Faster and more accurate, which is the combination that matters.</strong>
+      By hand, the misses were the kind people make: a first name standing alone later in the
+      text, the second appearance of a full name, a selection one character short of an email
+      address. With proposals, the misses were the tool's own boxes, approved as drawn. Both
+      kinds are why the screen now withholds every other occurrence of a value the moment a
+      reviewer withholds one.</p>
+    </div>
+    <details class="disclose">
+      <summary>For the technical reader: what the study can and cannot say</summary>
+      <ul>
+        <li><strong>{{reviewers_word_cap}} people</strong>, the first with eight years in access-to-information work. Every reviewer did the proposals half second, so some of the gain is familiarity with the templates; the interval resamples records, not people.</li>
+        <li><strong>The proposals are frozen</strong> as they stood for the first reviewer, so every later reviewer saw the same tool and the arms stay comparable as the tool improves.</li>
+        <li><strong>The reviewers changed the labels twice</strong>, and every table carries both rulings: a family word that points at a third party is withheld with the name, and the parties to a confidential workplace complaint are withheld with their titles. Where a reviewer departed from a label and the label stood, it counts against the reviewer.</li>
+        <li>Seconds are the server's own, from serving a page to its completion row in the log. <a data-repo href="{{repository}}/blob/main/results/reviewer.md">results/reviewer.md</a> and <a data-repo href="{{repository}}/blob/main/docs/reviewer-study.md">docs/reviewer-study.md</a>.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="pdf">
+    <h2>A black box is not a redaction</h2>
+    <p class="section-lead">
+      The most common redaction failure in the news is a black rectangle drawn over text that
+      is still in the file, one copy and paste from public. Every export here removes the text
+      under each box, and then a test tries to get it back two ways: from the PDF's text layer,
+      and by rendering the page to an image and reading it with OCR.
+    </p>
+    <div class="headline">
+      <div class="stat up"><span class="figure">{{pdf_recoverable}} of {{pdf_boxes}}</span><span class="caption">boxes with any of their text recoverable, on {{pdf_documents}} exported records</span></div>
+      <div class="stat"><span class="figure">2</span><span class="caption">channels checked: the text layer, and OCR of the rendered page</span></div>
+      <div class="stat"><span class="figure">Every</span><span class="caption">PDF this site serves has its text layer tested the same way before it is sent, and is refused if anything is found</span></div>
+    </div>
+    <p class="note">
+      Try it: <a href="/review">review a record</a>, release it, download the PDF and select the
+      text under a box. There is nothing there to select.
+    </p>
+  </section>
+
+  <section class="section" id="scans">
+    <h2>Scanned paper</h2>
+    <p class="section-lead">
+      Many records arrive as scans. The same {{scan_documents}} records were printed to PDF,
+      degraded the way a scanner, a photocopier and a fax degrade a page, and read back with
+      Tesseract. What a good scan costs is not the characters; it is the layout. A scan has
+      no signature block in it, only lines of text, so the tool reads the blocks back from the
+      words a signature and an email header are made of.
+    </p>
+    <figure class="chart-figure">
+      <div id="scan-chart" class="chart"></div>
+      <div class="legend" id="scan-legend"></div>
+      <figcaption>Leak rate and over-redaction by input, rules only, with 95% intervals. The character error rate is under each name.</figcaption>
+    </figure>
+    <div class="verdict">
+      <p><strong>A scanner or a photocopier costs about a point; a fax costs the record.</strong>
+      Reading the layout back takes an office scanner's over-redaction from
+      {{scan_scanner_flat_over}} to {{scan_scanner_over}}, against {{scan_native_over}} on the
+      native file. At {{scan_fax_cer}} of characters misread, a fax destroys the values
+      before any detector sees them, and the leak rate is {{scan_fax_leak}}. Fax-quality
+      records need a person, and the tool's number says so.</p>
+    </div>
+  </section>
+
+  <section class="section" id="real">
+    <h2>Real released records</h2>
+    <p class="section-lead">
+      Invented records have exact labels and template-shaped text. Published federal
+      releases are the opposite: real, untidy, and everything still visible was judged
+      releasable by a person at Library and Archives Canada. So the question asked of them is
+      one-sided but honest: <strong>of what a person released, how much would this tool have
+      withheld?</strong> {{rel_packages_total}} packages, {{rel_pages_total}} pages, in three
+      sets, the last two chosen by a rule written before any was downloaded.
+    </p>
+    <figure class="chart-figure">
+      <div id="release-chart" class="chart"></div>
+      <div class="legend" id="release-legend"></div>
+      <figcaption>Share of the spans a person released that the tool would have withheld, before and after the 2026-10-17 changes, with 95% intervals for the tool as it ships.</figcaption>
+    </figure>
+    <div class="verdict">
+      <p><strong>This is the tool's weakest result, and it is published as such.</strong> On the
+      Defence records it learned from, teaching it military ranks and reading layout back took
+      it from withholding everything to {{rel_defence_now}}. On records it never saw, it still
+      withholds {{rel_heldout_now}} and {{rel_fresh_now}}: heads of state it has no register for,
+      family words in century-old immigration files that the archive opened because everyone in
+      them was born more than 110 years ago. The gain did not travel, and the page says so rather
+      than quoting only the first set.</p>
+    </div>
+    <details class="disclose">
+      <summary>For the technical reader: why a leak rate cannot be reported here</summary>
+      <ul>
+        <li><strong>One-sided by construction.</strong> What sat under the original black boxes was removed before publication, so there is no must-withhold denominator. The scoring code raises rather than return a leak rate on this track.</li>
+        <li><strong>A floor, not a forecast.</strong> These are OCR text layers of scanned forms with no layout and no configured requester, so every effect pushes towards withholding.</li>
+        <li><strong>The archive's own age rule</strong> (release once 110 years have passed since birth, Privacy Regulations s. 6(c)) was built and registered before the third set was opened; no page in it was old enough for the rule to read, so it decided nothing there, and that is reported too.</li>
+        <li><a data-repo href="{{repository}}/blob/main/results/releases.md">releases.md</a>, <a data-repo href="{{repository}}/blob/main/results/releases-heldout.md">releases-heldout.md</a>, <a data-repo href="{{repository}}/blob/main/results/releases-fresh.md">releases-fresh.md</a>, and the selection rules in <a data-repo href="{{repository}}/blob/main/docs/data.md">docs/data.md</a>.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="model">
+    <h2>The language model, measured and switched off</h2>
+    <p class="section-lead">
+      The rules decide what has a settled answer and escalate the rest. A language model can be
+      asked about what is left, through the portfolio's own
+      <a href="https://gateway.peterparker.ca">AI gateway</a>, which replaces every name with a
+      typed placeholder before the request leaves, so the model never sees one. It was built,
+      measured at a threshold chosen on separate records, and then turned off by default,
+      because of what the measurement said.
+    </p>
+    <div class="headline">
+      <div class="stat up"><span class="figure">{{full_over}}</span><span class="caption">over-redaction with the model deciding what the rules could not, against {{rules_over}} with the rules alone</span></div>
+      <div class="stat down"><span class="figure">{{model_extra_leaks}}</span><span class="caption">more third parties' details released, all of them the model's decisions: a leak rate of {{full_leak}} against {{rules_leak}}</span></div>
+      <div class="stat"><span class="figure">{{model_cost_page}}</span><span class="caption">a page through the gateway ({{model_cost_page_cad}}), with {{model_name}}</span></div>
+      <div class="stat down"><span class="figure">{{gate_verdict}}</span><span class="caption">project 03's release gate: {{gate_worse}} documents worse with the model, {{gate_better}} better</span></div>
+    </div>
+    <div class="verdict">
+      <p><strong>The gains go to a requester, sooner; the losses go to a stranger, for good.</strong>
+      The model releases more of what requesters are owed, and leaks more of what third
+      parties are owed protection from, and the two do not weigh the same: a requester can
+      appeal a withheld line, and a third party's details in a stranger's hands cannot be
+      recalled. The portfolio's <a href="https://gate.peterparker.ca">release gate</a>, asked the
+      same question with the document as the unit, blocks it: {{gate_rules}} of documents
+      leak-free with the rules alone, {{gate_model}} with the model. Which to run is a public
+      body's decision; the default is the rules.</p>
+    </div>
+    <details class="disclose">
+      <summary>For the technical reader: the warning worth more than the number</summary>
+      <ul>
+        <li><strong>A model measured on top of imperfect rules is partly being paid to fix them.</strong> The model's case was far stronger until the rules stopped escalating bare job titles, and nothing about the model changed. Anyone comparing "rules" with "rules plus a model" is measuring the rules they happen to have.</li>
+        <li><strong>Without the rules the model leaks {{model_only_leak}}</strong> against {{full_leak}} with them. Asked on its own, it releases "the client's sibling" almost every time, because a family word with no name beside it reads as harmless.</li>
+        <li><strong>No raw entity leaves.</strong> A test asserts that no detected value appears in any outbound request; the gateway records the data class of every call. {{model_asks}} questions were asked for the published tables, and answers are cached so the tables reproduce for nothing.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="law">
+    <h2>The law, as data</h2>
+    <p class="section-lead">
+      Every proposal names a category, and every category maps to the sections of the
+      legislation it rests on, in two jurisdictions. The mapping is a data file, not code, so a
+      public body can read it, argue with it and change it. Each of the {{provisions}} provisions
+      carries the quoted text, the date it was checked and the address it was checked against,
+      and the file refuses one that has none.
+    </p>
+    <div class="table-wrap">
+      <table class="law">
+        <thead><tr><th scope="col">Category</th><th scope="col">Canada (federal)</th><th scope="col">Newfoundland and Labrador</th></tr></thead>
+        <tbody>
+{{taxonomy_rows}}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      ATIA is the Access to Information Act; ATIPPA is Newfoundland and Labrador's Access to
+      Information and Protection of Privacy Act, 2015. Where the two disagree, as on what is
+      already public, the provincial file escalates rather than releases. The tool decides only
+      personal information: advice, legal privilege, law enforcement and business interests are
+      flagged for the reviewer with the provision and never decided.
+    </p>
+  </section>
+
+  <section class="section" id="rejected">
+    <h2>What did not work</h2>
+    <p class="section-lead">
+      <strong>Looking officials up in the staff directory by name.</strong> Most of the
+      over-redaction of officials is a name the record never pairs with a title, and the obvious
+      remedy is to look the name up. Measured, it multiplied the leak rate by {{dir_leak_factor_word}},
+      from {{dir_leak_none}} to {{dir_leak_names}}. Some of that is the small invented name pool,
+      but {{dir_listed_leaks}} of the leaks were the <strong>listed employee themselves</strong>:
+      an employee who files a grievance is in the directory and is a third party in their own
+      complaint. A directory is evidence about a string; the decision turns on the sentence. Only
+      the work email address survived, and it is now the only thing a directory is matched on.
+    </p>
+  </section>
+
+  <section class="section" id="limits">
+    <h2>What this does not do</h2>
+    <div class="cards">
+      <div class="card-note"><h3>It does not release anything</h3><p>Every page needs a person's explicit action, and the export asks the audit log, which refuses while any page is undecided.</p></div>
+      <div class="card-note"><h3>It decides personal information only</h3><p>Advice, legal privilege, law enforcement and business interests are flagged with the provision and left to the reviewer.</p></div>
+      <div class="card-note"><h3>It is not legal advice</h3><p>The categories map to two statutes and are configurable. A public body applies its own interpretation.</p></div>
+      <div class="card-note"><h3>The corpus is invented</h3><p>Exact labels need people cast before the documents are written. Real releases, above, are where that is checked, and they are its weakest result.</p></div>
+      <div class="card-note"><h3>It does not read handwriting</h3><p>The scanned track covers typed pages. A fax-quality page loses most of its values before detection.</p></div>
+      <div class="card-note"><h3>The study is three people</h3><p>Each did both halves, proposals second, so familiarity is part of the gain. The interval resamples records, not reviewers.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="engineering">
+    <h2>How it is engineered</h2>
+    <div class="headline">
+      <div class="stat"><span class="figure">{{tests}}</span><span class="caption">test functions, including the PDF leak test, the requester-never-a-third-party test and the audit log's immutability</span></div>
+      <div class="stat"><span class="figure">{{code_lines}}</span><span class="caption">lines of typed Python, strict type checking and linting clean on every push</span></div>
+      <div class="stat"><span class="figure">{{provisions}}</span><span class="caption">statutory provisions, each quoted and checked against the consolidated act</span></div>
+      <div class="stat"><span class="figure">{{categories}}</span><span class="caption">categories, each with what it does federally and provincially</span></div>
+    </div>
+    <ul class="chips" aria-label="Tools and techniques">
+      <li>Python 3.13</li><li>Presidio</li><li>spaCy</li><li>PyMuPDF</li><li>Tesseract</li>
+      <li>FastAPI</li><li>Jinja</li><li>DuckDB</li><li>Pydantic</li><li>YAML taxonomy</li>
+      <li>Hash-chained audit log</li><li>Bootstrap intervals</li><li>Paired non-inferiority</li>
+      <li>mypy --strict</li><li>ruff</li><li>pytest</li><li>uv</li><li>Docker</li><li>Caddy</li>
+      <li>GitHub Actions</li><li>OVHcloud</li><li>Cloudflare</li>
+    </ul>
+    <details class="disclose">
+      <summary>For the technical reader: the rules the code enforces on itself</summary>
+      <ul>
+        <li><strong>No path to release without a person.</strong> The export asks the session's release gate, which reads the audit log and raises while any page lacks a completion row.</li>
+        <li><strong>Withhold and escalate when unsure.</strong> An undecided span is withheld and flagged; no rule releases a span because nothing matched.</li>
+        <li><strong>The audit log is append-only.</strong> A reviewer who changes their mind adds a row; each row's hash covers the one before it, and the log stores a hash of the withheld text rather than a second copy of it.</li>
+        <li><strong>Every model call goes through the gateway as personal data</strong>, and a test asserts that no raw detected value appears in an outbound request.</li>
+        <li><strong>Every reported number carries an interval and its track</strong>, and every table is written by the command that measured it. This page reads those tables, so it cannot disagree with them.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="section" id="built">
+    <h2>How this was built</h2>
+    <p>
+      Design, methodology, evaluation choices and judgement are Peter Parker's, from eight years
+      inside a public body that answers access-to-information requests, where the question on
+      this page is asked about every page released. AI coding assistants (Claude Code) were used
+      for implementation and drafting, the way a senior engineer uses them in 2026. Every number
+      on this page is reproducible from the repository.
+    </p>
+    <details class="disclose">
+      <summary>Glossary</summary>
+      <dl class="glossary">
+        <dt>Access-to-information request</dt><dd>A request by anyone for a public body's records, which the body must answer, withholding only what the law allows.</dd>
+        <dt>Confidence interval</dt><dd>The range a measured rate would plausibly fall in if the measurement were repeated. A bare number without one is treated as a defect here.</dd>
+        <dt>Context record</dt><dd>What the tool knows about one span before deciding it: its block, its heading, the person's title anywhere in the record, other mentions, a register entry, and whether they are the requester.</dd>
+        <dt>Escalation</dt><dd>A proposal to withhold and ask a person, because the record does not say enough to decide.</dd>
+        <dt>Leak rate</dt><dd>Of the details that must be withheld, the share released.</dd>
+        <dt>Over-redaction</dt><dd>Of the details that must be released, the share withheld. The number blunt tools never publish.</dd>
+        <dt>Severance</dt><dd>One piece of a record withheld under a provision, listed in the schedule sent to the requester.</dd>
+        <dt>Span</dt><dd>One stretch of text the tool found and decided: a name, a number, an address, a title.</dd>
+      </dl>
+    </details>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-inner">
+    <p>
+      Source, methods and every measurement: {{repository_line}}. Part of
+      <a href="https://peterparker.ca">Peter Parker's portfolio</a>, where every project ends in a
+      number a stranger can check.
+    </p>
+    <ul>
+      <li>This page sets no cookie and makes no request off this server</li>
+      <li>Type: Newsreader and Inter, SIL Open Font License, served from this host</li>
+      <li>Built {{built}}; results generated {{results_date}}</li>
+    </ul>
+  </div>
+</footer>
+<script src="/app.js"></script>
+</body>
+</html>

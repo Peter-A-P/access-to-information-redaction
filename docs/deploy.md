@@ -1,6 +1,9 @@
 # The public demonstration
 
-`redaction.peterparker.ca` runs `sever demo`, live since 2026-10-18: the reviewer's screen over six
+`redaction.peterparker.ca` runs `sever demo`, live since 2026-10-18. At `/` and `/how` is the
+project's website, built by `sever site` into the image from the committed results
+(`sever/site.py`), and at `/dashboard` a live count of visitors' decisions
+(`sever/review/stats.py`); neither sets a cookie. The reviewer's screen is at `/review`: the reviewer's screen over six
 invented records, one private session per visitor, forgotten after two hours, rules only
 and no model. A visitor who completes a record can download its PDF, built from their own
 decisions and leak-tested before it is served. `sever/review/demo.py` says what the

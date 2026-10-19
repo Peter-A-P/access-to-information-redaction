@@ -185,6 +185,10 @@ def create_app(
     templates.env.globals["span_actions"] = SPAN_ACTIONS
     templates.env.globals["study"] = study
     templates.env.globals["demo"] = demo
+    if demo:
+        from sever.site import masthead
+
+        templates.env.globals["masthead"] = masthead("/review")
     if study is not None:
         _study_routes(app, templates, study)
 
@@ -232,7 +236,9 @@ def create_app(
             "taxonomy": session.taxonomy,
         }
 
-    @app.get("/", response_class=HTMLResponse)
+    # In the demonstration `/` is the project's website, so the reviewer's list of records
+    # lives at `/review`.
+    @app.get("/review" if demo else "/", response_class=HTMLResponse)
     def index(request: Request) -> Any:
         rows = [
             {
@@ -241,6 +247,10 @@ def create_app(
                 "pages": len(i.document),
                 "remaining": session.pages_remaining(i.doc_id),
                 "proposals": len(i.proposals),
+                "requester": i.requester,
+                "decided": sum(
+                    len(session.acted_spans(i.doc_id, n)) for n in range(1, len(i.document) + 1)
+                ),
             }
             for i in session
         ]

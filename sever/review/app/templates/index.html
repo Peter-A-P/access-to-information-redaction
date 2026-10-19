@@ -1,14 +1,48 @@
 {% extends "base.html" %}
+{% block title %}{{ 'Review a record yourself: Hundreds of Pages, Redacted in an Afternoon' if demo else 'sever review' }}{% endblock %}
 {% block content %}
-<h2>Request {{ session.request_id }}</h2>
 {% if demo %}
-<p>
-  Six invented records responsive to one access-to-information request. Open one: the tool
-  has proposed, for every piece of personal information, whether to withhold it or release
-  it, and why. Accept or overrule each proposal, select anything it missed, mark the page
-  complete, and release the record. The tool proposes; you decide.
+{% set kinds = {'case_note': 'Case note', 'correspondence': 'Letter', 'email_chain': 'Email chain', 'hr_memorandum': 'HR memorandum', 'incident_report': 'Incident report', 'meeting_minutes': 'Meeting minutes'} %}
+<header class="hero compact">
+  <p class="eyebrow">Request {{ session.request_id }}, six invented records</p>
+  <h1>Review a record <span class="hl">yourself</span></h1>
+  <p class="lead">
+    An access-to-information request has come in, and these records answer it. The tool has
+    read each one and proposed, for every name, number and address, whether to withhold it
+    or release it, and why. You decide. Nothing is released until you have acted on every
+    page, and every action you take is a row in your own audit log.
+  </p>
+  <ol class="howto">
+    <li><strong>Open a record.</strong> Highlights are the tool's proposals: red to withhold, amber to withhold and escalate, green to release.</li>
+    <li><strong>Click a highlight to decide it.</strong> Or use the keys: <kbd>W</kbd> withhold, <kbd>R</kbd> release, <kbd>E</kbd> escalate, <kbd>N</kbd> next.</li>
+    <li><strong>Select anything it missed</strong> with the mouse to withhold it yourself.</li>
+    <li><strong>Mark the page complete</strong>, release the record, and download the redacted PDF. Try selecting the text under a box.</li>
+  </ol>
+</header>
+<div class="records">
+  {% for r in rows %}
+  <a class="record-card{{ ' done' if not r.remaining else '' }}" href="{{ '/doc/' ~ r.doc_id ~ ('/released' if not r.remaining else '/page/1') }}">
+    <span class="record-kind">{{ kinds.get(r.doc_type, r.doc_type) }}</span>
+    <span class="record-id">{{ r.doc_id }}</span>
+    {% if r.requester %}<span class="record-meta">Requested by {{ r.requester }}</span>{% endif %}
+    <span class="record-meta">{{ r.proposals }} proposals, {{ r.pages }} page{{ '' if r.pages == 1 else 's' }}</span>
+    <span class="record-progress" aria-hidden="true"><span style="width: {{ (100 * r.decided / r.proposals)|round|int if r.proposals else 0 }}%"></span></span>
+    <span class="record-status">
+      {% if not r.remaining %}Reviewed: release it and get the PDF
+      {% elif r.decided %}{{ r.decided }} of {{ r.proposals }} decided
+      {% else %}Not started{% endif %}
+    </span>
+  </a>
+  {% endfor %}
+</div>
+<p class="note">
+  Every person and record here is invented, the tool runs its rules only and calls no model,
+  and nothing you do is kept: your session and its audit log are deleted after two hours
+  idle. What you decide is counted, without the text, on the <a href="/dashboard">live
+  dashboard</a>.
 </p>
-{% endif %}
+{% else %}
+<h2>Request {{ session.request_id }}</h2>
 <p class="note">
   {{ rows|length }} document{{ '' if rows|length == 1 else 's' }}.
   {% if session.mode.shows_proposals %}
@@ -46,4 +80,5 @@
   {% endfor %}
   </tbody>
 </table>
+{% endif %}
 {% endblock %}

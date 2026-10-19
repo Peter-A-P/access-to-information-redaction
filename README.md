@@ -10,9 +10,11 @@ and how often it keeps what must stay. Days of reading become hours of review.
 **The tool proposes; a person decides.** There is no path from a proposal to a released
 document without a reviewer action on every page.
 
-**Try it at https://redaction.peterparker.ca**: the reviewer's screen over six invented
-records, rules only, one private session per visitor, and a truly redacted PDF of the
-record once you have decided every page.
+**Try it at https://redaction.peterparker.ca**: the project's website, with every figure
+below read from the results files; the reviewer's screen over six invented records, rules
+only, one private session per visitor, and a truly redacted PDF of the record once you
+have decided every page; and a live dashboard of every decision visitors make, counted
+without their text.
 
 ## Result
 
@@ -565,6 +567,7 @@ sever propose --documents 3           # proposals with the reason for each one
 sever export --documents 3            # redacted PDFs, schedules, and the leak test
 sever review --documents 3            # the reviewer's screen, on 127.0.0.1:8000
 sever study                           # the reviewer time study, one person at a time
+sever site --out site                 # the website, from the results files; fails on any figure it cannot read
 sever demo --insecure-cookie          # the public demonstration, locally; docs/deploy.md
 sever study report                    # score it: minutes per page and accuracy, per arm
 sever report --readme README.md       # every number above
@@ -679,7 +682,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 |---|---|---|
 | Taxonomy, two jurisdictions, all 39 provisions verified | | |
 | Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
-| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: six invented records, rules only | |
+| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records, rules only, and a live dashboard of visitors' decisions | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
 | The model layer, through the gateway on placeholders | | |

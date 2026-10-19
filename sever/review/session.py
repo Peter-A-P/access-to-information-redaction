@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -54,6 +54,21 @@ class Mode(StrEnum):
     @property
     def shows_proposals(self) -> bool:
         return self is Mode.PROPOSALS
+
+
+@dataclass(frozen=True, slots=True)
+class RecordEvent:
+    """One row the session just appended, as an observer sees it: the kind of action and the
+    codes, never the span's text. What the public demonstration's dashboard counts."""
+
+    doc_id: str
+    page: int
+    action: Action
+    span_start: int | None
+    span_end: int | None
+    proposed_code: str | None
+    final_code: str | None
+    reason: str | None
 
 
 class NotReviewed(RuntimeError):
@@ -139,6 +154,9 @@ class Session:
     # On, except in the reviewer study, whose three reviewers were timed without it. See
     # sever.review.propagate.
     propagate_withholding: bool = True
+    # Told about every row after it is appended. The demonstration counts visitors'
+    # decisions this way (sever.review.stats); nothing else sets it.
+    observer: Callable[[Session, RecordEvent], None] | None = field(default=None, repr=False)
     # When each page was last served, so a completion can be measured against it. In
     # memory: a restart loses the open pages, which is correct, because a page served
     # before a restart was not being read during it.
@@ -268,6 +286,20 @@ class Session:
             final_code=final_code,
             reason=reason,
         )
+        if self.observer is not None:
+            self.observer(
+                self,
+                RecordEvent(
+                    doc_id=doc_id,
+                    page=page,
+                    action=action,
+                    span_start=span_start,
+                    span_end=span_end,
+                    proposed_code=proposed_code,
+                    final_code=final_code,
+                    reason=reason,
+                ),
+            )
 
     def spread_withholding(
         self, *, doc_id: str, page: int, start: int, end: int, code: str | None

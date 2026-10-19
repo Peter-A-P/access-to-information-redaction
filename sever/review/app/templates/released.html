@@ -7,16 +7,20 @@
   were approved by a person, and the schedule below is generated from those rows and nothing else.
 </div>
 {% if demo %}
+<div class="cta">
+  <a class="button" href="/doc/{{ item.doc_id }}/released.pdf">Download the redacted PDF</a>
+  <a class="button ghost" href="/review">Back to your records</a>
+</div>
 <p>
-  <a href="/doc/{{ item.doc_id }}/released.pdf"><strong>Download the released PDF</strong></a>,
-  built from your decisions. The text under every box is removed, not covered, and the leak
-  test checked that before it was sent: try selecting the text under a box.
+  Built from your decisions. The text under every box is removed, not covered, and the leak
+  test checks that before the file is sent: open it and try selecting the text under a box.
 </p>
-{% endif %}
+{% else %}
 <p class="note">
   This screen authorises the export; it does not perform it. `sever export` applies the
   redactions and removes the text under every box, and the leak test runs on the result.
 </p>
+{% endif %}
 <h3>Schedule of severances</h3>
 <table>
   <thead><tr><th>Page</th><th>Extent</th><th>Category</th><th>Decided</th><th>Reason</th></tr></thead>

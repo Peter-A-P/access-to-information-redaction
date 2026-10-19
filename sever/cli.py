@@ -1250,8 +1250,13 @@ def demo(
     insecure_cookie: Annotated[
         bool, typer.Option(help="Drop the cookie's Secure flag, for a local run over http.")
     ] = False,
+    site: Annotated[
+        Path | None,
+        typer.Option(help="The built website (`sever site`). Built from the records if absent."),
+    ] = None,
 ) -> None:
-    """The public demonstration: one private, forgotten session per visitor.
+    """The public demonstration: the project's website, the live dashboard, and one private,
+    forgotten reviewer session per visitor.
 
     Six synthetic records, rules only, no model and no spend. Meant to run behind a TLS
     proxy; see docs/deploy.md.
@@ -1261,9 +1266,32 @@ def demo(
     from sever.review.demo import DemoServer, demo_items
 
     typer.echo("preparing the demonstration records...")
-    server = DemoServer(items=demo_items(), secure_cookie=not insecure_cookie)
+    items = demo_items()
+    if site is None:
+        from sever.site import build as build_site
+
+        site = Path(tempfile.mkdtemp(prefix="sever-site-"))
+        build_site(site, items=items)
+    server = DemoServer(items=items, site=site, secure_cookie=not insecure_cookie)
     typer.echo(f"http://{host}:{port}/")
     uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
+
+@app.command()
+def site(
+    out: Annotated[Path, typer.Option(help="Where to write the website.")] = Path("site"),
+    public: Annotated[
+        bool,
+        typer.Option(help="Link into the repository. Only once the repository is public."),
+    ] = False,
+) -> None:
+    """Build the project's website from the results files, the taxonomy and the
+    demonstration's records. Fails if any figure it prints cannot be read."""
+    from sever.site import build as build_site
+
+    typer.echo("running the demonstration's records through the engine...")
+    built = build_site(out, public=public)
+    typer.echo(f"wrote {', '.join(built.pages)} and their files to {built.out} ({built.figures} figures)")
+
 
 def _free_port(start: int, tries: int = 20) -> int:
     """`start` if nothing is listening on it, otherwise the next free port above it.

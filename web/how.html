@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it's built: Hundreds of Pages, Redacted in an Afternoon</title>
+<meta name="description" content="How the redaction tool at redaction.peterparker.ca is put together: the path of one page from the file to the released PDF, the rules in the order they apply, how every published number is produced, and where the demonstration runs.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+{{masthead_how}}
+<main>
+
+  <header class="hero">
+    <p class="eyebrow">Architecture</p>
+    <h1>How it's built</h1>
+    <p class="lead">
+      The path of one page from the file to the released PDF; the rules, in the order they
+      apply; how a number gets from a measurement onto the overview; and where this
+      demonstration runs. Each picture is drawn from the same code paths it describes.
+    </p>
+    <p class="hero-note"><a href="/">Back to the overview</a></p>
+  </header>
+
+  <nav class="toc" aria-label="On this page">
+    <p class="eyebrow">On this page</p>
+    <ol>
+      <li><a href="#path">From a file to a released record</a></li>
+      <li><a href="#rules">The rules, in order</a></li>
+      <li><a href="#screen">The reviewer's screen</a></li>
+      <li><a href="#numbers">How a number reaches this site</a></li>
+      <li><a href="#runs">Where this demonstration runs</a></li>
+    </ol>
+  </nav>
+
+  <section class="section" id="path">
+    <h2>From a file to a released record</h2>
+    <p class="section-lead">
+      Three stages, and only the last can release anything. The engine proposes; the
+      reviewer's screen records what a person decided; the export applies only those
+      decisions, and refuses until every page has one.
+    </p>
+    <div class="arch">
+      <div class="lane">
+        <p class="lane-title">In</p>
+        <div class="node"><strong>Native files</strong><span>PDF, Word, email</span></div>
+        <div class="node"><strong>Scans</strong><span>rasterised pages, read with Tesseract</span></div>
+        <div class="node"><strong>The request</strong><span>who asked, which jurisdiction, archival or not</span></div>
+      </div>
+      <div class="lane engine">
+        <p class="lane-title">The engine proposes</p>
+        <div class="node"><strong>Layout</strong><span>letterhead, headers and signature blocks, read back from the text when the file has none</span></div>
+        <div class="node"><strong>Detection</strong><span>Presidio and spaCy, Canadian identifier patterns, and a sweep that finds every other mention of a name already found</span></div>
+        <div class="node"><strong>Context record</strong><span>for every span: its block, heading, title, other mentions, register entry, requester match</span></div>
+        <div class="node"><strong>Rules</strong><span>fixed order, each tied to a provision; what is left is escalated</span></div>
+        <div class="node optional"><strong>Model, optional</strong><span>through project 04's gateway on placeholders; off by default</span></div>
+      </div>
+      <div class="lane person">
+        <p class="lane-title">A person decides</p>
+        <div class="node"><strong>Reviewer's screen</strong><span>approve, overrule, escalate or add, page by page</span></div>
+        <div class="node"><strong>Audit log</strong><span>append-only, hash-chained, in DuckDB; one row per action</span></div>
+        <div class="node"><strong>Release gate</strong><span>refuses while any page lacks a completion row</span></div>
+      </div>
+      <div class="lane out">
+        <p class="lane-title">Out</p>
+        <div class="node"><strong>True redaction</strong><span>text removed under every box, not covered</span></div>
+        <div class="node"><strong>Leak test</strong><span>text layer and OCR of the rendered page</span></div>
+        <div class="node"><strong>Schedule</strong><span>every severance with its provision, from the log alone</span></div>
+      </div>
+    </div>
+    <p class="note">
+      Every offset in the system indexes the same page text, and the reviewer's screen renders
+      that text as characters rather than as a PDF, so the reviewer looks at exactly what the
+      redaction will be applied to.
+    </p>
+  </section>
+
+  <section class="section" id="rules">
+    <h2>The rules, in order</h2>
+    <p class="section-lead">
+      The first rule that settles a span decides it, so the order is the design: the
+      requester's own information first, then identifiers that are sensitive whoever holds
+      them, then what is not personal at all, then capacity, then what is public. A span no
+      rule settles is withheld and escalated. This list is checked against the code each time
+      the site is built, and the build fails if they differ.
+    </p>
+    <ol class="rules">
+{{rule_steps}}
+    </ol>
+    <div class="verdict">
+      <p><strong>There is no rule that releases something because nothing matched.</strong>
+      The last step is always "withhold and ask a person", and the optional model is asked
+      only about what reaches it, with its answer accepted only above a confidence threshold
+      measured on separate records.</p>
+    </div>
+  </section>
+
+  <section class="section" id="screen">
+    <h2>The reviewer's screen</h2>
+    <p class="section-lead">
+      Server-rendered pages and about a hundred lines of hand-written script, with nothing
+      fetched from anywhere else, so it runs with the network cable out, which is where records
+      like these are usually read. Every action is one form post and one row in the log.
+    </p>
+    <div class="cards plain">
+      <div class="card-note"><h3>Keyboard first</h3><p>W withholds, R releases, E escalates, N moves to the next undecided span, so a page can be worked without the mouse.</p></div>
+      <div class="card-note"><h3>Select what it missed</h3><p>Selecting any text offers to withhold it. Detection finds {{recall}} of spans, and a reviewer who could only answer the tool's list would inherit its misses.</p></div>
+      <div class="card-note"><h3>Withhold once, withheld everywhere</h3><p>Withholding a full name, an email address or a number withholds every other exact occurrence in the record, each as its own logged row. Releasing never spreads.</p></div>
+      <div class="card-note"><h3>Release the rest</h3><p>Once the third parties are withheld, the remainder of a page can be released in one action, logged span by span with that reason.</p></div>
+      <div class="card-note"><h3>Changes are rows, not edits</h3><p>A reviewer who changes their mind adds a row; the earlier one stays. The log stores a hash of withheld text, not a second copy of it.</p></div>
+      <div class="card-note"><h3>Complete means complete</h3><p>A page cannot be marked complete while any span on it is undecided, and the refusal names them.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="numbers">
+    <h2>How a number reaches this site</h2>
+    <p class="section-lead">
+      No figure on the overview is typed. Each is read, when the site is built, from a table a
+      measurement command wrote, and the build fails if a figure is missing or no longer reads
+      as it did.
+    </p>
+    <ol class="flowline">
+      <li><strong>Cast the people first</strong><span>Invented personas get roles before any document exists: requester, official, third party, public figure, the deceased.</span></li>
+      <li><strong>Write the records</strong><span>Six kinds of document from templates, rendered to PDF, Word and email, and some degraded into scans. The right answer for every span is known.</span></li>
+      <li><strong>Run the tool and score it</strong><span><code>sever report</code> runs every configuration and scores it against the labels, with intervals resampled over documents.</span></li>
+      <li><strong>Write the tables</strong><span>The same command writes the results files and splices the tables into the README; nobody edits them.</span></li>
+      <li><strong>Build this site</strong><span><code>sever site</code> reads those files, runs the demonstration's letter through the engine, and fails on anything it cannot read.</span></li>
+    </ol>
+    <p class="note">
+      The reviewer study, the scanned track and the published releases follow the same path
+      with their own commands: <code>sever study report</code>, <code>sever eval-scanned</code>
+      and <code>sever eval-releases</code>.
+    </p>
+  </section>
+
+  <section class="section" id="runs">
+    <h2>Where this demonstration runs</h2>
+    <p class="section-lead">
+      One container beside project 04's gateway on a small virtual server in Beauharnois,
+      Quebec, behind the same Caddy. It calls no model, so it costs nothing to run and cannot
+      be made to spend money.
+    </p>
+    <div class="arch narrow">
+      <div class="lane">
+        <p class="lane-title">You</p>
+        <div class="node"><strong>Browser</strong><span>one private cookie, nothing else stored</span></div>
+      </div>
+      <div class="lane">
+        <p class="lane-title">The edge</p>
+        <div class="node"><strong>Cloudflare DNS</strong><span>DNS only: the certificate is the server's own</span></div>
+        <div class="node"><strong>Caddy</strong><span>TLS, security headers, a 64 KB limit on every request</span></div>
+      </div>
+      <div class="lane engine">
+        <p class="lane-title">The container</p>
+        <div class="node"><strong>sever demo</strong><span>this site, the reviewer's screen and the dashboard; read-only, one CPU, 2 GB, no published port</span></div>
+        <div class="node"><strong>Your session</strong><span>an audit log in memory-backed storage, deleted after two hours idle</span></div>
+        <div class="node"><strong>Your PDF</strong><span>built from your decisions and leak-tested before it is sent</span></div>
+      </div>
+    </div>
+    <p class="note">
+      The dashboard counts decisions across every visitor, and nothing else: no text, no
+      address, no identifier. The counts live in the process and start again when it does.
+    </p>
+  </section>
+
+  <p class="arch-back"><a href="/">Back to the overview</a></p>
+</main>
+<footer class="foot">
+  <div class="foot-inner">
+    <p>
+      Source, methods and every measurement: {{repository_line}}. Part of
+      <a href="https://peterparker.ca">Peter Parker's portfolio</a>.
+    </p>
+    <ul>
+      <li>Type: Newsreader and Inter, SIL Open Font License, served from this host</li>
+      <li>Built {{built}}</li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

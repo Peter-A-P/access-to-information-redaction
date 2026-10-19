@@ -8,7 +8,9 @@
 corpus/generated
 data
 review
-results
+# The website reads the results' tables; the answer cache and the study's raw rows it does not.
+results/model-answers.jsonl
+results/reviewer-study.jsonl
 .env
 .env.*
 CLAUDE.local.md

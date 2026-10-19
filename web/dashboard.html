@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every decision, live: Hundreds of Pages, Redacted in an Afternoon</title>
+<meta name="description" content="A live count of every decision visitors make in the redaction demonstration: what they withheld and released, how often they agreed with the tool's proposals, and every PDF leak-tested before it was sent.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+{{masthead_dashboard}}
+<main>
+
+  <header class="hero">
+    <p class="eyebrow">Live from this server</p>
+    <h1>Every decision made here, <span class="hl">as it happens</span></h1>
+    <p class="lead">
+      Everyone who reviews a record on this site makes the same decisions a reviewer makes:
+      withhold, release, escalate, or select something the tool missed. This page counts them
+      across every visitor, shows how often people agree with the tool's proposals, and tallies
+      every released PDF the leak test checked before it was sent. It counts and nothing more:
+      no text, no address, no identifier.
+    </p>
+    <p class="live" id="status" aria-live="polite">Connecting to this server's counts.</p>
+    <div class="cta">
+      <a class="button" href="/review">Review a record and add to it</a>
+      <a class="button ghost" href="/">What the tool is and what it measured</a>
+    </div>
+  </header>
+
+  <p class="warning" id="failure" hidden></p>
+  <noscript>
+    <p class="warning">This page reads the live counts in the browser, so it needs JavaScript. The raw counts are at <a href="/dashboard.json">/dashboard.json</a>.</p>
+  </noscript>
+
+  <section class="section" id="now">
+    <h2>Since the server started</h2>
+    <div class="headline six live-tiles">
+      <div class="stat"><span class="figure" id="t-visitors">&ndash;</span><span class="caption">visitors given a private session</span></div>
+      <div class="stat"><span class="figure" id="t-live">&ndash;</span><span class="caption">sessions active in the last two hours</span></div>
+      <div class="stat"><span class="figure" id="t-decisions">&ndash;</span><span class="caption">decisions made by a person, each a row in their own audit log</span></div>
+      <div class="stat"><span class="figure" id="t-pages">&ndash;</span><span class="caption">pages marked complete, which needs a decision on every span</span></div>
+      <div class="stat up"><span class="figure" id="t-pdfs">&ndash;</span><span class="caption" id="t-pdfs-caption">released PDFs leak-tested before they were sent</span></div>
+      <div class="stat"><span class="figure" id="t-spread">&ndash;</span><span class="caption">further occurrences withheld automatically, after a person withheld the first</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="minutes">
+    <h2>The last hour, minute by minute</h2>
+    <p class="section-lead">Decisions per minute, by what the person decided. Automatic spreads are not in it; only a person's own actions are.</p>
+    <figure class="chart-figure">
+      <div id="minute-chart" class="chart"></div>
+      <div class="legend" id="minute-legend"></div>
+      <figcaption id="minute-caption">Updated every five seconds.</figcaption>
+    </figure>
+  </section>
+
+  <section class="section" id="agreement">
+    <h2>People against the tool</h2>
+    <p class="section-lead">
+      For each proposal a visitor decided, did they go the way the tool proposed? A person
+      overruling a proposal is the system working: the tool proposes, a person decides. Where
+      visitors overrule one category far more than the others, that is where the rules are
+      weakest.
+    </p>
+    <figure class="chart-figure">
+      <div id="agree-chart" class="chart"></div>
+      <figcaption id="agree-caption">Share of decided proposals in each category where the visitor did what the tool proposed. Escalations have no direction to agree with, so they are shown by how visitors resolved them.</figcaption>
+    </figure>
+    <div class="table-wrap">
+      <table class="tight" id="agree-table">
+        <thead><tr><th scope="col">The tool proposed</th><th scope="col" class="num">Decided by visitors</th><th scope="col" class="num">Withheld</th><th scope="col" class="num">Released</th><th scope="col" class="num">Escalated</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" id="tool">
+    <h2>What the tool proposed on these records</h2>
+    <p class="section-lead">
+      The {{demo_records_word}} invented records every visitor sees, as the engine proposed them when this
+      server started: rules only, no model.
+    </p>
+    <div class="headline" id="tool-tiles"></div>
+    <p class="note">
+      The counts live in the server's memory and start again when it restarts. Each visitor's
+      own session, and its audit log, is deleted after two hours idle; what is counted here is
+      the number of each kind of action and nothing about the person or the text. The raw
+      counts are at <a href="/dashboard.json">/dashboard.json</a>.
+    </p>
+  </section>
+
+</main>
+<footer class="foot">
+  <div class="foot-inner">
+    <p>
+      Source, methods and every measurement: {{repository_line}}. Part of
+      <a href="https://peterparker.ca">Peter Parker's portfolio</a>.
+    </p>
+    <ul>
+      <li>Type: Newsreader and Inter, SIL Open Font License, served from this host</li>
+      <li>Built {{built}}</li>
+    </ul>
+  </div>
+</footer>
+<script src="/dashboard.js"></script>
+</body>
+</html>

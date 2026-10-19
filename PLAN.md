@@ -1816,3 +1816,34 @@ visitor's release. 04's gateway answered throughout, apart from Caddy's restart.
 Unlike 01, 08 and 12, this demonstration is not a static site on Azure Static Web Apps,
 because it is a server: spaCy's model, a session and audit log per visitor, and a PDF built
 and leak-tested on request. Section 7 always put it on the shared host.
+
+### 12.45 The demonstration becomes a site like the portfolio's others
+
+2026-10-18. Peter asked for the demonstration to match the other project pages on
+peterparker.ca: a full site explaining the project, a live element, and the same standard
+of content and design. It now has four pages under one menu, in the stylesheet projects 01,
+02, 08, 12 and 04 share (copied, with this site's additions at the end):
+
+- **Overview** (`/`): the problem, the tool's own proposals on one invented letter, the seven
+  steps, and every result with its interval: the two rates against four other
+  configurations, the context ablation, the leak decomposition, the reviewer study, the PDF
+  leak test, scans, the published releases, the model layer and the release gate's block,
+  the taxonomy with all 39 provisions, what did not work, and the limits.
+- **Review a record yourself** (`/review`): the reviewer's screen, unchanged in behaviour,
+  in the site's palette and menu, with dark mode.
+- **Every decision, live** (`/dashboard`): visitors' decisions across every session, by
+  outcome and minute, agreement with the tool by category, spreads counted apart from a
+  person's own decisions, and every released PDF's leak test. Counts only: no span text, no
+  identifier, nothing on disk, and they reset with the process. A native page rather than
+  Grafana, because the demonstration has no metrics store to put under one and the counts are
+  a few integers.
+- **How it's built** (`/how`): the path of a page, the rules in their order, the screen, how
+  a number reaches the site, and where it runs.
+
+Nothing on the site is typed: `sever site` reads every figure from `results/` and `gate/`,
+the categories from the taxonomy, the rule order from `DEFAULT_RULES`, and runs the letter
+through the engine, and it fails on anything it cannot read (`tests/test_site.py`). Links
+into the repository render as plain text until it is public (`--public`). Two things the
+build found: a derived count (the model's correct releases) could not be read exactly from
+rounded rates, so the page quotes the rates instead; and the letter's own output shows the
+inspector escalated though "the inspecting officer" names the role, which the page now says.

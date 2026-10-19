@@ -61,3 +61,6 @@ review/timings.jsonl
 # Runs set aside rather than scored, kept on this machine only.
 review/discarded/
 review/trial/
+
+# `sever site --out site`, built from the results; never committed.
+/site/
