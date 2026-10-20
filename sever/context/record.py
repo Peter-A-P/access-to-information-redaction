@@ -14,7 +14,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from sever.context.age import ARCHIVAL_YEARS, birth_year_beside, page_year
+from sever.context.age import ARCHIVAL_YEARS, birth_year_beside, death_year_after, page_year
 from sever.context.complaint import ComplaintParties, is_party_sentence
 from sever.context.directory import DirectoryMatch, StaffDirectory
 from sever.context.own_affairs import own_affairs_messages
@@ -66,6 +66,9 @@ class ContextRecord:
     archival_cutoff: int | None = None
     page_year: int | None = None
     birth_year: int | None = None
+    # The year of death the record states for this person, read across line breaks to the
+    # end of the sentence and carried to their other mentions; see `death_year_after`.
+    death_year: int | None = None
 
     cluster_id: str | None = None
     cluster_canonical: str | None = None
@@ -129,6 +132,7 @@ class ContextRecord:
             "title_source": None,
             "rank": None,
             "birth_year": None,
+            "death_year": None,
             "role_mentions": (),
             "register_match": None,
             "directory_match": None,
@@ -172,6 +176,7 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "title_source",
     "rank",
     "birth_year",
+    "death_year",
     "role_mentions",
     "register_match",
     "cluster_id",
@@ -306,6 +311,35 @@ class ContextBuilder:
             ],
         )
         own_affairs = {p.number: own_affairs_messages(p) for p in document}
+
+        # Deaths, per mention and then per person, as births are above.
+        persons_on = {
+            p.number: tuple(
+                d.offsets for d in detections
+                if d.page == p.number and d.entity_type is EntityType.PERSON
+            )
+            for p in document
+        }
+        deaths: dict[tuple[int, int, int], int] = {}
+        deaths_by_cluster: dict[str, int] = {}
+        for d in detections:
+            if d.entity_type is not EntityType.PERSON:
+                continue
+            died = death_year_after(
+                by_page[d.page].text,
+                d.offsets,
+                others=tuple(o for o in persons_on[d.page] if o != d.offsets),
+            )
+            if died is None:
+                continue
+            deaths[d.key] = died
+            c = clusters.cluster_for(d)
+            if c is not None and not c.ambiguous:
+                deaths_by_cluster.setdefault(c.cluster_id, died)
+        for d in detections:
+            c = clusters.cluster_for(d)
+            if d.key not in deaths and c is not None and c.cluster_id in deaths_by_cluster:
+                deaths[d.key] = deaths_by_cluster[c.cluster_id]
         out: list[ContextRecord] = []
         for det in detections:
             page = by_page[det.page]
@@ -379,6 +413,7 @@ class ContextBuilder:
                     archival_cutoff=cutoff,
                     page_year=page_years.get(det.page),
                     birth_year=births.get(det.key),
+                    death_year=deaths.get(det.key),
                     role_mentions=roles.for_name(name_for_role) or roles.for_name(det.text),
                     cluster_id=cluster.cluster_id if cluster else None,
                     cluster_canonical=cluster.canonical if cluster else None,

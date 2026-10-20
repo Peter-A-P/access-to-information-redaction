@@ -491,3 +491,31 @@ def test_an_official_in_an_ordinary_work_email_is_still_released(detector: Sever
     )
     props = decide(doc, requester_config("Aaron Byrne"), detector)
     assert code_for(props, "Cecile Bursey") == "K2"
+
+
+def test_a_death_on_the_next_line_of_the_same_sentence_is_read(detector: SeverDetector) -> None:
+    """The page's sentence splitter stops at a line end; the death is still this person's."""
+    doc = make_document(
+        [
+            (
+                BlockKind.BODY,
+                "An earlier report was prepared by Priya Yetman,\nthen the building's "
+                "inspector, who died on 1992-04-16. That report recommended repairs.",
+            ),
+        ]
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "Priya Yetman") == "K4"
+
+
+def test_the_requester_s_own_first_name_is_not_ambiguous_against_itself(
+    detector: SeverDetector,
+) -> None:
+    doc = make_document(
+        [
+            (BlockKind.BODY, "Aaron Byrne asked for the file. Aaron said the letter never arrived."),
+            (BlockKind.SIGNATURE, "Marie Doucette\nRegional Director"),
+        ]
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "Aaron said") == "K1"

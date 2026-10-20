@@ -206,6 +206,17 @@ def complaint_party(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+_ORGANISATION_WORD = re.compile(
+    r"\b(?:department|ministry|minister|division|branch|office|services?|committee|board|"
+    r"council|commission|agency|authority|association|society|union|club|company|corp\w*|"
+    r"inc|ltd|limited|llp|centre|center|hospital|clinic|school|college|university|"
+    r"foundation|government|bank|court|tribunal|police|rcmp|constabulary|church|institute|"
+    r"network|group|team|unit|program(?:me)?|act|policy|regulations?|house|registry|"
+    r"secretariat|corporation|forces|army|navy|regiment|battalion|command|headquarters)\b",
+    re.IGNORECASE,
+)
+
+
 def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
     """K6. An organisation, a place, a bare date or a job title with no person attached.
 
@@ -246,6 +257,20 @@ def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
     # A title in a message about its holder's own leave or grievance is that person's
     # title, and releasing it beside a withheld name identifies them in a small unit.
     if ctx.own_affairs_message and ctx.entity_type is EntityType.JOB_TITLE:
+        return None
+    # A place or an organisation attached to a person in the sentence ("Maeve Ivany of
+    # Labrador City") is where that person is from, and in a small community it names them
+    # as surely as the surname does. Released as "not personal information", it was 17 of
+    # the 42 leaks with the rules alone on 2026-10-20.
+    if ctx.entity_type in (EntityType.LOCATION, EntityType.ORGANISATION) and any(
+        f"{person} of {ctx.text}" in ctx.sentence or f"{person}, of {ctx.text}" in ctx.sentence
+        for person in ctx.co_mentions_in_sentence
+    ):
+        return None
+    # An "organisation" with nothing organisational in it is, as often as not, a person
+    # the detector mistyped: "Chidinma Delaney" came back as one, and 7 more leaks were
+    # that. A real organisation almost always carries one of these words.
+    if ctx.entity_type is EntityType.ORGANISATION and not _ORGANISATION_WORD.search(ctx.text):
         return None
     return RuleOutcome(
         code="K6",
@@ -400,12 +425,13 @@ def deceased_over_twenty_years(ctx: ContextRecord) -> RuleOutcome | None:
         text,
         re.IGNORECASE,
     )
-    if m is None:
+    # The context record's own reading, across line breaks and from the person's other
+    # mentions, when the sentence the splitter returned does not carry the death.
+    if m is None and ctx.death_year is None:
         return None
     import datetime as dt
 
-    raw = m.group(1)
-    year = int(raw[:4])
+    year = int(m.group(1)[:4]) if m is not None else int(ctx.death_year or 0)
     if dt.date.today().year - year <= 20:
         return RuleOutcome(
             code="E1",

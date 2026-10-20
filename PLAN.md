@@ -1984,3 +1984,59 @@ repeats across documents: 2 percent deduplication against 56.
 
 Project 03's gate passes the model layer at this configuration, where it blocked Haiku 4.5.
 `docs/rejected.md` section 7 has the evidence.
+
+### 12.48 A decision model beside the language model
+
+2026-10-20. 12.47's categorised errors showed the published threshold discarding 476 correct
+answers from Haiku 5.5 to prevent about two leaks, because its stated confidence, mostly 0.80
+or 0.85, does not separate its right answers from its wrong ones. The repair the plan's
+section 2.4 assumed, a threshold on the model's confidence, needs a confidence that means
+something. Decision models claim exactly that: Jev (TypeSafe AI, September 2026) returns a
+probability per option, stated to be calibrated, and no text.
+
+So the model layer can now be a decision model as well as a language model
+(`sever/decide/decision_model.py`), chosen by the gateway model id. The evidence is the same
+masked record, page and requester included; the question is one choice over the categories
+the tool decides, with the taxonomy's text as the options; "cannot tell" is not an option,
+because a low probability says it. Through 04, which grew a `decisions` provider kind for it
+(boundary 1.5.0), with Jev on OpenRouter at US$0.042 a million input tokens and Kev, the
+open-weights recreation, as a local entry.
+
+Not yet run: it needs an OpenRouter key in 04's environment, and Kev's useful sizes (4B and
+up) need a 32 GB machine this laptop is not. When it runs, the threshold is set on the
+validation split by 12.47's rule and the two models are compared on the same requests.
+
+### 12.49 Fixing the categorised errors, measured on a failure sample before the full run
+
+2026-10-20. Before paying for a full run again, the changes below were measured on a sample
+of 154 spans drawn from 12.47's error categories plus 16 controls that were right, old code
+replayed against new code sent live (99 calls, US$0.13 for two rounds). This sample is
+chosen for failure, so its rates are not the corpus's; it says whether a fix works, not how
+much the published numbers will move. The published tables are still 12.47's until the full
+run replaces them.
+
+* **Death dates (K4), all 24 fixed by rules.** A death stated in the record ("died in 1968",
+  across a line break) now sets the person's death year, carried to every mention of them,
+  and `deceased_over_twenty_years` reads it. The model used to see the year masked.
+* **Two people sharing a name part.** A bare part two people share is sent as
+  `[PERSON_3 or PERSON_6]` rather than as whoever was registered first, and a full name the
+  detector missed beside a known surname ("Odette Yetman" beside the detected "Maeve
+  Yetman") gets a placeholder of its own, on the page and on the span itself. The span used
+  to carry the other person's placeholder while the page gave the right one, and the model
+  believed the span: an official was called a third party at 0.95.
+* **A requester matcher that competed with itself.** Another name made only of the
+  requester's own name parts no longer makes the requester's name ambiguous.
+* **Places and organisations attached to a person.** `not_personal_information` no longer
+  releases "of Gander" after a member of the public's name, nor an organisation-typed span
+  with no organisational word in it; the taxonomy gained the matching R1 example and K6
+  trap, which the model reads in its category guide.
+
+Errors in the sample, every answer accepted: 126 before, 44 after; at the published 0.90
+threshold 126 before, 77 after, with leaks 24 to 1 and no control broken. What remains is
+two things no prompt fixes. The 19 "possibly the requester" spans are first names the
+requester genuinely shares with someone else in the record, which the rules never let a
+model resolve, by design. And of the officials still withheld, most are now answered
+correctly at 0.60 to 0.80 and discarded by the threshold, with a dozen answers flipping
+between two runs on identical requests. Recomputed over the same answers, 0.85 gives 72
+errors and 0.70 gives 48 with 3 leaks; the threshold is still chosen on the validation split
+by 12.47's rule, not from this sample.

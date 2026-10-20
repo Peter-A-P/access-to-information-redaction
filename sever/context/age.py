@@ -87,4 +87,40 @@ def birth_year_beside(
     return None
 
 
-__all__ = ["ARCHIVAL_YEARS", "birth_year_beside", "page_year", "years_in"]
+_DIED = re.compile(
+    r"\b(?:died|deceased|date of death|d\.)\b[^.\n]{0,20}?\b((?:1[89]|20)\d{2})(?:-\d{2}-\d{2})?\b"
+    r"|\b(?:died|deceased|date of death)\b[^.]{0,30}?\b((?:1[89]|20)\d{2})\b",
+    re.IGNORECASE,
+)
+
+
+def death_year_after(text: str, offsets: Offsets, *, others: tuple[Offsets, ...] = ()) -> int | None:
+    """The year of death written after a person's name, in the same sentence.
+
+    The sentence is read to its full stop across line breaks, because the page's sentence
+    splitter stops at a line end: "Prepared by Priya Yetman,\nthen the building's
+    inspector, who died on 1992-04-16." is one sentence to a reader and two to the
+    splitter, and the K4 rule, reading only the first, never saw the death (24 must-release
+    spans on 2026-10-20). Another person named between the name and the death owns it
+    instead, so nothing is returned.
+    """
+    window = text[offsets.end : offsets.end + 240]
+    stop = min((i for i in (window.find(". "), window.find(".\n")) if i >= 0), default=-1)
+    if stop >= 0:
+        window = window[: stop + 1]
+    m = _DIED.search(window)
+    if m is None:
+        return None
+    at = offsets.end + m.start()
+    if any(offsets.end <= o.start < at for o in others):
+        return None
+    return int(m.group(1) or m.group(2))
+
+
+__all__ = [
+    "ARCHIVAL_YEARS",
+    "birth_year_beside",
+    "death_year_after",
+    "page_year",
+    "years_in",
+]

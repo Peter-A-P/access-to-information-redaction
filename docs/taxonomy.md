@@ -62,6 +62,7 @@ Examples:
 - A member of the public's date of birth in an incident report.
 - A named neighbour's account of what they saw.
 - A physician's name, practice address and direct line in a case note or letter about a client. The physician is acting professionally, but not for a public body.
+- The town or community a member of the public is said to be from, as in "the Committee received a delegate of Gander" in minutes. A town on its own is not personal, but attached to a person it is where they live, and in a small community it narrows who they are.
 
 Traps:
 
@@ -317,6 +318,7 @@ Examples:
 Traps:
 
 - A generic role in a small unit can identify one individual; where it does, it is not K6.
+- A place or organisation written after a member of the public's name ("of Gander" in the record, "of [NAME?]" on a masked page) is where that person lives or comes from, which is R1, even when the detector typed it as an organisation or a place. A place attached to an official, or to no one, is K6.
 
 *Canada (federal):*
 

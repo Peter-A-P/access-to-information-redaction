@@ -440,6 +440,16 @@ wrote to whom without seeing a single name; it is told which placeholder is the 
 which email addresses are on the public body's own domain, and it is given the full category
 guide from `taxonomy/`. Its answer is taken only above a measured confidence threshold;
 below it the span is escalated with the model's reasoning attached.
+
+The model can also be a **decision model**: Jev, TypeSafe's, through OpenRouter, or Kev, an
+open-weights recreation of it, on this machine (`--model-name openrouter/typesafe/jev-1.14`
+or `kev/kev-latest`; `sever/decide/decision_model.py`). It is sent the same masked record and
+asked one question, which category, with the reviewers' category text as the options, and
+it returns a probability for each rather than an answer in prose. That is aimed at what the
+language model gets wrong: its confidence does not separate its right answers from its wrong
+ones, so the threshold throws good answers away. Jev's probabilities are claimed to be
+calibrated. It has not been run yet, and no number on this page comes from it.
+
 When neither is sure, the proposal is to withhold and escalate. There is no rule that
 releases a span because nothing matched.
 

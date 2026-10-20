@@ -124,7 +124,8 @@ address, identifier and contact replaced by the same placeholders used in the sp
 [PERSON_3] in the span and [PERSON_3] on the page are the same person. Read it to work \
 out who is who: who wrote and who signed, under what title, to whom a message was sent, \
 and what it is about. requester_placeholder, when it is not null, is the placeholder of \
-the person who made this request.
+the person who made this request. A placeholder written [PERSON_3 or PERSON_6] is a name \
+part two people share, written alone; which of them it is, the page around it says.
 """
 
 
@@ -425,7 +426,7 @@ class GatewayModelDecider:
         hit = self._cache.get(key)
         if hit is not None:
             self.cache_reads += 1
-            return self._outcome(parse_answer(hit, self.taxonomy))
+            return self._parse(hit)
         if self.replay_only:
             raise ModelUnavailable(
                 f"replay-only, and the answer cache does not hold this span "
@@ -442,14 +443,7 @@ class GatewayModelDecider:
                 f"{exc} Or run the rules-only pipeline, which needs nothing from 04."
             ) from exc
 
-        request = ChatRequest(
-            model=self.model,
-            system=self.system_prompt,
-            messages=({"role": "user", "content": message},),
-            max_tokens=self.max_tokens,
-            temperature=self.temperature,
-            extra={"output_config": {"effort": self.effort}} if self.effort else {},
-        )
+        request = self._chat_request(ChatRequest, message, payload)
         self._record({"payload": payload, "message": message, "model": self.model})
         # purpose, run_id and data_class, and no metadata mapping: an earlier version of
         # this call passed one. It typechecked, it passed every test, and it would have
@@ -465,6 +459,24 @@ class GatewayModelDecider:
         self._account(response)
         reply = _text_of(response)
         self._cache_put(key, reply)
+        return self._parse(reply)
+
+    def _chat_request(
+        self, chat_request: Any, message: str, payload: dict[str, object]
+    ) -> Any:
+        """The gateway request for one span. A hook, so a decision model can send the same
+        span as a state and a question rather than as a prompt."""
+        return chat_request(
+            model=self.model,
+            system=self.system_prompt,
+            messages=({"role": "user", "content": message},),
+            max_tokens=self.max_tokens,
+            temperature=self.temperature,
+            extra={"output_config": {"effort": self.effort}} if self.effort else {},
+        )
+
+    def _parse(self, reply: str) -> RuleOutcome | None:
+        """One reply, cached or fresh, as an outcome. A hook for the same reason."""
         return self._outcome(parse_answer(reply, self.taxonomy))
 
     @property

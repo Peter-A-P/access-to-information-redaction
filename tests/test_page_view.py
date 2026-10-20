@@ -90,3 +90,23 @@ def test_a_longer_number_is_not_a_copy_of_a_shorter_one() -> None:
 
     assert not PlaceholderPolicy._contains_word("registration date for te 181 is", "te 18")
     assert PlaceholderPolicy._contains_word("registration date for te 18 is", "te 18")
+
+
+def test_a_surname_span_is_the_person_its_sentence_names() -> None:
+    """Only "Yetman" of the official Odette Yetman was detected, and the witness Maeve
+    Yetman was. The span went out as the witness's placeholder while the page beside it
+    gave the official her own, and the model called the official a third party."""
+    from sever.decide.placeholders import PlaceholderPolicy
+    from sever.detect.types import Detection, EntityType
+    from sever.ingest.document import Offsets
+
+    found = [
+        Detection(page=1, offsets=Offsets(0, 12), text="Maeve Yetman",
+                  entity_type=EntityType.PERSON, score=1.0, recogniser="t")
+    ]
+    policy = PlaceholderPolicy.for_detections(found)
+    witness = policy.apply("Maeve Yetman")
+    official = policy.span_in("Yetman", "To: Odette Yetman <o@example.com>")
+    assert official is not None and official != witness
+    assert official in policy.apply("To: Odette Yetman <o@example.com>")
+    assert policy.span_in("Yetman", "From: Maeve Yetman") is None

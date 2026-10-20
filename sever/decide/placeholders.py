@@ -103,6 +103,11 @@ def on_public_body_domain(address: str, domains: Sequence[str]) -> bool:
     return False
 
 
+def _people_in(placeholder: str) -> list[str]:
+    """The person placeholders an ambiguity placeholder names, or the one it is."""
+    return [f"[{p}]" for p in re.findall(r"PERSON_\d+", placeholder)]
+
+
 class RawEntityLeak(RuntimeError):
     """A detected entity survived substitution and would have left the boundary."""
 
@@ -138,6 +143,10 @@ class PlaceholderPolicy:
     # One entry per placeholder, mapped to the canonical value. Used for rehydration.
     _by_placeholder: dict[str, str] = field(default_factory=dict)
     _counts: dict[str, int] = field(default_factory=dict)
+    # Each single-owner name part, mapped to the other parts of its owner's name. Read by
+    # `_distinct_full_names` to tell "Odette Yetman" from "Maeve Yetman" when only the
+    # second was detected.
+    _part_owner: dict[str, frozenset[str]] = field(default_factory=dict)
 
     @classmethod
     def for_detections(
@@ -198,8 +207,22 @@ class PlaceholderPolicy:
                 continue
             existing = self._by_value.get(cleaned)
             if existing is not None and existing != placeholder:
+                # Two people share this part. It used to stay with whoever was registered
+                # first, so a bare "Emmett" after the delegate Emmett Vokey was introduced
+                # went to the model as the secretary Emmett Halleran, and the model, reading
+                # the page, said "[PERSON_3] is used for two apparently different people"
+                # and withheld (49 must-release spans on 2026-10-20). Now the bare part names
+                # both, and the model resolves it from the page as a reader would.
+                if existing.startswith("[PERSON_") and placeholder not in existing:
+                    both = sorted({*_people_in(existing), placeholder})
+                    self._by_value[cleaned] = " or ".join(both).replace("] or [", " or ")
+                self._part_owner.pop(cleaned, None)
                 continue
             self._by_value.setdefault(cleaned, placeholder)
+            parts = frozenset(
+                q.strip(".'\"()").casefold() for q in name.replace(",", " ").split()
+            )
+            self._part_owner[cleaned] = parts - {cleaned}
 
     def placeholder_for(
         self, value: str, entity_type: EntityType, *, label: str | None = None
@@ -235,7 +258,7 @@ class PlaceholderPolicy:
         """Replace every known entity, and every part of a known name, with a placeholder."""
         if not text:
             return text
-        out = text
+        out = self._distinct_full_names(text)
         for value in self.substituted_values:
             placeholder = self._by_value[value]
             # Word boundaries matter for the short aliases: without them "Marie" inside
@@ -247,6 +270,59 @@ class PlaceholderPolicy:
                 flags=re.IGNORECASE,
             )
         return out
+
+    def _distinct_full_names(self, text: str) -> str:
+        """Give a full name the detector missed its own placeholder, where it shares a
+        surname with a name it found.
+
+        The detector found "Maeve Yetman", a witness, and only "Yetman" of "Odette Yetman",
+        an official. Every "Yetman" then became the witness's placeholder, and an official's
+        From line, To line and signature went to the model as the witness's. So a known name
+        part directly after a name-shaped word that is not part of the same person's name
+        is read as a different person's full name, and minted a placeholder of its own.
+        """
+        out = text
+        for part, owner in sorted(self._part_owner.items(), key=lambda kv: -len(kv[0])):
+            if self._by_value.get(part) is None:
+                continue
+            pattern = re.compile(
+                r"(?<![\w\[])([^\W\d_][\w'\u2019-]*)[ \t]+(" + re.escape(part) + r")(?!\w)",
+                re.IGNORECASE,
+            )
+
+            def replace(m: re.Match[str], owner: frozenset[str] = owner) -> str:
+                first = m.group(1)
+                folded = first.casefold()
+                if (
+                    folded in owner
+                    or folded in HONORIFICS
+                    or folded in NOT_NAME_PARTS
+                    or folded in SAFE_CAPITALISED
+                    or not _is_name_shaped(first)
+                ):
+                    return m.group(0)
+                return self.placeholder_for(m.group(0), EntityType.PERSON)
+
+            out = pattern.sub(replace, out)
+        return out
+
+    def span_in(self, span: str, sentence: str) -> str | None:
+        """The placeholder a person span carries where it stands in its sentence, when
+        that differs from the span's own.
+
+        The detector found only "Yetman" of the official Odette Yetman. Masked alone the
+        span is the witness Maeve Yetman's placeholder; masked in its sentence, "Odette
+        Yetman" is a person of its own (`_distinct_full_names`), and the page the model
+        reads says so. A span that names one person while the page beside it names
+        another is a contradiction the model resolved against the page's official: it
+        called Odette Yetman a third party at 0.95 (email_chain-020, 2026-10-20). So the
+        span is read the way the page is.
+        """
+        m = re.search(r"(?<!\w)" + re.escape(span) + r"(?!\w)", sentence, re.IGNORECASE)
+        if m is None:
+            return None
+        tail = re.search(r"\[PERSON_\d+\]$", self._distinct_full_names(sentence[: m.end()]))
+        return tail.group(0) if tail else None
 
     def mask_variants(self, text: str) -> str:
         """Substitute the copies of a known value that `apply` cannot see, and only those.
@@ -605,8 +681,11 @@ def redact_context(ctx: ContextRecord, policy: PlaceholderPolicy) -> dict[str, o
     ablation in PLAN.md section 1 is expected to cost little. Whether it does is a
     measurement, not an assumption, and `sever eval placeholders` runs it.
     """
+    span = outbound(ctx.text, policy)
+    if ctx.entity_type is EntityType.PERSON:
+        span = policy.span_in(ctx.text, ctx.sentence) or span
     return {
-        "span": outbound(ctx.text, policy),
+        "span": span,
         "entity_type": ctx.entity_type.value,
         "block": ctx.block_kind.value,
         "document_type": ctx.doc_type.value,

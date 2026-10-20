@@ -154,6 +154,15 @@ class RequesterMatcher:
         for other in self.other_names:
             if normalise(other) in self._normalised_names:
                 continue
+            # A mention made only of the requester's own name parts ("Colm" when the
+            # requester is Colm Whelan) could be the requester, and is no evidence that
+            # anyone else is in the record. It used to count as a competitor for itself, so
+            # every bare first-name mention of a requester was "ambiguous" against its own
+            # text and withheld from them (21 spans on 2026-10-20, most of them the
+            # requester's). A competitor has a part the requester does not.
+            other_parts = [q for q in normalise(other).split() if len(q) > 1]
+            if other_parts and all(q in self.config.name_parts for q in other_parts):
+                continue
             for part in normalise(other).split():
                 if len(part) > 1:
                     self._other_parts.setdefault(part, set()).add(other)

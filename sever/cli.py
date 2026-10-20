@@ -17,7 +17,7 @@ import typer
 
 from sever import __version__
 from sever.corpus.personas import PUBLIC_BODY_DOMAIN
-from sever.gateway import BoundaryUnavailable, require_boundary
+from sever.gateway import DECISIONS_MINIMUM, BoundaryUnavailable, require_boundary
 
 if TYPE_CHECKING:
     from sever.decide.model import GatewayModelDecider
@@ -65,7 +65,14 @@ def _build_model(
     import os
     import uuid
 
+    from sever.decide.decision_model import DecisionModelDecider, is_decision_model
     from sever.decide.model import CAPS_PROJECT, DATA_CLASS, GatewayModelDecider
+
+    # A decision model (Jev, Kev) is the same pipeline with the request reshaped; which one
+    # is chosen by the provider entry the model id names. See sever/decide/decision_model.py.
+    decider_cls: type[GatewayModelDecider] = (
+        DecisionModelDecider if is_decision_model(model_name) else GatewayModelDecider
+    )
 
     if replay_only:
         if answer_cache is None or not answer_cache.is_file():
@@ -77,7 +84,7 @@ def _build_model(
             f"model layer ON, replaying {answer_cache} only: no gateway, no network, no "
             f"spend. A span the cache does not hold is an error rather than a call."
         )
-        return GatewayModelDecider(
+        return decider_cls(
             gateway=None,
             model=model_name,
             enabled=True,
@@ -98,7 +105,7 @@ def _build_model(
             f"{CAPS_PROJECT!r}."
         )
     try:
-        require_boundary()
+        require_boundary(DECISIONS_MINIMUM if decider_cls is DecisionModelDecider else None)
         from boundary import Gateway
     except (BoundaryUnavailable, ImportError) as exc:
         raise typer.BadParameter(f"{exc} Or drop --model.") from exc
@@ -115,7 +122,7 @@ def _build_model(
             f"answer cache: {answer_cache} ({state}). A span already in the cache is not "
             f"re-sent and costs nothing."
         )
-    return GatewayModelDecider(
+    return decider_cls(
         gateway=gateway,
         model=model_name,
         enabled=True,

@@ -81,6 +81,11 @@ from typing import Any, Final
 
 MINIMUM_BOUNDARY: Final = (0, 23, 0)
 
+# A decision model (Jev, Kev) needs boundary 1.5.0, the first with the `decisions` provider
+# kind. Checked only where one is used, so the rules-only and language-model paths keep the
+# floor above.
+DECISIONS_MINIMUM: Final = (1, 5, 0)
+
 INSTALL: Final = "uv pip install -e ../04-compliant-ai-gateway"
 
 BOUNDARY_MISSING: Final = (
@@ -120,16 +125,20 @@ def installed_version() -> str | None:
     return version if isinstance(version, str) else None
 
 
-def require_boundary() -> Any:
-    """Import `boundary` and check the floor, or raise `BoundaryUnavailable`."""
+def require_boundary(floor: tuple[int, ...] | None = None) -> Any:
+    """Import `boundary` and check the floor, or raise `BoundaryUnavailable`.
+
+    `floor` raises it for one use: a decision model needs `DECISIONS_MINIMUM`, and nothing
+    else does, so the project's floor stays where its own reasons put it."""
     try:
         import boundary
     except ImportError as exc:
         raise BoundaryUnavailable(BOUNDARY_MISSING) from exc
 
     version = installed_version()
-    if version is None or _parsed(version) < MINIMUM_BOUNDARY:
-        wanted = ".".join(str(n) for n in MINIMUM_BOUNDARY)
+    needed = max(MINIMUM_BOUNDARY, floor or MINIMUM_BOUNDARY)
+    if version is None or _parsed(version) < needed:
+        wanted = ".".join(str(n) for n in needed)
         raise BoundaryUnavailable(
             f"boundary {version or 'of an unreported version'} is installed, and this "
             f"project needs {wanted} or newer. The correctness fixes in between decide "
