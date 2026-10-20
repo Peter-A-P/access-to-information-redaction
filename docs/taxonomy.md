@@ -68,6 +68,7 @@ Traps:
 
 - Both parties to a confidential workplace complaint, the employee who complained and the employee complained about, are third parties: a complaint by or against someone is about them, not about the functions of their position. Their job titles go with their names, because in a unit with one Regional Director the title identifies the person.
 - An official's employee number, even in a signature block beside a name and title that are released. It is an identifying number assigned to the person, not information about the position. Ruled on 2026-10-18 in the reviewer study.
+- The contrast is who the number is assigned to. An employee number or a health card number belongs to a person and is withheld (or, for the requester, released to them). A complaint or incident file number belongs to the matter and is K6, however sensitive the matter.
 
 *Canada (federal):*
 
@@ -314,6 +315,7 @@ Examples:
 
 - Department of Health and Community Services, detected as a person.
 - The Regional Director, with no name attached anywhere in the record.
+- A file or case number assigned to a matter, such as the file number of a workplace complaint in a memorandum's subject line. The number is the matter's, not a person's, so it is released even when the matter is confidential and its parties are withheld. Ruled on 2026-10-20: the labels stand.
 
 Traps:
 
