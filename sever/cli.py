@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from sever import __version__
+from sever.corpus.personas import PUBLIC_BODY_DOMAIN
 from sever.gateway import BoundaryUnavailable, require_boundary
 
 if TYPE_CHECKING:
@@ -33,6 +34,8 @@ app.add_typer(corpus_app, name="corpus")
 
 DEFAULT_CORPUS = Path("corpus/generated")
 DEFAULT_RESULTS = Path("results")
+# The trap templates, kept out of the headline corpus; see `eval_traps`.
+TRAP_DIR = Path(__file__).parent / "corpus" / "traps"
 
 # The gateway configuration is not in this repository and must not be: it names providers
 # and points at a caps file, and this repository is public. The sibling checkout is the
@@ -49,6 +52,7 @@ def _build_model(
     run_id: str | None,
     answer_cache: Path | None = None,
     replay_only: bool = False,
+    public_body_domains: tuple[str, ...] = (),
 ) -> GatewayModelDecider | None:
     """Construct the model decider, or None.
 
@@ -80,6 +84,7 @@ def _build_model(
             run_id=run_id,
             cache_path=answer_cache,
             replay_only=True,
+            public_body_domains=public_body_domains,
         )
 
     # Path("") is Path("."), which is truthy and is not a configuration file, so the
@@ -116,6 +121,7 @@ def _build_model(
         enabled=True,
         run_id=run,
         cache_path=answer_cache,
+        public_body_domains=public_body_domains,
     )
 
 
@@ -231,6 +237,7 @@ def propose(
         model_name=model_name or DEFAULT_MODEL,
         boundary_config=boundary_config,
         run_id=run_id,
+        public_body_domains=(PUBLIC_BODY_DOMAIN,),
     )
     detector = SeverDetector()
     for item in build(documents=documents, seed=seed):
@@ -402,6 +409,16 @@ def report(
             help="Read the answer cache and never send. Reproduces the model row for free.",
         ),
     ] = False,
+    public_body_domain: Annotated[
+        list[str] | None,
+        typer.Option(
+            help=(
+                "The public body's own email domain. Repeat for several. Addresses on it "
+                "reach the model as [EMAIL_PUBLIC_BODY_n] rather than [EMAIL_n]. Defaults "
+                "to the synthetic corpus's body, which is what these commands measure."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Run every system over the corpus and write the published tables.
 
@@ -419,6 +436,7 @@ def report(
         run_id=run_id,
         answer_cache=answer_cache,
         replay_only=replay_only,
+        public_body_domains=tuple(public_body_domain or (PUBLIC_BODY_DOMAIN,)),
     )
     tmp = Path(tempfile.mkdtemp(prefix="sever-export-"))
     try:
@@ -444,6 +462,73 @@ def report(
     if readme is not None:
         changed = report_mod.splice_into_readme(readme, markdown)
         typer.echo(f"{readme}: {'updated' if changed else 'already current'}")
+
+
+@app.command("eval-traps")
+def eval_traps(
+    documents: Annotated[int, typer.Option(help="Trap documents to render.")] = 30,
+    seed: Annotated[int, typer.Option()] = 20271019,
+    model: Annotated[
+        bool,
+        typer.Option("--model/--no-model", help="Add the rules-then-model row. Spends money."),
+    ] = False,
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    run_id: Annotated[str | None, typer.Option()] = None,
+    answer_cache: Annotated[
+        Path | None, typer.Option(help="Replay model answers from here, and record new ones.")
+    ] = Path("results/model-answers-traps.jsonl"),
+    replay_only: Annotated[
+        bool, typer.Option("--replay-only", help="Read the answer cache and never send.")
+    ] = False,
+    threshold: Annotated[
+        float, typer.Option(help="Below this confidence a model answer is escalated.")
+    ] = -1.0,
+    out: Annotated[Path, typer.Option(help="Write the tables here.")] = Path(
+        "results/traps.md"
+    ),
+) -> None:
+    """The trap set: records written to break a rule, scored apart from the headline corpus.
+
+    The headline corpus cannot test a rule it has no counter-example for. Every government
+    email address in it belongs to an official doing their job, so "a work address is K2"
+    could not leak there however wrong it was. The trap set holds the counter-examples
+    (sever/corpus/traps/), and it is kept out of the headline corpus because adding a
+    template there renumbers every document and would detach the frozen reviewer study
+    from the records it was scored on.
+    """
+    from sever.corpus.generate import build
+    from sever.decide.model import DEFAULT_MODEL
+    from sever.decide.pipeline import DEFAULT_THRESHOLD
+    from sever.eval import report as report_mod
+
+    decider = _build_model(
+        enabled=model,
+        model_name=model_name or DEFAULT_MODEL,
+        boundary_config=boundary_config,
+        run_id=run_id,
+        answer_cache=answer_cache,
+        replay_only=replay_only,
+        public_body_domains=(PUBLIC_BODY_DOMAIN,),
+    )
+    corpus = build(documents=documents, seed=seed, template_dir=TRAP_DIR)
+    result = report_mod.run(
+        corpus=corpus,
+        with_pdf_leak=False,
+        model=decider,
+        with_model_only=False,
+        cost_path=None,
+        model_confidence_threshold=DEFAULT_THRESHOLD if threshold < 0 else threshold,
+    )
+    markdown = (
+        "# Trap set\n\nRecords written to break a rule, scored apart from the headline "
+        "corpus. Generated by `sever eval-traps`; never hand-edited.\n\n"
+        + report_mod.to_markdown(result).replace("by `sever report`", "by `sever eval-traps`")
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(markdown + "\n", encoding="utf-8")
+    typer.echo(markdown)
+    typer.echo(f"wrote {out}")
 
 
 @app.command("eval-detector")
@@ -736,6 +821,16 @@ def eval_thresholds(
     out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
         "results/thresholds.md"
     ),
+    public_body_domain: Annotated[
+        list[str] | None,
+        typer.Option(
+            help=(
+                "The public body's own email domain. Repeat for several. Addresses on it "
+                "reach the model as [EMAIL_PUBLIC_BODY_n] rather than [EMAIL_n]. Defaults "
+                "to the synthetic corpus's body, which is what these commands measure."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Sweep the model confidence threshold against one set of model answers.
 
@@ -753,6 +848,7 @@ def eval_thresholds(
         run_id=run_id,
         answer_cache=answer_cache,
         replay_only=replay_only,
+        public_body_domains=tuple(public_body_domain or (PUBLIC_BODY_DOMAIN,)),
     )
     assert decider is not None
     result = sweep_mod.sweep(decider, documents=documents, seed=seed)
@@ -802,6 +898,9 @@ def cost(
     out: Annotated[Path | None, typer.Option(help="Record it here for `sever report`.")] = Path(
         "results/cost.json"
     ),
+    since: Annotated[
+        str, typer.Option(help="Ignore ledger rows before this UTC timestamp.")
+    ] = "",
 ) -> None:
     """Cost per page, out of the gateway ledger.
 
@@ -851,6 +950,33 @@ def cost(
         if runs
         else cost_mod.PUBLISHED_RUNS
     )
+    if not runs and not since:
+        since = cost_mod.PUBLISHED_SINCE
+    # Which answers the pipeline asked for, by replaying it alone over the committed cache.
+    # This is what splits a run that paid for the model-only baseline too; see
+    # `cost_mod.from_ledger`. Free: replay-only, no gateway.
+    from sever.decide.model import DEFAULT_MODEL
+    from sever.eval import report as report_mod
+
+    replay = _build_model(
+        enabled=True,
+        model_name=DEFAULT_MODEL,
+        boundary_config=None,
+        run_id=None,
+        answer_cache=answer_cache,
+        replay_only=True,
+        public_body_domains=(PUBLIC_BODY_DOMAIN,),
+    )
+    assert replay is not None
+    report_mod.run(
+        documents=documents, with_pdf_leak=False, model=replay, with_model_only=False,
+        cost_path=None,
+    )
+    answer_keys = [
+        str(json.loads(line)["key"])
+        for line in answer_cache.open(encoding="utf-8")
+        if line.strip()
+    ]
     try:
         result = cost_mod.from_ledger(
             ledger=store,
@@ -860,6 +986,9 @@ def cost(
             documents=documents,
             cached_answers=cached,
             asks=total_asks,
+            since=since or None,
+            answer_keys=answer_keys,
+            pipeline_keys=frozenset(replay.keys_seen),
         )
     except (LookupError, cost_mod.LedgerMismatch) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -943,6 +1072,19 @@ def eval_releases(
     held_out: Annotated[
         bool, typer.Option(help="The manifest is held out: chosen and scored blind.")
     ] = False,
+    model: Annotated[
+        bool,
+        typer.Option("--model/--no-model", help="Send the rules' residual to the model. Spends money."),
+    ] = False,
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    run_id: Annotated[str | None, typer.Option()] = None,
+    answer_cache: Annotated[
+        Path | None, typer.Option(help="Replay model answers from here, and record new ones.")
+    ] = Path("results/model-answers-releases.jsonl"),
+    replay_only: Annotated[
+        bool, typer.Option("--replay-only", help="Read the answer cache and never send.")
+    ] = False,
 ) -> None:
     """Over-redaction on records a public body actually released.
 
@@ -951,9 +1093,22 @@ def eval_releases(
     over-redaction against a real decision. Leak rate is not computable here and is not
     reported.
     """
+    from sever.decide.model import DEFAULT_MODEL
     from sever.eval import releases as releases_eval
 
-    result = releases_eval.run(manifest=manifest, root=root, held_out=held_out)
+    # No public body domain: these are federal records from several bodies, and a domain
+    # the operator did not state is not one this command should guess.
+    decider = _build_model(
+        enabled=model,
+        model_name=model_name or DEFAULT_MODEL,
+        boundary_config=boundary_config,
+        run_id=run_id,
+        answer_cache=answer_cache,
+        replay_only=replay_only,
+    )
+    result = releases_eval.run(
+        manifest=manifest, root=root, held_out=held_out, model=decider
+    )
     typer.echo(result.to_markdown())
     if out is not None:
         typer.echo(f"wrote {releases_eval.write(result, out)}")
@@ -1199,6 +1354,8 @@ def gate_export(
         run_id=None,
         answer_cache=answer_cache,
         replay_only=True,
+        # The same request `sever report` sent, or the replay finds nothing to replay.
+        public_body_domains=(PUBLIC_BODY_DOMAIN,),
     )
     result = report_mod.run(
         documents=documents,

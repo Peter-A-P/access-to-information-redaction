@@ -18,7 +18,7 @@ from sever.decide import rules
 from sever.decide.pipeline import DecisionEngine, DocumentProposals
 from sever.detect.engine import SeverDetector
 from sever.detect.types import EntityType
-from sever.ingest.document import BlockKind, Document
+from sever.ingest.document import BlockKind, Document, DocumentType
 from sever.taxonomy.loader import Decision, default_taxonomy
 
 from .conftest import code_covering, make_document, requester_config
@@ -157,6 +157,19 @@ def test_trap_an_officials_health_number_is_not_official_capacity(detector: Seve
     )
     props = decide(doc, requester_config("Aaron Byrne"), detector)
     assert code_for(props, "123 456 789 012") == "R1"
+
+
+def test_trap_an_employee_number_in_a_signature_block_is_withheld(detector: SeverDetector) -> None:
+    """The 2026-10-18 ruling: the name and title are released, the number is not."""
+    doc = make_document(
+        [
+            (BlockKind.BODY, "The inspection was carried out as scheduled."),
+            (BlockKind.SIGNATURE, "Marie Doucette\nRegional Director\nEmployee ID EMP-40912"),
+        ]
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "EMP-40912") == "R1"
+    assert code_for(props, "Marie Doucette") != "R1"
 
 
 def test_trap_a_death_within_twenty_years_is_not_k4() -> None:
@@ -446,3 +459,35 @@ def test_the_same_sentence_outside_a_confidential_complaint_is_not_a_party(
     )
     props = decide(doc, requester_config("Aaron Byrne"), detector)
     assert code_for(props, "Marie Doucette") != "R1"
+
+
+def test_trap_an_employee_writing_about_their_own_leave_is_not_released(
+    detector: SeverDetector,
+) -> None:
+    """Their title in their own signature block is no evidence they are doing their job.
+    The rules stand aside rather than decide, so with no model the span escalates."""
+    doc = make_document(
+        [
+            (BlockKind.EMAIL_HEADER, "From: Cecile Bursey <cecilebursey@gov.nl.ca.example>"),
+            (BlockKind.BODY, "I am attaching the note from my doctor and would like my leave to start on 15 June."),
+            (BlockKind.SIGNATURE, "Cecile Bursey\nAssistant Deputy Minister\n709-555-1638"),
+        ],
+        doc_type=DocumentType.EMAIL_CHAIN,
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    for needle in ("Cecile Bursey", "Assistant Deputy Minister", "709-555-1638"):
+        code = code_for(props, needle)
+        assert code is not None and not code.startswith("K"), (needle, code)
+
+
+def test_an_official_in_an_ordinary_work_email_is_still_released(detector: SeverDetector) -> None:
+    doc = make_document(
+        [
+            (BlockKind.EMAIL_HEADER, "From: Cecile Bursey <cecilebursey@gov.nl.ca.example>"),
+            (BlockKind.BODY, "The client file has been reassigned and the letter will go out this week."),
+            (BlockKind.SIGNATURE, "Cecile Bursey\nAssistant Deputy Minister\n709-555-1638"),
+        ],
+        doc_type=DocumentType.EMAIL_CHAIN,
+    )
+    props = decide(doc, requester_config("Aaron Byrne"), detector)
+    assert code_for(props, "Cecile Bursey") == "K2"

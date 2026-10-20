@@ -148,10 +148,13 @@ class ModelDecider(Protocol):
         contexts: Sequence[ContextRecord],
         *,
         universe: Sequence[ContextRecord] = (),
+        document: Document | None = None,
     ) -> Sequence[rules_mod.RuleOutcome | None]:
         """Decide `contexts`. `universe` is every context in the document, which the
         implementation needs in order to build a placeholder policy that covers the
-        entities appearing *around* the spans being sent, not only the spans themselves."""
+        entities appearing *around* the spans being sent, not only the spans themselves.
+        `document` is the record itself, for an implementation that shows the model the
+        page, masked, rather than one sentence of it."""
         ...
 
 
@@ -192,7 +195,7 @@ class DecisionEngine:
             residual = [i for i, r in enumerate(rule_results) if not r.decided_by_rule]
             if residual:
                 answers = self.model.decide(
-                    [contexts[i] for i in residual], universe=contexts
+                    [contexts[i] for i in residual], universe=contexts, document=document
                 )
                 for i, answer in zip(residual, answers, strict=True):
                     model_answers[i] = answer

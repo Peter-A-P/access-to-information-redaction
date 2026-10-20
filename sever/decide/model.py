@@ -29,9 +29,16 @@ from pathlib import Path
 from typing import Any
 
 from sever.context.record import ContextRecord
-from sever.decide.placeholders import PlaceholderPolicy, redact_context
+from sever.decide.placeholders import (
+    PlaceholderPolicy,
+    outbound,
+    redact_context,
+    scrub_unrecognised,
+)
 from sever.decide.rules import RuleOutcome
+from sever.detect.types import EntityType
 from sever.gateway import BoundaryUnavailable, require_boundary
+from sever.ingest.document import Document
 from sever.taxonomy.loader import Taxonomy, default_taxonomy
 
 # The data class this project's calls carry. CLAUDE.md requires that every model call
@@ -44,8 +51,14 @@ from sever.taxonomy.loader import Taxonomy, default_taxonomy
 # happens here, in sever.decide.placeholders, before the request is built.
 DATA_CLASS = "personal"
 CAPS_PROJECT = "access-to-information-redaction"
-DEFAULT_MODEL = "anthropic/claude-haiku-4-5-20251001"
-DEFAULT_MAX_TOKENS = 400
+DEFAULT_MODEL = "anthropic/claude-haiku-5-5"
+# Haiku 5.5 thinks before it answers and the thinking counts against this ceiling, so it
+# is set for the thinking and the answer together. A run at low effort used about 300
+# output tokens a call; 400 was set for Haiku 4.5, which did not think.
+DEFAULT_MAX_TOKENS = 4000
+# Low, because this is classification: the effort sweep in the API guidance puts
+# classification at low, and the measured run (results/results.md) is at low.
+DEFAULT_EFFORT = "low"
 
 SYSTEM_PROMPT = """\
 You are assisting a government access-to-information analyst who is deciding, span by \
@@ -58,32 +71,119 @@ from the structure and the context you are given, not from the literal text.
 Answer with one category code:
 
 R1 - third-party personal information: an identifiable individual who is not the requester \
-and is not acting in an official capacity.
+and is not acting for a public body. This includes anyone who does not work for the public \
+body even when they act professionally: a physician, lawyer, counsellor or landlord writing \
+about a client is a third party, and so are their name, practice address and telephone.
 R2 - a span in which a third party's information cannot be separated from the requester's.
 K1 - the requester's own personal information.
-K2 - an officer or employee of a public body, or a contractor, in information that relates \
-to the position or its functions: name, title, business contact details, work opinions and \
-actions. Not their home address, personal number, health or their own grievance.
+K2 - an officer, employee or contractor of a public body, in information about the position \
+or its functions: their name, title, work email, work telephone and office address, and \
+their work opinions and actions. Only the public body's own people. Never their employee \
+number, home address, personal telephone, health, leave, discipline or their own grievance \
+or complaint: in a message about those, the employee is a third party (R1), work address and \
+all.
 K3 - already publicly available.
 K4 - an individual dead more than twenty years, where the record says so.
 K5 - consent on the file, or a discretionary benefit of a financial nature.
 K6 - not personal information about an identifiable individual at all: an organisation, a \
-place, a bare date, a generic role.
+place, a bare date, a generic role. A place that is somebody's home or practice is not K6.
 E1 - you cannot tell from what you were given whether this is an official or a third party.
 E2 - a mixed span you cannot see how to sever.
 
 Rules that override your judgement:
 
-- If is_configured_requester is true, the answer is K1 unless other people share the span.
+- If is_configured_requester is true, or the span belongs to requester_placeholder, the \
+answer is K1 unless other people share the span.
 - A title paired with the person is strong evidence of K2, but only for information about \
 the position. An inherently sensitive identifier is never K2.
-- If the evidence does not decide it, answer E1. Withholding and asking is correct and \
-costs little. Guessing K on a third party releases someone's private information and \
-cannot be undone.
+- Decide what the record shows. When it does not decide it, answer E1: withholding and \
+asking costs the reviewer little, and guessing K on a third party releases someone's \
+private information and cannot be undone.
 
 Reply with JSON only, no prose, in exactly this shape:
 {"code": "R1", "confidence": 0.0 to 1.0, "evidence": "the field or phrase you relied on"}
 """
+
+# Added to the system prompt only when the decider is told the public body's own email
+# domains. Only then, because the prompt is part of the answer-cache key: an unconditional
+# change would orphan every recorded answer and the published rows would stop reproducing
+# from the committed cache.
+PUBLIC_BODY_DOMAIN_NOTE = """
+An email placeholder written [EMAIL_PUBLIC_BODY_n] is an address on the public body's own \
+email domain, and a plain [EMAIL_n] is an address on any other domain. A public-body \
+address is a work address, which is evidence about the position its holder occupies. It is \
+not proof that the person is acting in an official capacity in this record: an employee's \
+own grievance, health or leave is written from the same domain.
+"""
+
+# Added only when the decider sends the page, for the same cache-key reason as the note
+# above.
+PAGE_NOTE = """
+The request also carries page_text: the whole page the span is on, with every person, \
+address, identifier and contact replaced by the same placeholders used in the span, so \
+[PERSON_3] in the span and [PERSON_3] on the page are the same person. Read it to work \
+out who is who: who wrote and who signed, under what title, to whom a message was sent, \
+and what it is about. requester_placeholder, when it is not null, is the placeholder of \
+the person who made this request.
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class PageView:
+    """The document as the model may see it: each page masked, and who the requester is.
+
+    One sentence was all the model used to get, and with the rules first and every answer
+    accepted, Opus 5.5 escalated 627 of the 3,780 spans that had to be released, most of
+    them saying the sentence did not show who the person was. The page does: the signature
+    block with its title, the From and To lines, the subject. Every value on it goes
+    through `outbound`, the same substitution and scrub as the sentence, and the guard
+    reads the result before anything is sent.
+    """
+
+    pages: dict[int, str]
+    requester: str | None
+
+    @classmethod
+    def of(
+        cls,
+        document: Document,
+        universe: Sequence[ContextRecord],
+        policy: PlaceholderPolicy,
+    ) -> PageView:
+        requester = next(
+            (
+                outbound(c.text, policy)
+                for c in universe
+                if c.is_requester and c.entity_type is EntityType.PERSON
+            ),
+            None,
+        )
+        return cls(
+            pages={p.number: outbound(p.text, policy) for p in document.pages},
+            requester=requester,
+        )
+
+
+def category_guide(taxonomy: Taxonomy) -> str:
+    """Every category as the reviewers' reference card has it: definition, examples, traps.
+
+    The prompt's own list is one line a code, and a model given the page read it
+    literally. With the page attached and nothing else changed, Haiku 5.5 released 16
+    employee numbers as "a work identifier tied to the position" and 17 outside
+    physicians' practice addresses as "a business premises", both against rulings that
+    were in the taxonomy or the reviewer study and not in the prompt. Generated from the
+    loaded taxonomy rather than copied, so a ruling added to the YAML reaches the model
+    in the same commit.
+    """
+    lines = ["", "The categories in full, with the traps reviewers are warned about:"]
+    for c in taxonomy.categories:
+        lines.append(f"\n{c.code} - {c.name}. {' '.join(c.definition.split())}")
+        # Through the second pass, because the worked examples use invented names and an
+        # invented name can be a real person's: "Mr Byrne" in the R2 example matched a
+        # persona's surname and the guard refused the request, correctly.
+        lines += [f"  Example: {scrub_unrecognised(' '.join(e.split()))}" for e in c.examples]
+        lines += [f"  Trap: {' '.join(t.split())}" for t in c.traps]
+    return "\n".join(lines) + "\n"
 
 
 class ModelUnavailable(RuntimeError):
@@ -139,7 +239,12 @@ class GatewayModelDecider:
     model: str = DEFAULT_MODEL
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     max_tokens: int = DEFAULT_MAX_TOKENS
-    temperature: float = 0.0
+    # None, because Haiku 5.5 (like every 5.5 model) refuses a non-default temperature with
+    # a 400. Set it only for a model that takes one.
+    temperature: float | None = None
+    # Sent as output_config.effort. None sends nothing, which is what an older model that
+    # rejects the field (Haiku 4.5) needs.
+    effort: str | None = DEFAULT_EFFORT
     # Reaches the ledger row as free text. The data class travels in its own field now;
     # this says what the call was for.
     purpose: str = "sever.decide: the residual the rules could not place"
@@ -189,6 +294,23 @@ class GatewayModelDecider:
     # reason to spend money. A cache miss is an error rather than a quiet call, because
     # the failure it guards against is a run that was meant to be free and was not.
     replay_only: bool = False
+    # The public body's own email domains, which the operator configures as it configures
+    # the requester. Empty, the default, sends exactly what was sent before it existed.
+    public_body_domains: tuple[str, ...] = ()
+    # Send the span's whole page, masked, and the requester's placeholder, rather than one
+    # sentence, and the full category guide. On by default since 2026-10-20: with one
+    # sentence the model escalated what the page would have settled (docs/rejected.md,
+    # section 7). Off is the one-sentence ablation.
+    with_page: bool = True
+
+    @property
+    def system_prompt(self) -> str:
+        prompt = SYSTEM_PROMPT
+        if self.public_body_domains:
+            prompt += PUBLIC_BODY_DOMAIN_NOTE
+        if self.with_page:
+            prompt += PAGE_NOTE + category_guide(self.taxonomy)
+        return prompt
 
     def __post_init__(self) -> None:
         if self.cache_path is not None and self.cache_path.is_file():
@@ -202,7 +324,10 @@ class GatewayModelDecider:
 
     def _cache_key(self, message: str) -> str:
         h = hashlib.sha256()
-        for part in (self.model, SYSTEM_PROMPT, message):
+        # Effort is in the key because it changes the answer: the same request at low and at
+        # high effort is two different questions to the model, and replaying one for the
+        # other would publish an answer nobody asked for.
+        for part in (self.model, self.effort or "", self.system_prompt, message):
             h.update(part.encode("utf-8"))
             h.update(b"\x00")
         return h.hexdigest()
@@ -220,6 +345,7 @@ class GatewayModelDecider:
         contexts: Sequence[ContextRecord],
         *,
         universe: Sequence[ContextRecord] = (),
+        document: Document | None = None,
     ) -> Sequence[RuleOutcome | None]:
         if not contexts:
             return []
@@ -227,12 +353,19 @@ class GatewayModelDecider:
             # Not an error. The rules-only pipeline is a published baseline and it runs
             # this path in CI; every span simply stays escalated.
             return [None] * len(contexts)
-        policy = self.policy_for(contexts, universe)
-        return [self._decide_one(c, policy) for c in contexts]
+        policy = self.policy_for(contexts, universe, self.public_body_domains)
+        page_view = (
+            PageView.of(document, universe or contexts, policy)
+            if self.with_page and document is not None
+            else None
+        )
+        return [self._decide_one(c, policy, page_view) for c in contexts]
 
     @staticmethod
     def policy_for(
-        contexts: Sequence[ContextRecord], universe: Sequence[ContextRecord] = ()
+        contexts: Sequence[ContextRecord],
+        universe: Sequence[ContextRecord] = (),
+        public_body_domains: Sequence[str] = (),
     ) -> PlaceholderPolicy:
         """Build the substitution policy over every entity in the document.
 
@@ -242,10 +375,15 @@ class GatewayModelDecider:
         built from the residual alone substitutes the span and ships its neighbours.
         """
         pool = universe if universe else contexts
-        return PlaceholderPolicy.for_detections(c.detection for c in pool)
+        return PlaceholderPolicy.for_detections(
+            (c.detection for c in pool), public_body_domains=public_body_domains
+        )
 
     def build_request(
-        self, ctx: ContextRecord, policy: PlaceholderPolicy
+        self,
+        ctx: ContextRecord,
+        policy: PlaceholderPolicy,
+        page_view: PageView | None = None,
     ) -> tuple[str, dict[str, object]]:
         """The user message and the payload it was built from.
 
@@ -253,19 +391,35 @@ class GatewayModelDecider:
         corpus and assert the guard, without a gateway and without a network.
         """
         payload = redact_context(ctx, policy)
+        if page_view is not None:
+            payload["page_text"] = page_view.pages.get(ctx.page_number)
+            payload["requester_placeholder"] = page_view.requester
         body = json.dumps(payload, indent=1, ensure_ascii=False, sort_keys=True)
         message = (
             "Decide the category for this span.\n\n"
             f"{body}\n\n"
             "Reply with JSON only."
         )
-        # The guard runs on everything that would be serialised into the request, which is
-        # the system prompt plus this message. Nothing is sent if it raises.
-        policy.guard(SYSTEM_PROMPT + "\n" + message, where="model decision request")
+        # The guard runs on the message, which is everything in the request built from the
+        # record. Nothing is sent if it raises.
+        #
+        # Not on the system prompt, since 2026-10-20. That is fixed text generated from the
+        # taxonomy and holds nothing from any record, and once it carried the full category
+        # guide it held ordinary words a record can also contain: on a Library and Archives
+        # Canada package the detector typed "years" and "1968" as entities, both appear in
+        # the guide ("dead more than twenty years", "died in 1968"), and the guard refused
+        # to send the tool's own instructions. The guide's worked examples go through the
+        # name scrub all the same; see `category_guide`.
+        policy.guard(message, where="model decision request")
         return message, payload
 
-    def _decide_one(self, ctx: ContextRecord, policy: PlaceholderPolicy) -> RuleOutcome | None:
-        message, payload = self.build_request(ctx, policy)
+    def _decide_one(
+        self,
+        ctx: ContextRecord,
+        policy: PlaceholderPolicy,
+        page_view: PageView | None = None,
+    ) -> RuleOutcome | None:
+        message, payload = self.build_request(ctx, policy, page_view)
         key = self._cache_key(message)
         self._keys_seen.add(key)
         hit = self._cache.get(key)
@@ -290,10 +444,11 @@ class GatewayModelDecider:
 
         request = ChatRequest(
             model=self.model,
-            system=SYSTEM_PROMPT,
+            system=self.system_prompt,
             messages=({"role": "user", "content": message},),
             max_tokens=self.max_tokens,
             temperature=self.temperature,
+            extra={"output_config": {"effort": self.effort}} if self.effort else {},
         )
         self._record({"payload": payload, "message": message, "model": self.model})
         # purpose, run_id and data_class, and no metadata mapping: an earlier version of
@@ -311,6 +466,12 @@ class GatewayModelDecider:
         reply = _text_of(response)
         self._cache_put(key, reply)
         return self._outcome(parse_answer(reply, self.taxonomy))
+
+    @property
+    def keys_seen(self) -> frozenset[str]:
+        """The cache keys this run asked for, which `sever cost` uses to say which arm of
+        a run paid for which answer."""
+        return frozenset(self._keys_seen)
 
     @property
     def distinct_requests(self) -> int:

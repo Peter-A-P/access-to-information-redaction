@@ -416,8 +416,15 @@ def gate_figures(root: Path) -> dict[str, str]:
     f["gate_items"] = no_leak[1]
     f["gate_rules"] = find(no_leak[2], r"^([\d.]+%)", "gate baseline").group(1)
     f["gate_model"] = find(no_leak[3], r"^([\d.]+%)", "gate candidate").group(1)
-    m = find(text, r"(\d+) worse and (\d+) better", "gate counts")
-    f["gate_worse"], f["gate_better"] = m.group(1), m.group(2)
+    # Counted from the files the gate was run on, not from its prose: a BLOCK names the
+    # counts in its reasons and a PASS does not, and the page states them either way.
+    sides = [
+        json.loads(_read(root, f"gate/{name}.json"))["suites"]["no_leak"]["outcomes"]
+        for name in ("rules-only", "rules-then-model")
+    ]
+    base, cand = sides
+    f["gate_worse"] = str(sum(1 for k, ok in base.items() if ok and not cand.get(k, ok)))
+    f["gate_better"] = str(sum(1 for k, ok in base.items() if not ok and cand.get(k, ok)))
     return f
 
 
@@ -518,6 +525,11 @@ RULE_WORDS: dict[str, tuple[str, str, str]] = {
         "A health card or social insurance number, a date of birth or a bank account is "
         "withheld: a director's health number is not about being a director.",
     ),
+    "employee_number": (
+        "R1", "An employee number",
+        "Withheld even in a signature block where the name and title beside it are "
+        "released: the number is assigned to the person, not to the job.",
+    ),
     "family_relationship": (
         "R1", "A family word that points at someone",
         '"The client\'s sibling" identifies the sibling to a requester who knows the family, '
@@ -539,7 +551,8 @@ RULE_WORDS: dict[str, tuple[str, str, str]] = {
     "official_capacity": (
         "K2", "An official acting in that capacity",
         "A name paired with a title anywhere in the record: in a signature block, a "
-        "letterhead or an email header.",
+        "letterhead or an email header. Not in an email about the person's own leave, "
+        "health or grievance, where the title says nothing about the job.",
     ),
     "official_capacity_contact": (
         "K2", "An official's work contact details",

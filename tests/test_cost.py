@@ -356,3 +356,30 @@ def test_the_report_supplies_its_own_ask_count(tmp_path: Path) -> None:
     assert _cost_for(path, corpus, 40).asks == 40  # type: ignore[union-attr]
     # Zero means the model layer was off, and then there is nothing to override with.
     assert _cost_for(path, corpus, 0).asks == 999  # type: ignore[union-attr]
+
+
+def test_a_run_that_paid_for_both_arms_is_split_by_the_answers_it_bought() -> None:
+    """One run id, two arms: the n-th row paid for the n-th answer, and replaying the
+    pipeline says which answers were its own. An earlier run under the same id is dropped
+    by `since`, and a row that ended in an error paid for nothing."""
+    early = {**a_row("mixed", cost=9.0), "ts_utc": "2026-10-19T12:00:00Z"}
+    failed = {**a_row("mixed", cost=0.0), "ts_utc": "2026-10-20T15:00:00Z", "error_type": "timeout"}
+    paid = [
+        {**a_row("mixed", cost=c), "ts_utc": f"2026-10-20T15:0{i}:00Z"}
+        for i, c in enumerate((0.01, 0.02, 0.04))
+    ]
+    result = from_ledger(
+        ledger=FakeLedger([early, failed, *paid]),
+        project=PROJECT,
+        run_ids=("mixed",),
+        pages=10,
+        documents=10,
+        cached_answers=3,
+        asks=2,
+        since="2026-10-20T14:00:00Z",
+        answer_keys=("a", "b", "c"),
+        pipeline_keys=frozenset({"a", "c"}),
+    )
+    assert result.pipeline_runs == ("mixed:pipeline",)
+    assert result.per_run == {"mixed:baseline": 0.02, "mixed:pipeline": 0.05}
+    assert round(result.usd_per_page, 6) == 0.005

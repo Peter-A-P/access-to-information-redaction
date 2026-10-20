@@ -76,6 +76,33 @@ NOT_NAME_PARTS = frozenset(
 )
 
 
+# The placeholder label for an email address on one of the public body's own domains.
+#
+# A work address and a personal one are both [EMAIL_n] otherwise, and which of the two it
+# is was the evidence the model most often said it lacked: with the rules first and every
+# answer accepted, 245 of the 627 must-keep spans Opus 5.5 escalated were addresses it
+# called "cannot tell whether this is an official's business address or a third party's
+# personal email" (measured 2026-10-19, 210 documents). The domain names nobody. Every employee
+# shares it, and the public body publishes it, so it says which kind of address this is
+# and nothing about whose. The local part, which is often the name, is still replaced.
+#
+# It is evidence about the address, not about the capacity the person is acting in. An
+# employee's own grievance is written from the same domain, and the prompt says so.
+PUBLIC_BODY_EMAIL = "EMAIL_PUBLIC_BODY"
+
+
+def on_public_body_domain(address: str, domains: Sequence[str]) -> bool:
+    """Whether an address is on one of `domains` or a subdomain of one."""
+    if "@" not in address or not domains:
+        return False
+    host = address.rsplit("@", 1)[1].strip().strip(".>").casefold()
+    for d in domains:
+        d = d.strip().lstrip("@").casefold()
+        if d and (host == d or host.endswith("." + d)):
+            return True
+    return False
+
+
 class RawEntityLeak(RuntimeError):
     """A detected entity survived substitution and would have left the boundary."""
 
@@ -114,7 +141,11 @@ class PlaceholderPolicy:
 
     @classmethod
     def for_detections(
-        cls, detections: Iterable[Detection], *, extra: Mapping[str, EntityType] = {}
+        cls,
+        detections: Iterable[Detection],
+        *,
+        extra: Mapping[str, EntityType] = {},
+        public_body_domains: Sequence[str] = (),
     ) -> PlaceholderPolicy:
         policy = cls()
         # Longest first, so "Marie Doucette" is substituted before "Doucette" and the
@@ -123,7 +154,12 @@ class PlaceholderPolicy:
         for d in ordered:
             if d.entity_type in NOT_SUBSTITUTED:
                 continue
-            placeholder = policy.placeholder_for(d.text, d.entity_type)
+            label = None
+            if d.entity_type is EntityType.EMAIL and on_public_body_domain(
+                d.text, public_body_domains
+            ):
+                label = PUBLIC_BODY_EMAIL
+            placeholder = policy.placeholder_for(d.text, d.entity_type, label=label)
             if d.entity_type is EntityType.PERSON:
                 policy.add_aliases(d.text, placeholder)
             elif d.entity_type is EntityType.EMAIL:
@@ -165,14 +201,16 @@ class PlaceholderPolicy:
                 continue
             self._by_value.setdefault(cleaned, placeholder)
 
-    def placeholder_for(self, value: str, entity_type: EntityType) -> str:
+    def placeholder_for(
+        self, value: str, entity_type: EntityType, *, label: str | None = None
+    ) -> str:
         key = self._key(value)
         if not key:
             return value
         existing = self._by_value.get(key)
         if existing is not None:
             return existing
-        label = entity_type.value.upper()
+        label = label or entity_type.value.upper()
         n = self._counts.get(label, 0) + 1
         self._counts[label] = n
         placeholder = f"[{label}_{n}]"
@@ -210,6 +248,53 @@ class PlaceholderPolicy:
             )
         return out
 
+    def mask_variants(self, text: str) -> str:
+        """Substitute the copies of a known value that `apply` cannot see, and only those.
+
+        `apply` matches a value as written. On a scanned page the same value comes back
+        in another form: `accès` where the detector found `accés`, `TE\\n18` where it found
+        `TE 18`. The guard compares accent- and space-insensitively, sees the copy, and
+        refuses the request, which is right and leaves the page unusable. So the copies
+        are found the way the guard finds them, by comparing runs of words under
+        `normalise` (and digits-only for anything numeric), and replaced with the value's
+        own placeholder.
+
+        Runs only on text the guard would refuse, so a page `apply` already handled is
+        returned unchanged, byte for byte, and its cache key with it.
+        """
+        try:
+            self.guard(text, where="page")
+            return text
+        except RawEntityLeak:
+            pass
+        words = list(re.finditer(r"[^\W_]+", text))
+        hits: list[tuple[int, int, str]] = []
+        for value in self.substituted_values:
+            if len(value.strip()) < _MIN_GUARDED_LENGTH:
+                continue
+            target = normalise(value)
+            digits = normalise_identifier(value) if any(c.isdigit() for c in value) else ""
+            k = len(target.split())
+            if not target or k == 0:
+                continue
+            for i in range(len(words) - k + 1):
+                start, end = words[i].start(), words[i + k - 1].end()
+                window = text[start:end]
+                if normalise(window) == target or (
+                    len(digits) >= 6 and normalise_identifier(window) == digits
+                ):
+                    hits.append((start, end, self._by_value[value]))
+        # Longest first, so a full name wins over a part of it; then right to left, so the
+        # offsets still to be replaced stay valid.
+        taken: list[tuple[int, int, str]] = []
+        for hit in sorted(hits, key=lambda h: (-(h[1] - h[0]), h[0])):
+            if not any(hit[0] < e and s < hit[1] for s, e, _ in taken):
+                taken.append(hit)
+        out = text
+        for start, end, placeholder in sorted(taken, reverse=True):
+            out = out[:start] + placeholder + out[end:]
+        return out
+
     def rehydrate(self, text: str) -> str:
         out = text
         for placeholder, value in self._by_placeholder.items():
@@ -237,8 +322,13 @@ class PlaceholderPolicy:
         """
         if not needle:
             return False
-        pattern = rf"(?<![^\W\d_]){re.escape(needle)}(?![^\W\d_])"
-        return re.search(pattern, haystack) is not None
+        # A digit at either end of the value is part of the word on that side: "te 18" is
+        # not in "te 181", which is a different number. Found on a Library and Archives
+        # Canada page, where "TE: 181" was refused as a copy of a detected "TE 18". Letters
+        # stay the only boundary at a letter end, as above.
+        before = r"(?<![^\W_])" if needle[0].isdigit() else r"(?<![^\W\d_])"
+        after = r"(?![^\W_])" if needle[-1].isdigit() else r"(?![^\W\d_])"
+        return re.search(before + re.escape(needle) + after, haystack) is not None
 
     def guard(self, payload: str, *, where: str = "outbound request") -> None:
         """Refuse to let a raw entity leave.
@@ -501,8 +591,10 @@ def scrub_unrecognised(text: str) -> str:
 
 
 def outbound(text: str, policy: PlaceholderPolicy) -> str:
-    """The only way free text is allowed into a request: substitute, then scrub."""
-    return scrub_unrecognised(policy.apply(text))
+    """The only way free text is allowed into a request: substitute, scrub, then catch
+    the copies of a known value written in another form (`PlaceholderPolicy.mask_variants`),
+    which changes nothing on text the guard would already pass."""
+    return policy.mask_variants(scrub_unrecognised(policy.apply(text)))
 
 def redact_context(ctx: ContextRecord, policy: PlaceholderPolicy) -> dict[str, object]:
     """The context record as the model sees it: structure intact, every name gone.

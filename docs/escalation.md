@@ -87,6 +87,31 @@ that is the cost of the guard, paid in reviewer time rather than in a stranger's
 Outside a military record a rank means nothing to the rules. "Capt" in a fisheries record
 is a ship's master, and a ship's master is a third party.
 
+### 8. An employee writing about their own affairs (`E1`, or the model)
+
+Since 2026-10-20, in an email message that says "my" or "your" before leave, health, a
+doctor, a diagnosis, discipline, an accommodation, a grievance or a complaint, no rule
+releases anyone as an official: not the title in a signature block (`official_capacity`),
+not the bare job title (`not_personal_information`), not the work telephone
+(`official_capacity_contact`), not a staff directory match. An employee asking for their own
+medical leave from their work address is a third party in that message, and their title in
+their own signature says nothing about the job. The spans fall through to the model, which
+has the page; with the model off they fall through to case 1 and are withheld.
+
+The rules do not try to tell the employee from the adviser answering them, who is doing
+their job. That is reading, and it is the model's work. With the model off, the adviser is
+withheld too, and the reviewer releases them.
+
+Found on the trap set (`sever eval-traps`, `results/traps.md`), where before this guard the
+rules alone leaked 62.5 percent of what had to be withheld. The headline corpus could not
+show it: every government address in it belongs to an official doing their job.
+
+**What it misses.** The vocabulary was written beside one trap template. A message that
+says "I am off sick" or "the diagnosis" with no possessive is not marked, and its writer is
+released by the rules behind this one. That is a leak, and the reviewer is the backstop. A
+message is only found by its `From:` line, so a forwarded note pasted without headers is
+not a message here at all.
+
 ## What is out of scope rather than escalated
 
 These are not escalations. The tool does not attempt them at all, and says so.
@@ -196,17 +221,19 @@ moved.
 
 ## The number this page is about
 
-At the last full run, **25.7 percent** of spans were escalated with the model layer on, and
-**41.2 percent** with the rules alone. Both fell on 2026-09-21 when the rules stopped
-escalating bare job titles, which is the largest single move either figure has made and was
-not a change to the escalation policy at all.
+At the last full run, 2026-10-20, **12.4 percent** of spans were escalated with the model
+layer on, and **36.0 percent** with the rules alone. With the model it was 22.7 percent a run
+earlier, on Claude Haiku 4.5 shown one sentence around each span; the drop came from showing
+the model the page, not from a change to the escalation policy, which is unchanged
+([rejected.md](rejected.md) section 7). The rules-only figure fell on the same day, from 37.3
+percent, because an employee number is now decided by a rule rather than escalated; case 8
+pushes the other way, and on this corpus barely at all.
 
-The gap between those two columns is the whole argument of the model layer, and it is worth
-reading in the right direction. The model does not make the tool decisive by being clever
-about hard cases; it makes it decisive by answering 43 percent of the questions the rules
-could not, and it is wrong on some of them. Escalation falls by 18.8 points and the leak
-rate rises by 2.5. The reviewer's queue halves and a few more third parties are named in a
-released record.
+The gap between those two columns is the whole argument of the model layer. It now answers
+two thirds of the questions the rules could not at the published threshold, and nearly all of
+them below it, and on the synthetic corpus it is wrong about one of them. The threshold sweep
+in `results/thresholds.md` shows the rest of the trade: accepting every answer brings
+escalation down to 2.4 percent and adds about two leaks.
 
 An earlier run escalated 46.1 percent with the rules alone, and both escalation figures rose
 once when detection improved. That looks like a regression and is not. A better detector

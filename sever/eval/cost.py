@@ -65,6 +65,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -78,26 +79,21 @@ DEFAULT_COST_PATH = Path("results/cost.json")
 
 # The runs behind the tool's own rows, and the only ones whose spend is a cost of running
 # the pipeline over a page.
-PIPELINE_RUNS: tuple[str, ...] = (
-    "sever-full-001",
-    "sever-full-210",
-    "sever-sweep-210",
-    "sever-retype-210",
-)
+PIPELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210:pipeline",)
 
 # The model-only baseline. It asks about every span rather than the residual the rules
 # could not settle, so it paid for 1,357 answers the pipeline never needs. Its spend is a
 # cost of measuring the tool, not a cost of running it, and folding the two together would
 # have doubled the published cost per page for a configuration nobody would deploy.
-BASELINE_RUNS: tuple[str, ...] = (
-    "sever-modelonly-smoke",
-    "sever-modelonly-210",
-)
+BASELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210:baseline",)
 
 # Everything that paid for a line in the committed answer cache. The integrity check is
 # against this, because the cache does not record which run bought which answer, and a
 # check over a subset would pass while a whole run was missing.
-PUBLISHED_RUNS: tuple[str, ...] = PIPELINE_RUNS + BASELINE_RUNS
+PUBLISHED_RUNS: tuple[str, ...] = ("sever-haiku55-210",)
+# Rows under the published run id before this belong to an exploratory run that reused it
+# on 2026-10-19; the published run began at 14:10 UTC on 2026-10-20.
+PUBLISHED_SINCE = "2026-10-20T14:00:00Z"
 
 
 class LedgerMismatch(RuntimeError):
@@ -222,14 +218,32 @@ def from_ledger(
     asks: int,
     model: str = "",
     today: dt.date | None = None,
+    since: str | None = None,
+    answer_keys: Sequence[str] = (),
+    pipeline_keys: frozenset[str] | None = None,
 ) -> RunCost:
     """Total the published runs out of the gateway's ledger, and check they are all of them.
 
     Takes the store rather than a path so the tests can hand it a stand-in: the job here is
     the arithmetic and the honesty of the fields, not the SQL.
+
+    **A run that paid for both arms.** `sever report` with the model-only baseline on asks
+    for both under one run id, so the id cannot say which arm a call was for. The answer
+    cache can: answers are appended in the order they were paid for, so the n-th answer is
+    the n-th successful row of the run, and replaying the pipeline arm alone says which
+    answers it asked for. With `answer_keys` (the cache's keys, in file order) and
+    `pipeline_keys`, each row is filed under `<run>:pipeline` or `<run>:baseline`, and the
+    headline is over the first. A key both arms asked for was paid by the pipeline, which
+    asks first on every document. `since` drops earlier rows under a reused run id.
     """
     wanted = set(run_ids)
-    rows = [r for r in ledger.rows(project=project) if r.get("run_id") in wanted]
+    rows = [
+        r
+        for r in ledger.rows(project=project)
+        if r.get("run_id") in wanted
+        and not r.get("error_type")
+        and (since is None or str(r.get("ts_utc") or "") >= since)
+    ]
     if not rows:
         raise LookupError(
             f"the ledger holds no rows for {sorted(wanted)} under project {project!r}. "
@@ -248,10 +262,22 @@ def from_ledger(
             f"list also served something that is not in the cache. Either way the number "
             f"would be wrong, so it is not written."
         )
+    labels = [str(r.get("run_id")) for r in rows]
+    if pipeline_keys is not None:
+        if len(answer_keys) != len(rows):
+            raise LedgerMismatch(
+                f"{len(rows)} rows against {len(answer_keys)} answer keys: the rows cannot "
+                f"be matched to the answers they paid for, so neither arm can be costed."
+            )
+        labels = [
+            f"{label}:{'pipeline' if key in pipeline_keys else 'baseline'}"
+            for label, key in zip(labels, answer_keys, strict=True)
+        ]
+        pipeline_runs = tuple(sorted({lb for lb in labels if lb.endswith(":pipeline")}))
+        wanted = set(labels)
     per_run: dict[str, float] = {}
     calls_per_run: dict[str, int] = {}
-    for r in rows:
-        rid = str(r.get("run_id"))
+    for r, rid in zip(rows, labels, strict=True):
         per_run[rid] = per_run.get(rid, 0.0) + float(r.get("cost_usd") or 0.0)
         calls_per_run[rid] = calls_per_run.get(rid, 0) + 1
     return RunCost(

@@ -449,37 +449,39 @@
   </section>
 
   <section class="section" id="model">
-    <h2>The language model, measured and switched off</h2>
+    <h2>The language model, shown the page</h2>
     <p class="section-lead">
-      The rules decide what has a settled answer and escalate the rest. A language model can be
+      The rules decide what has a settled answer and escalate the rest. A language model is
       asked about what is left, through the portfolio's own
-      <a href="https://gateway.peterparker.ca">AI gateway</a>, which replaces every name with a
-      typed placeholder before the request leaves, so the model never sees one. It was built,
-      measured at a threshold chosen on separate records, and then turned off by default,
-      because of what the measurement said.
+      <a href="https://gateway.peterparker.ca">AI gateway</a>. It sees the whole page with every
+      name, contact and identifier replaced by a typed placeholder, the same one wherever that
+      person appears, so it can tell who signed and who wrote to whom without seeing a single
+      name. Its answers are taken at a confidence threshold chosen on separate records.
     </p>
     <div class="headline">
       <div class="stat up"><span class="figure">{{full_over}}</span><span class="caption">over-redaction with the model deciding what the rules could not, against {{rules_over}} with the rules alone</span></div>
-      <div class="stat down"><span class="figure">{{model_extra_leaks}}</span><span class="caption">more third parties' details released, all of them the model's decisions: a leak rate of {{full_leak}} against {{rules_leak}}</span></div>
+      <div class="stat down"><span class="figure">{{model_extra_leaks}}</span><span class="caption">of the model's decisions released a third party's details that had to be withheld: a leak rate of {{full_leak}} against {{rules_leak}}</span></div>
       <div class="stat"><span class="figure">{{model_cost_page}}</span><span class="caption">a page through the gateway ({{model_cost_page_cad}}), with {{model_name}}</span></div>
-      <div class="stat down"><span class="figure">{{gate_verdict}}</span><span class="caption">project 03's release gate: {{gate_worse}} documents worse with the model, {{gate_better}} better</span></div>
+      <div class="stat up"><span class="figure">{{gate_verdict}}</span><span class="caption">project 03's release gate: {{gate_worse}} documents worse with the model, {{gate_better}} better</span></div>
     </div>
     <div class="verdict">
-      <p><strong>The gains go to a requester, sooner; the losses go to a stranger, for good.</strong>
-      The model releases more of what requesters are owed, and leaks more of what third
-      parties are owed protection from, and the two do not weigh the same: a requester can
-      appeal a withheld line, and a third party's details in a stranger's hands cannot be
-      recalled. The portfolio's <a href="https://gate.peterparker.ca">release gate</a>, asked the
-      same question with the document as the unit, blocks it: {{gate_rules}} of documents
-      leak-free with the rules alone, {{gate_model}} with the model. Which to run is a public
-      body's decision; the default is the rules.</p>
+      <p><strong>A stronger model was not the answer; showing the model the page was.</strong>
+      Given one sentence around each name, even the largest model available said "cannot tell"
+      on hundreds of spans, and said why: the sentence did not show who the person was. Given
+      the page, the reviewers' category guide and which addresses are the public body's own,
+      the smallest one decides nearly all of it. The portfolio's
+      <a href="https://gate.peterparker.ca">release gate</a>, asked with the document as the
+      unit, passes it: {{gate_rules}} of documents leak-free with the rules alone,
+      {{gate_model}} with the model, inside its three-point margin. Which to run is still a
+      public body's decision, and the tool runs the rules alone unless told otherwise.</p>
     </div>
     <details class="disclose">
-      <summary>For the technical reader: the warning worth more than the number</summary>
+      <summary>For the technical reader: what weakens the result</summary>
       <ul>
-        <li><strong>A model measured on top of imperfect rules is partly being paid to fix them.</strong> The model's case was far stronger until the rules stopped escalating bare job titles, and nothing about the model changed. Anyone comparing "rules" with "rules plus a model" is measuring the rules they happen to have.</li>
-        <li><strong>Without the rules the model leaks {{model_only_leak}}</strong> against {{full_leak}} with them. Asked on its own, it releases "the client's sibling" almost every time, because a family word with no name beside it reads as harmless.</li>
-        <li><strong>No raw entity leaves.</strong> A test asserts that no detected value appears in any outbound request; the gateway records the data class of every call. {{model_asks}} questions were asked for the published tables, and answers are cached so the tables reproduce for nothing.</li>
+        <li><strong>Some of what the model knows came from this corpus's errors.</strong> Given the page, it first released employee numbers and an outside physician's practice address. Both rulings existed; neither was in the prompt. They are now, and the corpus that exposed them is the one scored here.</li>
+        <li><strong>On real released records the gain is smaller.</strong> On packages nothing here was tuned on, the share of possibly personal spans withheld falls from 100 percent to 84.5 with the model.</li>
+        <li><strong>Without the rules the model leaks {{model_only_leak}}</strong> against {{full_leak}} with them, and withholds far more. It reads a person where the detector saw a place, which the rules cannot; the rules settle two thirds of the spans for nothing.</li>
+        <li><strong>No raw entity leaves.</strong> A test asserts that no detected value appears in any outbound request, page included; the gateway records the data class of every call. {{model_asks}} questions were asked for the published tables, and answers are cached so the tables reproduce for nothing.</li>
       </ul>
     </details>
   </section>

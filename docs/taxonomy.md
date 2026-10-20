@@ -61,10 +61,12 @@ Examples:
 - The complainant's home address in a case note.
 - A member of the public's date of birth in an incident report.
 - A named neighbour's account of what they saw.
+- A physician's name, practice address and direct line in a case note or letter about a client. The physician is acting professionally, but not for a public body.
 
 Traps:
 
 - Both parties to a confidential workplace complaint, the employee who complained and the employee complained about, are third parties: a complaint by or against someone is about them, not about the functions of their position. Their job titles go with their names, because in a unit with one Regional Director the title identifies the person.
+- An official's employee number, even in a signature block beside a name and title that are released. It is an identifying number assigned to the person, not information about the position. Ruled on 2026-10-18 in the reviewer study.
 
 *Canada (federal):*
 
@@ -160,6 +162,8 @@ Traps:
 
 - An official's personal mobile number or home address is not about the position.
 - An official's own grievance or medical leave is not about the position.
+- An employee writing from their work address about their own leave, health, discipline or grievance is a third party in that message: their name, title, work email and work telephone there are R1, although the same details are K2 in a message where they are doing their job.
+- The employee number in a signature block, beside a name and title that are K2. The number is R1.
 
 *Canada (federal):*
 

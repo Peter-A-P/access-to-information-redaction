@@ -27,6 +27,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+# The synthetic public body's email domain. Its officials' work addresses are on it, and
+# `sever report` tells the model so, as an operator would tell it its own domain.
+PUBLIC_BODY_DOMAIN = "gov.nl.ca.example"
+
 
 class PersonaRole(StrEnum):
     """The role decides the category, which is why it is decided first."""
@@ -500,7 +504,7 @@ class PersonaFactory:
             titles = (
                 PUBLIC_FIGURE_TITLES if role is PersonaRole.PUBLIC_FIGURE else OFFICIAL_TITLES
             )
-            domain = "gov.nl.ca.example"
+            domain = PUBLIC_BODY_DOMAIN
             return Persona(
                 title=rng.choice(titles),
                 work_email=f"{_slug(given)}{_slug(surname)}@{domain}",

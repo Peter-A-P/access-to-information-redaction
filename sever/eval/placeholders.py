@@ -146,7 +146,12 @@ class RawTextDecider(GatewayModelDecider):
         if self.enabled:
             assert_loopback(self.gateway, self.model)
 
-    def build_request(self, ctx: ContextRecord, policy: Any) -> tuple[str, dict[str, object]]:
+    def build_request(
+        self, ctx: ContextRecord, policy: Any, page_view: Any = None
+    ) -> tuple[str, dict[str, object]]:
+        # The ablation compares one sentence masked against one sentence raw. A page view
+        # would change what is being compared, so it is accepted for the signature and
+        # not used.
         payload = raw_context(ctx)
         body = json.dumps(payload, indent=1, ensure_ascii=False, sort_keys=True)
         message = f"Decide the category for this span.\n\n{body}\n\nReply with JSON only."

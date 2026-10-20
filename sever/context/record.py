@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from sever.context.age import ARCHIVAL_YEARS, birth_year_beside, page_year
 from sever.context.complaint import ComplaintParties, is_party_sentence
 from sever.context.directory import DirectoryMatch, StaffDirectory
+from sever.context.own_affairs import own_affairs_messages
 from sever.context.register import PublicRegister, RegisterMatch
 from sever.context.requester import RequestConfig, RequesterMatch, RequesterMatcher
 from sever.context.roles import RoleIndex, RoleMention
@@ -81,6 +82,11 @@ class ContextRecord:
     # sever.context.complaint.
     complaint_party: str | None = None
 
+    # Set when the span sits in an email message about its writer's or recipient's own
+    # leave, health, discipline or grievance. The rules that release an official stand
+    # aside there; see sever.context.own_affairs.
+    own_affairs_message: bool = False
+
     @property
     def entity_type(self) -> EntityType:
         return self.detection.entity_type
@@ -135,6 +141,7 @@ class ContextRecord:
             "co_mentions_in_sentence": (),
             "message_index": None,
             "complaint_party": None,
+            "own_affairs_message": False,
         }
         changes = {}
         for name in fields_to_blank:
@@ -174,6 +181,7 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "cluster_ambiguous",
     "message_index",
     "complaint_party",
+    "own_affairs_message",
 )
 
 
@@ -297,6 +305,7 @@ class ContextBuilder:
                 if d.entity_type is EntityType.PERSON
             ],
         )
+        own_affairs = {p.number: own_affairs_messages(p) for p in document}
         out: list[ContextRecord] = []
         for det in detections:
             page = by_page[det.page]
@@ -378,6 +387,9 @@ class ContextBuilder:
                     cluster_ambiguous=cluster.ambiguous if cluster else False,
                     co_mentions_in_sentence=co_mentions,
                     complaint_party=complaint_party,
+                    own_affairs_message=any(
+                        m.contains(det.offsets) for m in own_affairs[det.page]
+                    ),
                 )
             )
         return tuple(out)

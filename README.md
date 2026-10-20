@@ -23,39 +23,39 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 <!-- BEGIN RESULTS -->
 
-**Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-10 by `sever report`.
+**Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-20 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-4-5-20251001, through the 04 gateway with data class `personal`. 246 model calls, US$0.2737, US$0.00111 per call, 189330 in / 16868 out tokens, 9383 replayed from the answer cache, free, of which 2002 were the tool's own residual and 7627 the model-only baseline.
+**Model layer:** anthropic/claude-haiku-5-5, through the 04 gateway with data class `personal`. 9559 answers replayed from the cache, nothing spent, of which 1932 were the tool's own residual and 7627 the model-only baseline.
 
-**Cost:** US$0.00456 per page (CA$0.00615 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.9571 over 871 paid calls and 210 pages. The pipeline asked 2002 times and paid 871 of them, because 56% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.01048 each, which is the figure to read if your documents are not generated from templates. A further US$1.4754 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00523 per page (CA$0.00706 at 1.35 CAD/USD), from project 04's gateway ledger: US$1.0983 over 1895 paid calls and 210 pages. The pipeline asked 1932 times and paid 1895 of them, because 2% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.00533 each, which is the figure to read if your documents are not generated from templates. A further US$3.0920 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
-| `K1` | 980 | n/a | 6.9% (5.6% to 8.3%), n=980 | 5.3% (3.9% to 6.8%), n=980 |
-| `K2` | 2170 | n/a | 29.5% (27.1% to 32.0%), n=2170 | 19.1% (17.3% to 21.1%), n=2170 |
-| `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
+| `K1` | 980 | n/a | 3.8% (2.5% to 5.2%), n=980 | 3.7% (2.4% to 5.1%), n=980 |
+| `K2` | 2170 | n/a | 22.4% (20.6% to 24.3%), n=2170 | 22.2% (20.4% to 24.0%), n=2170 |
+| `K3` | 280 | n/a | 0.7% (0.0% to 2.1%), n=280 | 0.7% (0.0% to 2.1%), n=280 |
 | `K4` | 70 | n/a | 48.6% (45.7% to 50.0%), n=70 | 48.6% (45.7% to 50.0%), n=70 |
-| `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
-| `R1` | 1680 | 4.6% (3.6% to 5.7%), n=1680 | n/a | 43.9% (41.4% to 46.3%), n=1680 |
+| `K6` | 280 | n/a | 16.8% (13.1% to 20.5%), n=280 | 16.8% (13.1% to 20.5%), n=280 |
+| `R1` | 1680 | 2.6% (1.7% to 3.6%), n=1680 | n/a | 4.5% (3.0% to 6.2%), n=1680 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 4.6% (3.6% to 5.7%), n=1680 | 19.7% (18.1% to 21.2%), n=3780 | 22.7% (21.6% to 23.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| model-only, no rules | 15.4% (13.8% to 17.0%), n=1680 | 41.0% (38.4% to 43.6%), n=3780 | 40.8% (39.7% to 41.9%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sever, rules only | 2.5% (1.7% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 37.3% (35.8% to 38.7%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules then the model on the residual | 2.6% (1.7% to 3.6%), n=1680 | 16.1% (14.8% to 17.3%), n=3780 | 12.4% (11.4% to 13.4%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| model-only, no rules | 1.5% (1.0% to 2.1%), n=1680 | 42.8% (41.2% to 44.5%), n=3780 | 33.6% (32.2% to 35.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules only | 2.5% (1.7% to 3.5%), n=1680 | 22.4% (20.9% to 23.9%), n=3780 | 36.0% (34.6% to 37.5%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 | blunt redact-all-PII | 1.1% (0.6% to 1.6%), n=1680 | 98.4% (97.9% to 99.0%), n=3780 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| sentence-only, no document context | 8.8% (6.9% to 10.8%), n=1680 | 49.3% (47.1% to 51.4%), n=3780 | 59.0% (57.4% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sentence-only, no document context | 8.8% (6.9% to 10.8%), n=1680 | 49.3% (47.1% to 51.4%), n=3780 | 57.8% (56.0% to 59.4%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 
 **Where the leaks come from**
 
 | System | Leaks | Never found | Found, called impersonal | Box too short | The decision was wrong |
 |---|---:|---:|---:|---:|---:|
-| sever, rules then the model on the residual | 77 | 17 | 24 | 1 | 35 |
-| model-only, no rules | 259 | 17 | 101 | 1 | 140 |
+| sever, rules then the model on the residual | 43 | 17 | 24 | 1 | 1 |
+| model-only, no rules | 25 | 17 | 3 | 1 | 4 |
 | sever, rules only | 42 | 17 | 24 | 1 | 0 |
 | blunt redact-all-PII | 18 | 17 | 0 | 1 | 0 |
 | sentence-only, no document context | 147 | 17 | 129 | 1 | 0 |
@@ -66,7 +66,7 @@ The middle column is the one worth knowing about. A span typed as a place or an 
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2361 | 0 | text layer and OCR |
+| 2259 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -85,52 +85,76 @@ what nobody publishes.
 
 ## The honest limitation
 
-**The case for the model layer is much weaker than it was, because the rules got better.**
+**The model layer now earns its place on the synthetic corpus, and much less of it on real
+records, and some of what it knows it was taught on the corpus it is scored on.**
 
 With the rules alone the tool leaks 2.5 percent and withholds 22.4 percent of what must be
-released. With the model deciding what the rules could not, at the confidence threshold
-measured in [`results/thresholds.md`](results/thresholds.md), it leaks 4.6 percent and
-withholds 19.7 percent. In counts, over 5,460 labelled spans: turning the model on
-correctly releases **105 spans the rules had withheld** and wrongly releases **35 that had
-to go**. Both rows are in the table above and neither is hidden behind the other.
+released. With Claude Haiku 5.5 deciding what the rules could not, at the confidence
+threshold in [`results/thresholds.md`](results/thresholds.md), it leaks 2.6 percent and
+withholds 16.1 percent. In counts, over 5,460 labelled spans: turning the model on
+correctly releases **241 spans the rules had withheld** and wrongly releases **one that had
+to go**. Until 2026-10-20 the same comparison read 105 against 35, on Claude Haiku 4.5.
 
-That ratio was **eight to one** a day ago and it is **three to one** now. Nothing about the
-model changed. What changed is that the rules stopped escalating bare job titles, which
-removed seven points of over-redaction from the rules-only row at no cost in leaks, and a
-good part of what the model had been earning its keep on was cleaning up after a
-deterministic bug. The measurement that found the bug was not aimed at the model at all.
+**What changed was the evidence, not the model.** The model used to be shown one sentence
+around the span. Asked to decide with that, Claude Opus 5.5 did no better than Haiku 4.5:
+it answered "cannot tell" on 627 of the 3,780 spans that had to be released, and said why,
+over and over: the sentence did not show who the person was. So the model is now shown the
+whole page, masked (every person, contact and identifier replaced by the same placeholder
+everywhere it appears), which placeholder is the requester, which email addresses are on the
+public body's own domain, and the full category guide with its traps, generated from
+`taxonomy/`. Haiku 5.5, at a tenth of Haiku 4.5's price per token, then decides almost all
+of it. The rejected approach and the evidence are [`docs/rejected.md`](docs/rejected.md)
+section 7.
 
-**That is the general warning and it is worth more than the number.** A model layer measured
-on top of an imperfect deterministic layer is partly being paid to fix it, and the payment
-is invisible until the deterministic layer improves. Anyone comparing "rules" against
-"rules plus a model" is measuring the rules they happen to have, not the architecture.
+**Three things weaken that result, and none is small.**
 
-Three to one is thin. The three are a requester receiving their own record; the one is a
-third party's personal information in a stranger's hands, and it cannot be recalled. On
-these numbers the rules-only configuration is the defensible default, and it is what the
-tool does with no flags: the model layer is opt-in, costs money, and now has to argue for
-2.7 points of over-redaction against 2.1 points of leak. Which to run is a public body's
-decision and this repository does not make it.
+- **The guide was improved by reading this corpus's errors.** Given the page, Haiku 5.5
+  first released employee numbers and an outside physician's practice address, both
+  against rulings this project had made. Those rulings were then written into the taxonomy,
+  the prompt and, for employee numbers, a deterministic rule. They are real rulings, made
+  before, but the corpus that exposed them is the corpus scored here. This is not a
+  held-out number.
+- **On real records the gain is much smaller.** On the held-out release packages, which
+  nothing in this repository was tuned on, the share of possibly personal spans withheld
+  falls from 100 percent with the rules alone to **84.5 percent** with the model
+  ([`results/releases-heldout-model.md`](results/releases-heldout-model.md)); on the first
+  six packages, from 65.7 to 61.0. Scanned forms are the hard case and the model helps least
+  there.
+- **The threshold throws a third of the model's answers away.** It was set on the
+  validation split by a rule fixed before looking: the lowest threshold at which the model
+  adds no leaks over the rules alone. That is 0.90. Accepting every answer instead would cut
+  over-redaction to 3.5 percent at a leak rate of 2.7, about two more third-party spans
+  released for about 475 more spans returned correctly. Which side of that to take is a
+  public body's decision and this repository does not make it; the sweep is published so it
+  can be made.
 
-**Project 03's release gate, asked the same question, blocks the model layer.** Its
-paired non-inferiority test, with the document as the item and a three-point margin, finds
-turning the model on worse on documents with no leak: 84.3 percent of documents clean with
-the rules alone against 67.6 with the model, **35 documents worse and none better**. It
-passes the model on the requester's own information (+7.6 points) and on what is not
-personal information (+40.0), and cannot decide the publicly-available category on 70
-documents. One block is enough for the gate, and it is the right one: the gains are a
-requester receiving their own record sooner, the loss is a stranger's information that
-cannot be recalled. [`gate/decision.md`](gate/decision.md) is the gate's own output and
-`sever gate-export` writes what it was run on, for nothing.
+**Project 03's release gate passes the model layer.** It blocked the Haiku 4.5 layer, with
+35 documents worse on leaks and none better. Asked again, its paired non-inferiority test,
+with the document as the item and a three-point margin, finds documents with no leak at
+83.3 percent with the rules alone and 82.9 with the model, a difference of -0.5 points
+(-1.4 to +1.4) that sits inside the margin; the requester's own information gains 21.9
+points and what is not personal information 13.1. The publicly available category is still
+too small to decide. [`gate/decision.md`](gate/decision.md) is the gate's own output.
 
-**Read the leak decomposition above before deciding the rules are the weak part.** Every
-one of the 39 leaks in the rules-only row is the detector's fault: 16 spans it never found
-and 23 it found and called a place or an organisation, which is not personal information,
-so the rule released them and said so. The deterministic rules contribute **zero**, and
-that stayed true through the job-title change, which is the check that mattered: releasing
-a category that used to be withheld is exactly how a leak class gets introduced. That
-column only exists because a two-bucket decomposition filed those 23 under "the decision
-was wrong" and pointed the next fix at the wrong module.
+**Where it broke, found by a trap the headline corpus could not set.** Every government
+email address in the corpus belongs to an official doing their job, so a rule that releases
+work contacts could not leak there however wrong it was. The trap set
+([`results/traps.md`](results/traps.md), `sever eval-traps`) holds the counter-example: an
+employee emailing from their work address about their own leave and grievance. The rules
+alone leaked **62.5 percent** of what had to be withheld in it, releasing the employee for
+the title in their own signature block. They now stand aside in such a message
+([docs/escalation.md](docs/escalation.md) case 8) and leak none of it, with or without the
+model, at the cost of withholding 86.7 percent of what could have been released there. The
+trap set is scored apart from the headline corpus, because adding a template to the corpus
+renumbers every document and would detach the frozen reviewer study from its records.
+
+**Read the leak decomposition above before deciding the model is the weak part.** Of the 42
+leaks in the rules-only row, 17 are spans the detector never found, 24 are spans it found and
+typed as a place or an organisation, which the rule then releases as not personal
+information, and 1 is a box too short. The rules decide none of them wrongly and the model
+adds one. The model-only row makes the typing mistake 3 times where the rules make it 24,
+because the model reads the page and sees a person where the detector saw a place. That is
+the next thing to fix, and it is a change to which spans reach the model, not to the model.
 
 **Every leak rate on this page now counts a partial box the way a reader would.** Until
 2026-10-10 the tables asked whether the box that overlapped a span most was a withholding
@@ -342,33 +366,29 @@ Three more limitations, none of them small:
 
 ## What the deterministic rules are worth
 
-The results table has a `model-only, no rules` row: the same model, the same context record,
-the same threshold, with the rules removed so every span is sent rather than only the
-residual. The difference between it and the full configuration is the deterministic layer
-and nothing else.
+The results table has a `model-only, no rules` row: the same model, the same page and the
+same threshold, with the rules removed so every span is sent rather than only the residual.
+The difference between it and the full configuration is the deterministic layer and nothing
+else.
 
-It leaks more than three times as much, **15.4% against 4.6%**, and over-redacts twice as
-much, **41.0% against 19.7%**.
+**It now leaks less than the full configuration, 1.5 percent against 2.6, and withholds far
+more, 42.8 percent against 16.1.** Until 2026-10-20 it leaked three times as much, and this
+section said the rules were the safety net under the model. Two things reversed that. The
+model now gets the page, so it sees the person the detector typed as a place: that is 3 of
+the model-only row's leaks against 24 in every row with rules. And it gets the category guide,
+so the reviewers' rulings the rules were written to apply (a family word goes with the name,
+both parties to a confidential complaint are third parties) reach the model as well.
 
-The leak half of that is new, and it comes from two rulings by a reviewer. The first is a
-single word. Until 2026-10-08 the two leaked about the same (4.8% against 5.3%), and this section said the rules were not the
-safety net under the model. Then a reviewer ruled that "the client's sibling" identifies
-the sibling and must be withheld with the name. A rule withholds it every time. Asked on
-its own, the model releases it almost every time, because a family word with no name
-beside it reads as harmless: 140 of the model-only row's leaks are its decisions,
-against 35 when it only sees what the rules leave. The second ruling, on 2026-10-10, widened
-the gap again: the parties to a confidential workplace complaint are withheld with their job
-titles, and asked about "Regional Director" on its own, the model calls it a position and
-releases it, which is 101 of the model-only row's 259 leaks. So the rules *are* a safety
-net, for exactly the kind of judgement a public body writes down once and expects applied
-every time. They also earn their place by being decisive: they settle the cases that have a settled answer, the model is asked only
-the genuinely ambiguous ones, and a model asked only hard questions escalates far less than
-a model asked everything.
+What the rules still buy is decisiveness and price. Asked about everything, the model is
+unsure about a third of it and withholds what it is unsure of; asked only about what the
+rules leave, it settles nearly all of it. And the rules decide two thirds of the spans for
+nothing, where the model-only baseline cost US$3.09 against the pipeline's US$1.10 for the
+same pages. The leak gap points the other way, at a rule: the one that releases a span the
+detector typed as a place or an organisation.
 
 Read that against the `sentence-only` row, which is the same rules with the document context
-blanked, at 49.3%. Neither half is carrying the tool, and each ablation costs about what the
-other does. Since the complaint ruling the sentence-only row leaks too, 8.8 percent: whether
-a record is a confidential complaint is a fact about the document, not the sentence.
+blanked: 49.3 percent over-redaction and 8.8 percent leaks. Whether a record is a
+confidential complaint, or who signed it, is a fact about the document and not the sentence.
 
 ## What this does not do
 
@@ -413,9 +433,13 @@ that names them. It is three inches lower, in the signature block.
 the requester's own information first, then inherently sensitive identifiers (a director's
 health number is not about being a director), then non-personal entity types, then
 capacity, then the public register, then the twenty-year rule. Whatever is left goes to a
-**model** through the portfolio's gateway (project 04, `boundary`) with the personal data class,
-seeing typed placeholders and never a name. Its answer is taken only above a measured
-confidence threshold; below it the span is escalated with the model's reasoning attached.
+**model** (Claude Haiku 5.5) through the portfolio's gateway (project 04, `boundary`) with
+the personal data class. It sees the whole page with every person, contact and identifier
+replaced by a typed placeholder, the same one everywhere, so it can tell who signed and who
+wrote to whom without seeing a single name; it is told which placeholder is the requester and
+which email addresses are on the public body's own domain, and it is given the full category
+guide from `taxonomy/`. Its answer is taken only above a measured confidence threshold;
+below it the span is escalated with the model's reasoning attached.
 When neither is sure, the proposal is to withhold and escalate. There is no rule that
 releases a span because nothing matched.
 
@@ -588,11 +612,13 @@ The model row reproduces for nothing too. Every answer the model gave is committ
 ```bash
 sever report --model --replay-only --answer-cache results/model-answers.jsonl
 sever eval-thresholds                 # the confidence threshold, swept, also from the cache
+sever eval-traps --model --replay-only # the trap set: records written to break a rule
 ```
 
 The cache is publishable for the same reason the requests are: it holds what the model
 said about typed placeholders, and a test asserts that no persona value appears in it.
-Reproducing the paid run itself needs the gateway and costs about US$0.51. The gateway is
+Reproducing the paid run itself needs the gateway and costs about US$1.10 for the pipeline,
+or US$4.19 with the model-only baseline. The gateway is
 project 04's library, `boundary`, which is public at
 [Peter-A-P/compliant-ai-gateway](https://github.com/Peter-A-P/compliant-ai-gateway) but not
 on PyPI, so it is not a declared dependency here and cannot be: the `boundary` package on

@@ -1,7 +1,7 @@
 {
  "label": "sever, rules only",
  "source": {
-  "commit": "6943054",
+  "commit": "657aa52",
   "corpus": "210 documents, seed 20270802",
   "repository": "access-to-information-redaction"
  },

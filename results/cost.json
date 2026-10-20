@@ -1,56 +1,32 @@
 {
   "_comment": "Written by `sever cost`, which reads project 04's gateway ledger. Committed because that ledger is not in this repository, so `sever report` reads this instead. See sever/eval/cost.py.",
   "run_ids": [
-    "sever-full-001",
-    "sever-full-210",
-    "sever-modelonly-210",
-    "sever-modelonly-kinship",
-    "sever-modelonly-mcp",
-    "sever-modelonly-smoke",
-    "sever-retype-210",
-    "sever-sweep-210",
-    "sever-wholetitle-210"
+    "sever-haiku55-210:baseline",
+    "sever-haiku55-210:pipeline"
   ],
   "pipeline_runs": [
-    "sever-full-001",
-    "sever-full-210",
-    "sever-retype-210",
-    "sever-sweep-210"
+    "sever-haiku55-210:pipeline"
   ],
-  "recorded_on": "2026-10-10",
-  "model": "claude-haiku-4-5-20251001",
-  "calls": 2487,
-  "cost_usd": 2.7061830000000007,
-  "input_tokens": 1882823,
-  "output_tokens": 164672,
+  "recorded_on": "2026-10-20",
+  "model": "claude-haiku-5-5",
+  "calls": 7549,
+  "cost_usd": 4.190282400000002,
+  "input_tokens": 32856719,
+  "output_tokens": 1809221,
   "uncosted": 0,
   "pages": 210,
   "documents": 210,
-  "cached_answers": 2487,
-  "asks": 2002,
+  "cached_answers": 7549,
+  "asks": 1932,
   "per_run": {
-    "sever-full-001": 0.410757,
-    "sever-full-210": 0.510829,
-    "sever-modelonly-210": 1.379395,
-    "sever-modelonly-kinship": 0.012758,
-    "sever-modelonly-mcp": 0.001044,
-    "sever-modelonly-smoke": 0.08223,
-    "sever-retype-210": 0.008851,
-    "sever-sweep-210": 0.026649,
-    "sever-wholetitle-210": 0.27367
+    "sever-haiku55-210:baseline": 3.091978,
+    "sever-haiku55-210:pipeline": 1.098305
   },
   "calls_per_run": {
-    "sever-full-001": 373,
-    "sever-full-210": 466,
-    "sever-modelonly-210": 1278,
-    "sever-modelonly-kinship": 12,
-    "sever-modelonly-mcp": 1,
-    "sever-modelonly-smoke": 79,
-    "sever-retype-210": 8,
-    "sever-sweep-210": 24,
-    "sever-wholetitle-210": 246
+    "sever-haiku55-210:baseline": 5654,
+    "sever-haiku55-210:pipeline": 1895
   },
-  "usd_per_page": 0.00455755,
-  "undeduplicated_usd_per_page": 0.01047557,
-  "cad_per_page": 0.0061527
+  "usd_per_page": 0.00523002,
+  "undeduplicated_usd_per_page": 0.00533214,
+  "cad_per_page": 0.00706053
 }

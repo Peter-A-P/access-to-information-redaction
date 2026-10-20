@@ -1946,3 +1946,41 @@ redacts the original scan: map each withheld span's offsets onto the OCR layer's
 boxes (`get_text("words")`), redact those rectangles with image pixels removed, and run the
 leak test with its raster channel on. Roughly half a day more. First version re-lays, as
 now, and says so on the page; boxes on the scan follow if Peter wants them.
+
+### 12.47 Haiku 5.5 on the page, not a bigger model on the sentence
+
+2026-10-20. Section 6 named Haiku 4.5 as the primary model and budgeted a mid-tier ablation.
+The ablation ran, with Sonnet 5.5 and Opus 5.5 rather than Sonnet 5, and showed that model
+size was not the problem: given one sentence, Opus 5.5 answered "cannot tell" on 627 of the
+3,780 spans that had to be released, and said the sentence did not show who the person was.
+So the primary model is now **Claude Haiku 5.5**, and what changed is what it is shown:
+
+1. **The whole page, masked**, with the same placeholder for the same person everywhere, and
+   which placeholder is the requester (`GatewayModelDecider.with_page`, on by default).
+   Section 2.3's property is unchanged and re-tested over the page: no persona value reaches
+   a request. The guard now reads the part of the request built from the record and not the
+   fixed system prompt, which holds no record content; and a value copied on a scanned page
+   in another form (`accès` for `accés`) is masked rather than refused.
+2. **The public body's email domain**, as `[EMAIL_PUBLIC_BODY_n]`, which names nobody.
+3. **The full category guide** in the prompt, generated from `taxonomy/`, with the traps.
+4. **Two rulings made rules.** An employee number is R1 wherever it appears
+   (`employee_number`, the 2026-10-18 ruling). In an email about its writer's or recipient's
+   own leave, health or grievance, no rule releases anyone as an official (`own_affairs`,
+   escalation case 8).
+5. **A trap set**, `sever eval-traps`, scored apart from the headline corpus, because adding
+   a template to the corpus renumbers every document and would detach the frozen reviewer
+   study. It found the own-affairs leak in the rules: 62.5 percent of what had to be
+   withheld, before item 4.
+6. **The threshold set on the validation split**, as section 9 promised and 12.9 did not do:
+   the lowest threshold at which the model adds no leaks over the rules alone. It came out at
+   0.90 again.
+
+Costs, CAD at 1.35. The ablations and the build of this change: about CA$21 (US$15.70) in
+October on top of the earlier runs, against the CA$16 the plan set for primary-model runs and
+the CA$8 for the ablation. The published run: US$1.10 for the pipeline (US$0.0052 a page)
+and US$3.09 for the model-only baseline. Haiku 5.5's request carries a page and a guide, so
+it is about ten times the tokens of Haiku 4.5's at a tenth of the price, and almost nothing
+repeats across documents: 2 percent deduplication against 56.
+
+Project 03's gate passes the model layer at this configuration, where it blocked Haiku 4.5.
+`docs/rejected.md` section 7 has the evidence.

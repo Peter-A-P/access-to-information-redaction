@@ -46,7 +46,7 @@ from pathlib import Path
 
 from sever.context.requester import RequestConfig
 from sever.decide import rules as rules_mod
-from sever.decide.pipeline import DecisionEngine, Proposal
+from sever.decide.pipeline import DEFAULT_THRESHOLD, DecisionEngine, ModelDecider, Proposal
 from sever.detect import recognisers as rec
 from sever.detect.engine import SeverDetector
 from sever.detect.military import has_name_shaped_token
@@ -147,6 +147,8 @@ class ReleaseResult:
     # scored once with no change made in response. Changes only what the page says
     # about blindness; the scoring is the same.
     held_out: bool = False
+    # The model that decided the residual of the first table, or "" for rules only.
+    model_name: str = ""
 
     @property
     def personal_candidates(self) -> list[VisibleSpan]:
@@ -198,6 +200,16 @@ class ReleaseResult:
             + (f", from {', '.join(self.institutions)}" if self.institutions else "")
             + ". Track: real releases.",
             "",
+            *(
+                [
+                    f"**Decided by:** the rules, then {self.model_name} on what they left, "
+                    f"through the 04 gateway on placeholders. The ablation table below is "
+                    f"rules only.",
+                    "",
+                ]
+                if self.model_name
+                else []
+            ),
             "| Denominator | Spans | Over-redaction |",
             "|---|---:|---|",
             f"| Spans that could be personal information | {len(personal)} | "
@@ -326,7 +338,11 @@ _RULES_WITHOUT_RANK = tuple(r for r in rules_mod.DEFAULT_RULES if r is not rules
 
 
 def _propose(
-    data: Loaded, detector: Detector, configuration: Configuration
+    data: Loaded,
+    detector: Detector,
+    configuration: Configuration,
+    model: ModelDecider | None = None,
+    threshold: float = DEFAULT_THRESHOLD,
 ) -> list[VisibleSpan]:
     taxonomy = default_taxonomy()
     det = detector
@@ -351,7 +367,12 @@ def _propose(
         )
         document = _blocks(release.document, configuration.recover_layout)
         proposals = DecisionEngine(
-            config=config, detector=det, taxonomy=taxonomy, rules=rules
+            config=config,
+            detector=det,
+            taxonomy=taxonomy,
+            rules=rules,
+            model=model,
+            model_confidence_threshold=threshold,
         ).propose(document)
         spans.extend(
             VisibleSpan(doc_id=release.record.file_name, proposal=p) for p in proposals
@@ -384,6 +405,8 @@ def run(
     loaded: Loaded | None = None,
     ablation: bool = True,
     held_out: bool = False,
+    model: ModelDecider | None = None,
+    threshold: float = DEFAULT_THRESHOLD,
 ) -> ReleaseResult:
     """Propose redactions over every visible span, and count the ones that would land.
 
@@ -395,7 +418,10 @@ def run(
     det = detector or SeverDetector()
 
     shipping = CONFIGURATIONS[-1]
-    spans = _propose(data, det, shipping)
+    # The model, when there is one, decides the shipping configuration's residual only. The
+    # ablation rows stay rules-only, so they still measure what layout and vocabulary are
+    # worth and nothing else.
+    spans = _propose(data, det, shipping, model, threshold)
 
     rows: list[AblationRow] = []
     dropped = 0
@@ -438,6 +464,7 @@ def run(
         ),
         by_rule=dict(sorted(by_rule.items(), key=lambda kv: -kv[1])),
         held_out=held_out,
+        model_name=str(getattr(model, "model", "")) if model is not None else "",
     )
 
 

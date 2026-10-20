@@ -137,6 +137,31 @@ def inherently_sensitive(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def employee_number(ctx: ContextRecord) -> RuleOutcome | None:
+    """R1 for an employee number, wherever it appears and whoever it belongs to.
+
+    Ruled on 2026-10-18 in the reviewer study: an employee number is an identifying number
+    assigned to the person, not information about the position, so it is withheld even in
+    a signature block beside a name and title that are released. Until this rule it fell
+    through to the model, which read the signature block and released it as "a work
+    identifier tied to the position" 16 times in one run. A ruling that is the same every
+    time belongs here rather than in a prompt. Runs before the capacity rules for the same
+    reason `inherently_sensitive` does.
+    """
+    if ctx.entity_type is not EntityType.EMPLOYEE_ID:
+        return None
+    return RuleOutcome(
+        code="R1",
+        confidence=0.95,
+        reason=(
+            "An employee number is an identifying number assigned to the person, not "
+            "information about the position, so it is withheld even where the name and "
+            "title beside it are released."
+        ),
+        rule="employee_number",
+    )
+
+
 def family_relationship(ctx: ContextRecord) -> RuleOutcome | None:
     """R1 for a family relationship pointing at a third party: "the client's sibling".
 
@@ -218,6 +243,10 @@ def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
         return None
     if ctx.register_match is not None or ctx.title is not None:
         return None
+    # A title in a message about its holder's own leave or grievance is that person's
+    # title, and releasing it beside a withheld name identifies them in a small unit.
+    if ctx.own_affairs_message and ctx.entity_type is EntityType.JOB_TITLE:
+        return None
     return RuleOutcome(
         code="K6",
         confidence=0.9,
@@ -230,8 +259,12 @@ def not_personal_information(ctx: ContextRecord) -> RuleOutcome | None:
 
 
 def official_capacity(ctx: ContextRecord) -> RuleOutcome | None:
-    """K2. A name paired with a title, or a name signing on letterhead."""
-    if ctx.cluster_ambiguous:
+    """K2. A name paired with a title, or a name signing on letterhead.
+
+    Not in a message about someone's own affairs, where a title in a signature block is
+    no evidence that its holder is doing their job; see sever.context.own_affairs.
+    """
+    if ctx.cluster_ambiguous or ctx.own_affairs_message:
         return None
     if ctx.title is not None:
         where = ctx.title_source or "the record"
@@ -260,6 +293,8 @@ def official_capacity_contact(ctx: ContextRecord) -> RuleOutcome | None:
     if ctx.entity_type not in (EntityType.EMAIL, EntityType.PHONE, EntityType.ADDRESS):
         return None
     if ctx.block_kind not in (BlockKind.SIGNATURE, BlockKind.LETTERHEAD, BlockKind.FOOTER):
+        return None
+    if ctx.own_affairs_message:
         return None
     return RuleOutcome(
         code="K2",
@@ -294,7 +329,7 @@ def staff_directory(ctx: ContextRecord) -> RuleOutcome | None:
     rule's because the evidence is about the name and not about the sentence: an employee
     who is the complainant in their own grievance is in the directory too.
     """
-    if ctx.directory_match is None or ctx.cluster_ambiguous:
+    if ctx.directory_match is None or ctx.cluster_ambiguous or ctx.own_affairs_message:
         return None
     return RuleOutcome(
         code="K2",
@@ -436,6 +471,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     requester_own_information,
     archival_age,
     inherently_sensitive,
+    employee_number,
     family_relationship,
     complaint_party,
     not_personal_information,

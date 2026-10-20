@@ -1,0 +1,42 @@
+@doc email_chain
+@meta title: Email chain in which an employee writes about their own leave and grievance
+@meta subject: RE: My leave and the grievance
+@meta traps: an employee writing from their work address about their own leave, health or grievance is a third party in that message, and so are their name, title and work address (K2 trap: an official's own grievance or medical leave is not about the position); the HR adviser answering is acting in their role
+@cast employee=official adviser=official manager=official requester=requester
+@block email_header
+From: {adviser.full_name} <{adviser.work_email}>
+Sent: Tuesday, 9 June, 3:20 PM
+To: {employee.full_name!R1} <{employee.work_email!R1}>
+Subject: RE: My leave and the grievance
+
+@block body
+Thank you for sending the medical note. Your leave is approved from 15 June and I have
+told your manager only that you will be away, not why. The grievance you filed about the
+scheduling decision is with the labour relations unit and you will hear from them directly.
+
+A client file in your queue, {requester.full_name}'s, will be reassigned while you are away.
+
+@block signature
+{adviser.full_name}
+{adviser.title}
+{adviser.organisation}
+{adviser.work_phone}
+
+@block email_header
+From: {employee.full_name!R1} <{employee.work_email!R1}>
+Sent: Monday, 8 June, 8:47 AM
+To: {adviser.full_name} <{adviser.work_email}>
+Cc: {manager.full_name} <{manager.work_email}>
+Subject: My leave and the grievance
+
+@block body
+I am attaching the note from my doctor. I would like to start leave on 15 June and I do
+not want the reason shared with the team. I also want to confirm that my grievance about
+the change to my schedule has been received.
+
+You can reach me at home on {employee.personal_phone!R1} while I am off.
+
+@block signature
+{employee.full_name!R1}
+{employee.title!R1}
+{employee.work_phone!R1}

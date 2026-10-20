@@ -1,7 +1,7 @@
 # What did not work
 
 Rule C of the portfolio: name an approach that was tried and rejected, with the evidence.
-Five are recorded here. The first is the approach this project exists to replace, and the
+Seven are recorded here. The first is the approach this project exists to replace, and the
 measurement is the argument for the project. The second is a design idea inside the project
 that was wrong, caught by a test, and replaced. The third is a number that was guessed and
 turned out to be the wrong guess. The fourth is a measurement that was healthy and was
@@ -273,13 +273,88 @@ directory is given (`StaffDirectory.match_on`). It is not in the headline tables
 no directory, because a directory is something a public body supplies; the full sweep, with
 coverage at 50, 80 and 100 percent, is [results/directory.md](../results/directory.md). The
 limit it carries: an employee writing from their work address about a personal matter would
-be released, and the corpus has no such message.
+be released, and the corpus has no such message. The trap set now has one (section 7), and in
+a message like that no rule releases anyone as an official any more, the directory rule
+included ([escalation.md](escalation.md) case 8).
+
+## 7. A cheap model shown one sentence, and then a stronger model shown the same sentence
+
+**The approach.** The model layer decided what the rules left with Claude Haiku 4.5, shown
+the span, the sentence around it and a handful of fields from the context record, all on
+placeholders, and its answer was taken at a confidence of 0.90. The obvious repair for weak
+model results is a stronger model, and that was the second approach.
+
+**Why both were rejected.** The first was measured and blocked. With the rules alone the tool
+leaked 2.5 percent of what had to be withheld; with Haiku 4.5 on top it leaked 4.6, and it
+released 105 spans the rules had withheld against 35 it should not have. Project 03's release
+gate blocked it: 35 documents worse on leaks and none better.
+
+The second approach did not help. The same requests sent to Claude Sonnet 5.5 and Claude
+Opus 5.5 (US$1.43 and US$3.39 on 2026-10-18) changed nothing at 0.90, because neither model
+ever reported that much confidence, and accepting every answer gave this:
+
+| Model, every answer accepted | Leak rate | Over-redaction | Leaks the model caused |
+|---|---|---|---:|
+| Haiku 4.5 at 0.90, as published | 4.6% | 19.7% | 35 |
+| Sonnet 5.5 | 2.8% | 20.7% | 5 |
+| Opus 5.5 | 2.6% | 18.9% | 1 |
+
+The stronger models stopped leaking and did not release much more. Of the 714 spans that had
+to be released and Opus withheld, **627 were Opus answering "cannot tell"**, and its reasons
+said the same thing every time: no title paired with the person, a sentence cut off
+mid-clause, an address it could not place. In 245 of them the address was a government work
+address, `[EMAIL_3]` to the model, the domain gone with the name. The model was not short of
+judgement; the request was short of evidence, and the prompt told it, correctly, to withhold
+when the evidence did not decide.
+
+Two smaller repairs were tried on the way, and the record of them matters as much:
+
+- **Label the domain.** An address on the public body's domain became
+  `[EMAIL_PUBLIC_BODY_n]`. Haiku 5.5 released more (over-redaction 20.5 to 15.7 percent);
+  Opus released almost nothing more (18.9 to 18.8), and asked for the next piece of evidence:
+  a work address does not say whether the message is the person's job or their own
+  grievance. It was right, and the prompt had said so.
+- **Tell the model a work address is official unless the record says otherwise.** It halved
+  over-redaction for both models, and leaked nothing, on a corpus where every government
+  address belongs to an official doing their job. A rule that cannot leak on its test set has
+  not been tested. Not adopted; the trap set below was written instead.
+
+**What replaced it.** The evidence. The model is now shown the whole page, masked, with the
+same placeholder for the same person everywhere; which placeholder is the requester; the
+domain labels; and the full category guide with its traps, generated from `taxonomy/`
+(`GatewayModelDecider.with_page`, on by default). On Haiku 5.5, at a tenth of Haiku 4.5's
+price per token, the page alone cut over-redaction to 3.1 percent and raised leaks to 4.5:
+the model now decided, and decided two things against this project's own rulings, an
+employee number in a signature block (16 times) and an outside physician's practice address
+(17). Both rulings existed. Neither was in the prompt. The employee number became a rule and
+the physician a stated example, and with the guide the run leaked 2.7 percent at 3.8
+percent over-redaction.
+
+The published configuration is that, with the threshold set on the validation split by a
+rule fixed before looking (no leak added over the rules alone), which is 0.90 again: 2.6
+percent leaks, 16.1 percent over-redaction, 241 spans released that the rules withheld
+against 1 that had to go, and project 03's gate passes it.
+
+**What the trap set found.** Every government address in the corpus belongs to an official
+doing their job, so nothing above could show the risk of releasing work contacts. The trap
+set (`sever eval-traps`) is an employee emailing about their own leave and grievance. The
+rules alone, before any of this, leaked 62.5 percent of what had to be withheld there,
+releasing the employee for the title in their own signature block. That was a rule, not the
+model, and it had been there all along.
+
+**The general lesson.** When a model abstains, read its reasons before buying a bigger one. A
+stronger model given the same request is the same question asked more carefully, and a
+careful model with no evidence withholds. And a rule, or a prompt, that cannot fail on the
+test set has not been tested: write the counter-example before believing the number.
 
 ---
 
-All six entries are reproducible: `sever report` produces the first table,
+All seven entries are reproducible: `sever report` produces the first table,
 `pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second,
 `sever eval-thresholds` produces the third from the committed answer cache,
 `sever eval-sweep --profiles all` produces the fourth,
-`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the fifth, and
-`sever eval-directory` produces the sixth.
+`pytest tests/test_no_raw_entity_leaves.py` is the test that produced the fifth,
+`sever eval-directory` produces the sixth, and `sever report --model --replay-only` and
+`sever eval-traps --model --replay-only` produce the seventh from the committed answers; the
+Sonnet and Opus comparison was a scratch experiment and is recorded here, not reproducible
+from the repository.
