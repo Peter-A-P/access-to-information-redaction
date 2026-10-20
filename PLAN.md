@@ -1992,6 +1992,16 @@ the detector finds "Yee Wing" by the name sweep but not the "Thue" after it, so 
 leaves the surname visible. That is a detection miss, the kind the reviewer is there to
 catch by selecting it, and the record's note says the tool is at its weakest there.
 
+**Deployed 2026-10-20**, from branch `demo-records` at `cf2251d`, before that branch was
+rebased onto main for the merge (so without 12.48 and 12.49), by the steps in
+`docs/deploy.md`, with `sever demo-records` run first. The image it replaced is
+tagged `sever-demo:previous` on the host for a rollback. Checked on the public URL the same
+day: the health check, ten released records listed beside the six invented ones, and one of
+them (the impetigo reply) reviewed to the end and downloaded: 415 KB, both pages still
+JPEGs with one image each, no document information, LAC's "19(1)" boxes and the visitor's
+black ones on the same page. That review is in the live dashboard's counts until the
+process next restarts.
+
 ### 12.47 Haiku 5.5 on the page, not a bigger model on the sentence
 
 2026-10-20. Section 6 named Haiku 4.5 as the primary model and budgeted a mid-tier ablation.
