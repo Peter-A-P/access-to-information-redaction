@@ -1953,14 +1953,16 @@ leak test is what proves it does, so the test grew with the export.
   on an occurrence and never on every match of a string. A span takes whole words, one box
   per line, padded by 1.5 points, and a span any of whose characters no word box covers is
   refused with `UnplacedSpan`: the PDF is not served rather than served with part of a name
-  in the image. `apply_redactions` with `PDF_REDACT_IMAGE_PIXELS` overwrites the pixels under
-  each box in the image itself and deletes the text layer's characters under it; the file
-  is written whole, with unused objects and earlier revisions dropped and the document
-  information emptied.
+  in the image. On a page with a box, the page image is decoded, the pixels under every box
+  are set to black, and the image is encoded again in its own kind, a JPEG as a JPEG at
+  quality 80 and a lossless image losslessly; then the text layer's characters under each
+  box are deleted and the box drawn into the page's content. The file is written whole,
+  with unused objects and earlier revisions dropped and the document information emptied.
 - The leak test (`sever/eval/pdf_leak.py`) gains two channels for a scan. **Image pixels**
-  reads the page image's own pixels under every box and requires them all to be one value:
-  rendering the page would show the box and pass even when the picture under it is whole,
-  so the check reads the image, not the page. **Structure** requires one image per page, no
+  reads the page image's own pixels under every box and requires every one to be near black
+  (no channel above 48 of 255): rendering the page would show the box and pass even when the
+  picture under it is whole, so the check reads the image, not the page, and paper left
+  under a box is what it finds. **Structure** requires one image per page, no
   annotation, no attachment and no document information. Neither needs Tesseract, which the
   image does not have. The tests build a scan (a rendered page under an invisible text layer,
   as an OCR'd package is), then build each failure: a box drawn over the picture is caught
@@ -1971,9 +1973,19 @@ leak test is what proves it does, so the test grew with the export.
   which runs where the excerpts have been built and is skipped in CI, where they are not).
 - The dashboard's new section counts decisions on these pages, their agreement with the
   tool, completed pages and scans sent, apart from the invented records' figures.
-- The cost: a redacted scan is 0.1 to 7.6 MB, up to about seven times the excerpt, because
-  MuPDF re-compresses a redacted image without the PNG predictor LAC's files use. Left as
-  it is; a predictor-encoded stream written by hand would bring it back.
+- Compression, fixed 2026-10-20 before the first deploy. The first version used PyMuPDF's
+  `PDF_REDACT_IMAGE_PIXELS`, which stores every image it touches losslessly: LAC's colour
+  pages are JPEGs, and a redacted record came back at up to 7.6 MB, about seven times the
+  excerpt. Re-encoding a JPEG page as a JPEG brings every colour record to within 2 to 17
+  percent of its excerpt; the two black-and-white briefing notes, stored losslessly as
+  before, grow about 1.6 times and stay under 210 KB. Re-encoding a JPEG is why the pixel
+  check asks for near black and not for one value: the blocks that straddle a box's edge
+  carry a faint ringing into the box from the released text beside it, which peaks at 30
+  of 255 on the ten records, against paper at 200 and above. Growing each box to whole
+  JPEG blocks was tried first and keeps the pixels exactly black, but on the lower
+  resolution scans (about two pixels a point) it widens a box by up to four points a
+  side, enough to clip the line above or below, which is an over-redaction a visitor can
+  see.
 
 What a visitor will see that is not a defect of the redaction: on the immigration case file
 the detector finds "Yee Wing" by the name sweep but not the "Thue" after it, so the box

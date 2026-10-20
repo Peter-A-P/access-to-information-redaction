@@ -18,6 +18,7 @@ the second one ships. For an ingested PDF the geometry comes from the source ins
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -233,11 +234,24 @@ def apply_redactions(
 # image, not the image, and an ascender or a descender a hair outside its word's box would
 # otherwise stay visible beside the box.
 SCAN_PADDING = 1.5
+# LAC's page images sit at about quality 75 (re-encoding them at 75 gives back their size,
+# give or take a tenth). One step above it, so a redacted page loses nothing visible to a
+# second encoding.
+JPEG_QUALITY = 80
 
 
-class UnplacedSpan(RuntimeError):
-    """A span to withhold whose characters the scan's word boxes do not all cover. The
-    export stops rather than ship a page with part of a name left in the image."""
+class ScanRefused(RuntimeError):
+    """The scan cannot be redacted as asked. The export stops rather than ship a page with
+    something left in it."""
+
+
+class UnplacedSpan(ScanRefused):
+    """A span to withhold whose characters the scan's word boxes do not all cover."""
+
+
+class NotAScan(ScanRefused):
+    """A page that is not one image under a text layer, so the pixels under a box are not
+    known to be the only copy of what it covers."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -289,6 +303,52 @@ def rects_on_scan(words: Sequence[_Word], text: str, offsets: Offsets) -> list[B
     return [BBox(r.x0 - p, r.y0 - p, r.x1 + p, r.y1 + p) for r in lines.values()]
 
 
+def _burn_into_image(
+    doc: pymupdf.Document,
+    pdf_page: pymupdf.Page,
+    on_page: Sequence[tuple[BBox, Proposal]],
+) -> list[tuple[BBox, Proposal]]:
+    """Set the page image's pixels under every box to black and put the image back, encoded
+    as it came. Returns each box grown to whole pixels, so the text removed and the box
+    drawn cover exactly the pixels that were blacked out."""
+    images = pdf_page.get_images(full=True)
+    if len(images) != 1:
+        raise NotAScan(f"page {pdf_page.number + 1} has {len(images)} images, not one")
+    xref = images[0][0]
+    (where, *_rest) = pdf_page.get_image_rects(xref) or [None]
+    if where is None or _rest:
+        raise NotAScan(f"page {pdf_page.number + 1}'s image is not placed once")
+    jpeg = "DCTDecode" in doc.xref_object(xref, compressed=True)
+    pix = pymupdf.Pixmap(doc, xref)
+    if pix.alpha or pix.colorspace is None or pix.colorspace.n not in (1, 3):
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+    sx, sy = pix.width / where.width, pix.height / where.height
+    black = (0,) * pix.n
+    drawn: list[tuple[BBox, Proposal]] = []
+    for box, proposal in on_page:
+        x0 = max(0, math.floor((box.x0 - where.x0) * sx))
+        y0 = max(0, math.floor((box.y0 - where.y0) * sy))
+        x1 = min(pix.width, math.ceil((box.x1 - where.x0) * sx))
+        y1 = min(pix.height, math.ceil((box.y1 - where.y0) * sy))
+        pix.set_rect(pymupdf.IRect(x0, y0, x1, y1), black)
+        drawn.append(
+            (
+                BBox(
+                    where.x0 + x0 / sx,
+                    where.y0 + y0 / sy,
+                    where.x0 + x1 / sx,
+                    where.y0 + y1 / sy,
+                ),
+                proposal,
+            )
+        )
+    if jpeg:
+        pdf_page.replace_image(xref, stream=pix.tobytes("jpeg", jpg_quality=JPEG_QUALITY))
+    else:
+        pdf_page.replace_image(xref, pixmap=pix)
+    return drawn
+
+
 def redact_scan(
     source: Path,
     destination: Path,
@@ -298,13 +358,22 @@ def redact_scan(
     """Redact a scanned record in place: the boxes go on the original page images.
 
     A scan is a picture with an invisible OCR text layer over it, and both have to lose
-    what a box covers. `apply_redactions` with `PDF_REDACT_IMAGE_PIXELS` overwrites the
-    pixels under each box in the image itself, deletes the text layer's characters under
-    it, and draws the box into the page's content, so there is no shape to remove and no
-    covered picture under it. The file is then written whole, without the unused objects
-    and earlier revisions a PDF can carry, and with its document information emptied.
-    `sever.eval.pdf_leak` checks the text layer, the pixels and the structure before it is
-    served.
+    what a box covers. On every page with a box, the page image is decoded, the pixels
+    under each box are set to black, and the image is encoded again in its own kind: a
+    JPEG as a JPEG and a lossless image losslessly. The pixels are overwritten before the
+    encoding, so nothing of what was under a box is in what is encoded; a JPEG's blocks
+    that straddle a box's edge bring a faint ringing from the released text beside it into
+    the box, which is why the leak test's pixel check asks for near black rather than one
+    value. Pages without a box keep their image untouched. Then the
+    text layer's characters under each box are deleted and the box is drawn into the
+    page's content, so there is no shape to remove and no covered picture under it. The
+    file is written whole, without the unused objects and earlier revisions a PDF can carry,
+    and with its document information emptied. `sever.eval.pdf_leak` checks the text layer,
+    the pixels and the structure before it is served.
+
+    PyMuPDF's own `PDF_REDACT_IMAGE_PIXELS` does the pixel step too, and was used first. It
+    stores every image it touches losslessly, which made a JPEG page up to seven times its
+    size (PLAN.md 12.46).
     """
     withheld = [p for p in proposals if p.withholds]
     doc = pymupdf.open(str(source))
@@ -312,26 +381,28 @@ def redact_scan(
     strings: list[str] = []
     try:
         placed: dict[int, list[_Word]] = {}
+        boxes: dict[int, list[tuple[BBox, Proposal]]] = {}
         for proposal in withheld:
             page = document.page(proposal.page)
-            pdf_page = doc[proposal.page - 1]
             if proposal.page not in placed:
-                placed[proposal.page] = _words_on(pdf_page, page.text)
-            boxes = rects_on_scan(placed[proposal.page], page.text, proposal.detection.offsets)
-            for box in boxes:
-                pdf_page.add_redact_annot(pymupdf.Rect(*box.as_tuple()), fill=(0, 0, 0))
+                placed[proposal.page] = _words_on(doc[proposal.page - 1], page.text)
+            for box in rects_on_scan(placed[proposal.page], page.text, proposal.detection.offsets):
+                boxes.setdefault(proposal.page, []).append((box, proposal))
+            strings.append(proposal.detection.text)
+        for number, on_page in sorted(boxes.items()):
+            pdf_page = doc[number - 1]
+            for grown, proposal in _burn_into_image(doc, pdf_page, on_page):
+                pdf_page.add_redact_annot(pymupdf.Rect(*grown.as_tuple()), fill=(0, 0, 0))
                 regions.append(
                     RedactedRegion(
-                        page=proposal.page,
-                        bbox=box,
+                        page=number,
+                        bbox=grown,
                         text=proposal.detection.text,
                         code=proposal.code,
                     )
                 )
-            strings.append(proposal.detection.text)
-        for pdf_page in doc:
             pdf_page.apply_redactions(
-                images=pymupdf.PDF_REDACT_IMAGE_PIXELS,
+                images=pymupdf.PDF_REDACT_IMAGE_NONE,
                 graphics=pymupdf.PDF_REDACT_LINE_ART_NONE,
                 text=pymupdf.PDF_REDACT_TEXT_REMOVE,
             )

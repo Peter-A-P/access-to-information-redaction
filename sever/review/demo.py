@@ -306,7 +306,7 @@ def _add_pdf_route(app: FastAPI, session: Session, stats: DemoStats | None = Non
         """The visitor's own decisions, truly redacted, leak-tested before it is served."""
         from sever.eval.pdf_leak import LeakChecker
         from sever.review.decisions import as_released
-        from sever.review.export import UnplacedSpan, apply_redactions, redact_scan, render_pdf
+        from sever.review.export import ScanRefused, apply_redactions, redact_scan, render_pdf
         from sever.review.session import NotReviewed
 
         try:
@@ -329,12 +329,12 @@ def _add_pdf_route(app: FastAPI, session: Session, stats: DemoStats | None = Non
                 # A published release: the boxes go on LAC's own page images.
                 try:
                     result = redact_scan(scan, out, item.document, applied)
-                except UnplacedSpan as exc:
+                except ScanRefused as exc:
                     if stats is not None:
                         stats.pdf(clean=False, boxes=0, scan=True)
                     raise HTTPException(
                         status_code=500,
-                        detail="a withheld span could not be placed on the scan; not served",
+                        detail="the scan could not be redacted as asked; not served",
                     ) from exc
             else:
                 source = render_pdf(item.document, Path(tmp) / "source.pdf")

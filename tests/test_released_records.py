@@ -41,9 +41,9 @@ LINES = (
 )
 
 
-def make_scan(path: Path) -> Path:
+def make_scan(path: Path, *, jpeg: bool = False) -> Path:
     """One page as an OCR'd package has it: a picture of the page, and the same words in an
-    invisible text layer at the same places."""
+    invisible text layer at the same places. LAC's colour scans are JPEGs, `jpeg`."""
     typeset = pymupdf.open()
     page = typeset.new_page(width=612, height=792)
     at = [(72.0, 90.0 + 20 * i) for i in range(len(LINES))]
@@ -52,7 +52,10 @@ def make_scan(path: Path) -> Path:
     picture = page.get_pixmap(dpi=150)
     scan = pymupdf.open()
     out = scan.new_page(width=612, height=792)
-    out.insert_image(out.rect, pixmap=picture)
+    if jpeg:
+        out.insert_image(out.rect, stream=picture.tobytes("jpeg", jpg_quality=75))
+    else:
+        out.insert_image(out.rect, pixmap=picture)
     for (x, y), line in zip(at, LINES, strict=True):
         out.insert_text((x, y), line, fontname="helv", fontsize=12, render_mode=3)
     scan.set_metadata({"title": "a scanned page"})
@@ -80,12 +83,30 @@ def withhold(document: Document, occurrence: int) -> Proposal:
     )
 
 
-@pytest.fixture()
-def scan(tmp_path: Path) -> tuple[Path, Document]:
+@pytest.fixture(params=[False, True], ids=["lossless", "jpeg"])
+def scan(tmp_path: Path, request: pytest.FixtureRequest) -> tuple[Path, Document]:
     from sever.ingest.releases import to_document
 
-    path = make_scan(tmp_path / "scan.pdf")
+    path = make_scan(tmp_path / "scan.pdf", jpeg=request.param)
     return path, to_document(path, "scan")
+
+
+def test_a_redacted_page_keeps_its_kind_of_image_and_its_size(
+    scan: tuple[Path, Document], tmp_path: Path
+) -> None:
+    """A JPEG stays a JPEG. Stored losslessly, LAC's pages came back up to seven times
+    their size (PLAN.md 12.46)."""
+    path, document = scan
+    result = redact_scan(path, tmp_path / "out.pdf", document, [withhold(document, 1)])
+
+    def image(p: Path) -> tuple[str, int]:
+        doc = pymupdf.open(str(p))
+        xref = doc[0].get_images(full=True)[0][0]
+        return doc.xref_object(xref, compressed=True), len(doc.xref_stream_raw(xref))
+
+    (before, size_before), (after, size_after) = image(path), image(result.path)
+    assert ("DCTDecode" in before) == ("DCTDecode" in after)
+    assert size_after < 1.5 * size_before
 
 
 def test_the_box_is_burned_into_the_image_on_the_occurrence_it_was_put_on(

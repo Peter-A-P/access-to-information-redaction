@@ -46,6 +46,9 @@ MIN_TESTABLE_WIDTH = 3.0
 # Clip the rectangle inward before extracting, so a glyph from the adjacent unredacted
 # character that overlaps the boundary by a hair is not reported as a survivor.
 CLIP_INSET = 0.75
+# The brightest a pixel under a redaction box may be, on any channel of 0 to 255. See
+# `check_image_pixels`.
+NEAR_BLACK = 48
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,12 +208,16 @@ def check_rendering(
 def check_image_pixels(
     path: Path, regions: Sequence[RedactedRegion], document: str
 ) -> list[LeakFinding]:
-    """Read the page image itself under each box. Every pixel must be the same value.
+    """Read the page image itself under each box. Every pixel must be near black.
 
     A box drawn over a scan covers the picture on screen and leaves it whole in the file,
     where anyone can take the image out and read it. Rendering the page would show the box
-    and pass, so this reads the image's own pixels: overwritten pixels are all one value,
-    and a word left under the box is dark strokes on a light ground. It needs no OCR
+    and pass, so this reads the image's own pixels. A word left under the box is dark
+    strokes on a light ground, and the ground is what this finds: any pixel brighter than
+    `NEAR_BLACK` on any channel. Not "all one value", because a redacted JPEG is encoded
+    again after the pixels are overwritten, and its blocks that straddle the box's edge
+    bring a faint ringing in from the released text beside the box; on the ten released
+    records that ringing peaks at 30, against paper at 200 and above. It needs no OCR
     engine, so it runs on every scan the demonstration serves.
     """
     findings: list[LeakFinding] = []
@@ -232,18 +239,18 @@ def check_image_pixels(
                     sx, sy = pix.width / placed.width, pix.height / placed.height
                     x0, x1 = int((inside.x0 - placed.x0) * sx), int((inside.x1 - placed.x0) * sx)
                     y0, y1 = int((inside.y0 - placed.y0) * sy), int((inside.y1 - placed.y0) * sy)
-                    values = {
-                        pix.pixel(x, y)
+                    bright = sum(
+                        max(pix.pixel(x, y)) > NEAR_BLACK
                         for y in range(max(y0, 0), min(y1, pix.height))
                         for x in range(max(x0, 0), min(x1, pix.width))
-                    }
-                    if len(values) > 1:
+                    )
+                    if bright:
                         findings.append(
                             LeakFinding(
                                 document=document,
                                 page=region.page,
                                 expected=region.text,
-                                recovered=f"{len(values)} distinct pixel values in the image",
+                                recovered=f"{bright} pixels brighter than black in the image",
                                 channel="image pixels",
                             )
                         )
