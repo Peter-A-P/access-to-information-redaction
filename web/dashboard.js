@@ -144,6 +144,33 @@ function agreement(d) {
   }
 }
 
+/* The released pages, counted apart: see the section's lead. */
+function released(d) {
+  const r = d.released;
+  if (!r) return;
+  set("r-decisions", fmt(r.decisions_total));
+  set("r-withheld", fmt(r.decisions.withhold + r.decisions.escalate + r.decisions.add));
+  set("r-pages", fmt(r.pages_completed));
+  set("r-scans", fmt(d.pdfs.scans || 0));
+  const body = document.querySelector("#released-table tbody");
+  body.replaceChildren();
+  const WORDS = { withhold: "To withhold", release: "To release", escalate: "To withhold and escalate" };
+  for (const [kind, v] of Object.entries(r.agreement)) {
+    const tr = html("tr");
+    tr.append(html("th", "", WORDS[kind] || kind));
+    tr.firstChild.scope = "row";
+    for (const n of [v.decided, v.withhold, v.release, v.escalate]) tr.append(html("td", "num", fmt(n)));
+    body.append(tr);
+  }
+  const t = r.tool;
+  if (t && t.records) {
+    set("released-tool", `On these ${t.records} records the tool proposed ${fmt(t.spans)} spans: ` +
+      `${fmt(t.withhold)} to withhold, ${fmt(t.escalate)} to withhold and escalate, ` +
+      `${fmt(t.release)} to release, and ${fmt(t.not_personal)} not personal information. ` +
+      "Every one of them is text LAC released.");
+  }
+}
+
 function tool(d) {
   const host = document.getElementById("tool-tiles");
   if (!host || host.childElementCount) return;
@@ -175,6 +202,7 @@ async function tick() {
     tiles(d);
     minutes(d);
     agreement(d);
+    released(d);
     tool(d);
     const since = new Date(d.since).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
     status.replaceChildren(html("span", "pulse"), document.createTextNode(

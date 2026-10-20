@@ -193,9 +193,11 @@ project's environment rather than turning verification off.
 
 `data/demo/manifest.json` names ten records, nineteen pages and none longer than three,
 taken one each from ten of the release packages above, for the hosted demonstration's
-"records a public body released" section (PLAN.md 12.46). The manifest gives each excerpt's source package, the source's sha256, the
-pages and what the record shows; the excerpt PDFs are gitignored and rebuilt from the
-packages. Unlike the measured tracks, these pages will be served publicly by the
+"records a public body released" section (PLAN.md 12.46). The manifest gives each
+excerpt's source package, the source's sha256, the pages, the request number, the details
+page and what the record shows. The excerpt PDFs are gitignored and rebuilt from the
+packages by `sever demo-records`, which refuses a package whose sha256 differs from the
+manifest's. Unlike the measured tracks, these pages are served publicly by the
 demonstration. LAC's terms, read 2026-10-01, allow non-commercial reproduction with the
 source cited, and every record is shown with its title, request number and details page.
 Nothing on them is changed: what LAC removed under its boxes is not recoverable, and the

@@ -1939,13 +1939,46 @@ packages, replacing its earlier "reproduces nothing publicly".
 7. `docs/deploy.md`, `docs/data.md`, the site's "How it's built" page, and a line in this
    section when it ships.
 
-**Open: where the boxes go on the released PDF.** The demonstration's download re-lays a
-record's text into a new PDF and redacts that. For an invented record that is the record;
-for a scanned release it throws away the page a visitor was shown. The better output
-redacts the original scan: map each withheld span's offsets onto the OCR layer's word
-boxes (`get_text("words")`), redact those rectangles with image pixels removed, and run the
-leak test with its raster channel on. Roughly half a day more. First version re-lays, as
-now, and says so on the page; boxes on the scan follow if Peter wants them.
+**Where the boxes go: on the scan, decided 2026-10-19.** The demonstration's download used
+to re-lay a record's text into a new PDF and redact that. For an invented record that is the
+record; for a scanned release it would throw away the page a visitor was shown and hand
+them a page of OCR text. Peter chose the scan, and asked the right question about it: can
+someone take the boxes back off? Not if the redaction removes what is under them, and the
+leak test is what proves it does, so the test grew with the export.
+
+**Built 2026-10-19.** As listed above, with these specifics:
+
+- `redact_scan` (`sever/review/export.py`) finds each withheld span's words in the scan's
+  OCR layer by walking the words forward through `Page.text` in reading order, so a box goes
+  on an occurrence and never on every match of a string. A span takes whole words, one box
+  per line, padded by 1.5 points, and a span any of whose characters no word box covers is
+  refused with `UnplacedSpan`: the PDF is not served rather than served with part of a name
+  in the image. `apply_redactions` with `PDF_REDACT_IMAGE_PIXELS` overwrites the pixels under
+  each box in the image itself and deletes the text layer's characters under it; the file
+  is written whole, with unused objects and earlier revisions dropped and the document
+  information emptied.
+- The leak test (`sever/eval/pdf_leak.py`) gains two channels for a scan. **Image pixels**
+  reads the page image's own pixels under every box and requires them all to be one value:
+  rendering the page would show the box and pass even when the picture under it is whole,
+  so the check reads the image, not the page. **Structure** requires one image per page, no
+  annotation, no attachment and no document information. Neither needs Tesseract, which the
+  image does not have. The tests build a scan (a rendered page under an invisible text layer,
+  as an OCR'd package is), then build each failure: a box drawn over the picture is caught
+  by the text layer and by the pixels, a second copy of the page and a title are caught by
+  the structure check, and the unredacted scan fails the pixel check.
+- On the ten real records, with every span the tool found other than K6 withheld, every
+  export is clean on all three channels (the last test in `tests/test_released_records.py`,
+  which runs where the excerpts have been built and is skipped in CI, where they are not).
+- The dashboard's new section counts decisions on these pages, their agreement with the
+  tool, completed pages and scans sent, apart from the invented records' figures.
+- The cost: a redacted scan is 0.1 to 7.6 MB, up to about seven times the excerpt, because
+  MuPDF re-compresses a redacted image without the PNG predictor LAC's files use. Left as
+  it is; a predictor-encoded stream written by hand would bring it back.
+
+What a visitor will see that is not a defect of the redaction: on the immigration case file
+the detector finds "Yee Wing" by the name sweep but not the "Thue" after it, so the box
+leaves the surname visible. That is a detection miss, the kind the reviewer is there to
+catch by selecting it, and the record's note says the tool is at its weakest there.
 
 ### 12.47 Haiku 5.5 on the page, not a bigger model on the sentence
 

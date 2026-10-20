@@ -229,6 +229,128 @@ def apply_redactions(
     )
 
 
+# Points added round every box on a scan. The OCR layer's word boxes are a reading of the
+# image, not the image, and an ascender or a descender a hair outside its word's box would
+# otherwise stay visible beside the box.
+SCAN_PADDING = 1.5
+
+
+class UnplacedSpan(RuntimeError):
+    """A span to withhold whose characters the scan's word boxes do not all cover. The
+    export stops rather than ship a page with part of a name left in the image."""
+
+
+@dataclass(frozen=True, slots=True)
+class _Word:
+    start: int
+    end: int
+    rect: pymupdf.Rect
+    line: tuple[int, int]
+
+
+def _words_on(pdf_page: pymupdf.Page, text: str) -> list[_Word]:
+    """Each word of the page's text layer, with its offsets in `text` and its box.
+
+    `text` is the page's `get_text("text")`, which is what `Page.text` holds, and the words
+    come in the same reading order, so each is found by walking forward from the end of the
+    last with nothing but whitespace between. That ties a box to an occurrence, never to a
+    string: a name that appears twice gets the box of the occurrence the span is at. A word
+    that cannot be placed so is left out, and a span that needs it is refused by
+    `rects_on_scan`.
+    """
+    words: list[_Word] = []
+    cursor = 0
+    for x0, y0, x1, y1, word, block, line, _ in pdf_page.get_text("words"):
+        at = text.find(word, cursor)
+        if at < 0 or text[cursor:at].strip():
+            continue
+        words.append(_Word(at, at + len(word), pymupdf.Rect(x0, y0, x1, y1), (block, line)))
+        cursor = at + len(word)
+    return words
+
+
+def rects_on_scan(words: Sequence[_Word], text: str, offsets: Offsets) -> list[BBox]:
+    """The boxes that cover a span on a scanned page: one per line it crosses.
+
+    Whole words, so a span that ends inside a word takes the word, which over-covers rather
+    than under-covers. Every non-space character of the span must fall inside a placed word
+    or the span is refused.
+    """
+    hit = [w for w in words if w.start < offsets.end and w.end > offsets.start]
+    for i in range(offsets.start, offsets.end):
+        if not text[i].isspace() and not any(w.start <= i < w.end for w in hit):
+            raise UnplacedSpan(
+                f"no word box covers character {i} of {text[offsets.start:offsets.end]!r}"
+            )
+    lines: dict[tuple[int, int], pymupdf.Rect] = {}
+    for w in hit:
+        lines[w.line] = lines[w.line] | w.rect if w.line in lines else pymupdf.Rect(w.rect)
+    p = SCAN_PADDING
+    return [BBox(r.x0 - p, r.y0 - p, r.x1 + p, r.y1 + p) for r in lines.values()]
+
+
+def redact_scan(
+    source: Path,
+    destination: Path,
+    document: Document,
+    proposals: Iterable[Proposal],
+) -> ExportResult:
+    """Redact a scanned record in place: the boxes go on the original page images.
+
+    A scan is a picture with an invisible OCR text layer over it, and both have to lose
+    what a box covers. `apply_redactions` with `PDF_REDACT_IMAGE_PIXELS` overwrites the
+    pixels under each box in the image itself, deletes the text layer's characters under
+    it, and draws the box into the page's content, so there is no shape to remove and no
+    covered picture under it. The file is then written whole, without the unused objects
+    and earlier revisions a PDF can carry, and with its document information emptied.
+    `sever.eval.pdf_leak` checks the text layer, the pixels and the structure before it is
+    served.
+    """
+    withheld = [p for p in proposals if p.withholds]
+    doc = pymupdf.open(str(source))
+    regions: list[RedactedRegion] = []
+    strings: list[str] = []
+    try:
+        placed: dict[int, list[_Word]] = {}
+        for proposal in withheld:
+            page = document.page(proposal.page)
+            pdf_page = doc[proposal.page - 1]
+            if proposal.page not in placed:
+                placed[proposal.page] = _words_on(pdf_page, page.text)
+            boxes = rects_on_scan(placed[proposal.page], page.text, proposal.detection.offsets)
+            for box in boxes:
+                pdf_page.add_redact_annot(pymupdf.Rect(*box.as_tuple()), fill=(0, 0, 0))
+                regions.append(
+                    RedactedRegion(
+                        page=proposal.page,
+                        bbox=box,
+                        text=proposal.detection.text,
+                        code=proposal.code,
+                    )
+                )
+            strings.append(proposal.detection.text)
+        for pdf_page in doc:
+            pdf_page.apply_redactions(
+                images=pymupdf.PDF_REDACT_IMAGE_PIXELS,
+                graphics=pymupdf.PDF_REDACT_LINE_ART_NONE,
+                text=pymupdf.PDF_REDACT_TEXT_REMOVE,
+            )
+        doc.set_metadata({})
+        doc.del_xml_metadata()
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        doc.save(str(destination), garbage=4, deflate=True, clean=True)
+        pages = doc.page_count
+    finally:
+        doc.close()
+    return ExportResult(
+        path=destination,
+        redacted_strings=tuple(strings),
+        regions=tuple(regions),
+        boxes=len(regions),
+        pages=pages,
+    )
+
+
 def extract_text(path: Path) -> str:
     doc = pymupdf.open(str(path))
     try:

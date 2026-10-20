@@ -202,6 +202,88 @@ def check_rendering(
     return findings
 
 
+def check_image_pixels(
+    path: Path, regions: Sequence[RedactedRegion], document: str
+) -> list[LeakFinding]:
+    """Read the page image itself under each box. Every pixel must be the same value.
+
+    A box drawn over a scan covers the picture on screen and leaves it whole in the file,
+    where anyone can take the image out and read it. Rendering the page would show the box
+    and pass, so this reads the image's own pixels: overwritten pixels are all one value,
+    and a word left under the box is dark strokes on a light ground. It needs no OCR
+    engine, so it runs on every scan the demonstration serves.
+    """
+    findings: list[LeakFinding] = []
+    doc = pymupdf.open(str(path))
+    try:
+        for region in regions:
+            if region.bbox.x1 - region.bbox.x0 < MIN_TESTABLE_WIDTH:
+                continue
+            page = doc[region.page - 1]
+            box = _clip(region.bbox.as_tuple())
+            for xref, *_ in page.get_images(full=True):
+                pix = pymupdf.Pixmap(doc, xref)
+                if pix.alpha or pix.colorspace is None or pix.colorspace.n not in (1, 3):
+                    pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+                for placed in page.get_image_rects(xref):
+                    inside = box & placed
+                    if inside.is_empty:
+                        continue
+                    sx, sy = pix.width / placed.width, pix.height / placed.height
+                    x0, x1 = int((inside.x0 - placed.x0) * sx), int((inside.x1 - placed.x0) * sx)
+                    y0, y1 = int((inside.y0 - placed.y0) * sy), int((inside.y1 - placed.y0) * sy)
+                    values = {
+                        pix.pixel(x, y)
+                        for y in range(max(y0, 0), min(y1, pix.height))
+                        for x in range(max(x0, 0), min(x1, pix.width))
+                    }
+                    if len(values) > 1:
+                        findings.append(
+                            LeakFinding(
+                                document=document,
+                                page=region.page,
+                                expected=region.text,
+                                recovered=f"{len(values)} distinct pixel values in the image",
+                                channel="image pixels",
+                            )
+                        )
+    finally:
+        doc.close()
+    return findings
+
+
+def check_scan_structure(path: Path, document: str) -> list[LeakFinding]:
+    """What else a scanned PDF could carry the original in: a second image on a page, an
+    annotation, an attachment, or document information. Each is a finding."""
+    findings: list[LeakFinding] = []
+    doc = pymupdf.open(str(path))
+
+    def found(page: int, what: str) -> None:
+        findings.append(
+            LeakFinding(document=document, page=page, expected="", recovered=what,
+                        channel="structure")
+        )
+
+    try:
+        if doc.embfile_count():
+            found(0, f"{doc.embfile_count()} embedded files")
+        # `format` and `encryption` are PyMuPDF's reading of the file, not stored fields.
+        stored = sorted(
+            k for k, v in (doc.metadata or {}).items() if v and k not in ("format", "encryption")
+        )
+        if stored:
+            found(0, f"document information: {', '.join(stored)}")
+        for page in doc:
+            images = page.get_images(full=True)
+            if len(images) != 1:
+                found(page.number + 1, f"{len(images)} images on the page, not one")
+            if page.first_annot is not None:
+                found(page.number + 1, "an annotation")
+    finally:
+        doc.close()
+    return findings
+
+
 @dataclass
 class LeakChecker:
     """Accumulates results across every export in a run."""
@@ -214,12 +296,24 @@ class LeakChecker:
     _ocr_ran: bool = False
     _ocr_note: str = ""
 
-    def check(self, path: Path, regions: Sequence[RedactedRegion], *, document: str) -> None:
+    def check(
+        self,
+        path: Path,
+        regions: Sequence[RedactedRegion],
+        *,
+        document: str,
+        scan: bool = False,
+    ) -> None:
+        """`scan` adds the two checks a redacted scan needs and a typeset export does not:
+        the image's own pixels under every box, and the file's structure."""
         self.documents += 1
         text_findings, skipped = check_text_layer(path, regions, document)
         self.skipped_too_small += skipped
         self.boxes_tested += len(regions) - skipped
         self.findings.extend(text_findings)
+        if scan:
+            self.findings.extend(check_image_pixels(path, regions, document))
+            self.findings.extend(check_scan_structure(path, document))
         if not self.use_ocr:
             self._ocr_note = "OCR channel disabled for this run"
             return

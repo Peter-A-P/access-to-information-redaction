@@ -6,7 +6,9 @@
 .pytest_cache
 **/__pycache__
 corpus/generated
-data
+# Nothing from data except the demonstration's released pages (sever demo-records).
+data/*
+!data/demo
 review
 # The website reads the results' tables; the answer cache and the study's raw rows it does not.
 results/model-answers.jsonl

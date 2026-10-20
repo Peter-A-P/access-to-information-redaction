@@ -250,6 +250,7 @@ def create_app(
                 "remaining": session.pages_remaining(i.doc_id),
                 "proposals": len(i.proposals),
                 "requester": i.requester,
+                "released": i.released,
                 "decided": sum(
                     len(session.acted_spans(i.doc_id, n)) for n in range(1, len(i.document) + 1)
                 ),

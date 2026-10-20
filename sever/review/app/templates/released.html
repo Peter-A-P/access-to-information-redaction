@@ -11,10 +11,20 @@
   <a class="button" href="/doc/{{ item.doc_id }}/released.pdf">Download the redacted PDF</a>
   <a class="button ghost" href="/review">Back to your records</a>
 </div>
+{% if item.released %}
+<p>
+  Built from your decisions on Library and Archives Canada's own scan. Each box is burned
+  into the page image, so the pixels under it are overwritten, and the words under it are
+  deleted from the scan's hidden text layer. Before the file is sent the leak test reads
+  that text layer and the image's own pixels under every box, and checks the file carries
+  no second copy of the page: open it and try selecting, or extracting the images.
+</p>
+{% else %}
 <p>
   Built from your decisions. The text under every box is removed, not covered, and the leak
   test checks that before the file is sent: open it and try selecting the text under a box.
 </p>
+{% endif %}
 {% else %}
 <p class="note">
   This screen authorises the export; it does not perform it. `sever export` applies the

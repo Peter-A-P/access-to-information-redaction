@@ -1487,6 +1487,14 @@ kbd { font: 600 0.74rem/1 var(--mono); border: 1px solid var(--line-2); border-b
 .record-status { font-size: 0.8rem; font-weight: 600; color: var(--accent-ink); }
 .record-card.done .record-status { color: var(--good); }
 @media (prefers-reduced-motion: reduce) { .record-card { transition: none; } .record-card:hover { transform: none; } }
+/* The pages a public body released: a second shelf under the invented records, its cards
+   titled by the record rather than by a document type, so the title runs smaller. */
+.records-heading { font-family: var(--serif); font-size: 1.45rem; margin: 2.2rem 0 0; }
+.records-heading + .records { margin-top: 1rem; }
+.lead.small { font-size: 0.98rem; max-width: 46rem; margin: 0.6rem 0 0; }
+.record-card.released { border-top-color: var(--escalate); }
+.record-card.released.done { border-top-color: var(--good); }
+.record-card.released .record-kind { font-size: 1.05rem; line-height: 1.3; }
 
 /* A fourth colour for a headline figure in money: the escalation amber, a dark gold on paper
    and a soft gold in the dark, so a dollar figure never reads as one more green. */

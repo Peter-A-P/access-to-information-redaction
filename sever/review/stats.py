@@ -16,6 +16,11 @@ What is counted, and what is not:
   * **Agreement** compares the person's outcome with the direction the tool proposed for the
     same span: withhold (an R code), release (a K code), or escalate (an E code, which has no
     direction to agree with and is shown by how people resolved it).
+  * **Pages a public body released are counted apart.** On an invented record a visitor's
+    agreement with the tool is agreement with labels the tool was built against; on a
+    released page everything visible was already released by a person, so a visitor who
+    withholds there is disagreeing with that person, not with the tool. Their decisions go
+    into their own totals and agreement table, and the per-minute activity counts both.
 """
 
 from __future__ import annotations
@@ -53,6 +58,7 @@ class DemoStats:
 
     taxonomy: Taxonomy
     tool: Mapping[str, int]
+    tool_released: Mapping[str, int] = field(default_factory=dict)
     clock: Callable[[], float] = time.time
     since: dt.datetime = field(default_factory=lambda: dt.datetime.now(dt.UTC))
     visitors: int = 0
@@ -64,7 +70,7 @@ class DemoStats:
     _pages: int = 0
     _records: int = 0
     _pdfs: dict[str, int] = field(
-        default_factory=lambda: {"built": 0, "clean": 0, "refused": 0, "boxes": 0}
+        default_factory=lambda: {"built": 0, "clean": 0, "refused": 0, "boxes": 0, "scans": 0}
     )
     _by_code: dict[str, dict[str, int]] = field(default_factory=dict)
     _agreement: dict[str, dict[str, int]] = field(
@@ -74,6 +80,18 @@ class DemoStats:
         }
     )
     _minutes: deque[tuple[int, dict[str, int]]] = field(default_factory=deque)
+    _released: dict[str, Any] = field(
+        default_factory=lambda: {
+            "decisions": dict.fromkeys(OUTCOMES, 0),
+            "pages_completed": 0,
+            "records_completed": 0,
+            "spread": 0,
+            "agreement": {
+                k: {"decided": 0, "withhold": 0, "release": 0, "escalate": 0}
+                for k in ("withhold", "release", "escalate")
+            },
+        }
+    )
 
     # -- recording -----------------------------------------------------------------------
 
@@ -93,7 +111,11 @@ class DemoStats:
         """One audit row a visitor's session just wrote."""
         if event.action is Action.COMMENT:
             return
+        released = session.item(event.doc_id).released is not None
         with self._lock:
+            if released:
+                self._observe_released(session, event)
+                return
             if event.action is Action.PAGE_COMPLETE:
                 self._pages += 1
                 if session.releasable(event.doc_id):
@@ -126,6 +148,31 @@ class DemoStats:
             agreed = outcome == tool or (tool == "withhold" and outcome == "escalate")
             code["agreed"] += int(agreed)
 
+    def _observe_released(self, session: Session, event: RecordEvent) -> None:
+        """The same reading as `observe`, into the released pages' own totals."""
+        r = self._released
+        if event.action is Action.PAGE_COMPLETE:
+            r["pages_completed"] += 1
+            if session.releasable(event.doc_id):
+                r["records_completed"] += 1
+            return
+        if event.reason is not None and event.reason.startswith(PROPAGATED_REASON):
+            r["spread"] += 1
+            return
+        outcome = self._outcome(event)
+        if outcome is None:
+            return
+        if event.action is Action.ADD:
+            outcome = "add"
+        r["decisions"][outcome] += 1
+        self._minute()[outcome] += 1
+        tool = _direction(self.taxonomy, event.proposed_code)
+        if outcome == "add" or tool is None:
+            return
+        row = r["agreement"][tool]
+        row["decided"] += 1
+        row[outcome] += 1
+
     def _outcome(self, event: RecordEvent) -> str | None:
         if event.action is Action.APPROVE or event.action is Action.ADD:
             return "withhold"
@@ -137,9 +184,10 @@ class DemoStats:
             return _direction(self.taxonomy, event.final_code)
         return None
 
-    def pdf(self, *, clean: bool, boxes: int) -> None:
+    def pdf(self, *, clean: bool, boxes: int, scan: bool = False) -> None:
         with self._lock:
             self._pdfs["built"] += 1
+            self._pdfs["scans"] += int(scan)
             self._pdfs["clean" if clean else "refused"] += 1
             self._pdfs["boxes"] += boxes
 
@@ -183,6 +231,15 @@ class DemoStats:
                 "by_code": by_code,
                 "minutes": minutes,
                 "tool": dict(self.tool),
+                "released": {
+                    "decisions": dict(self._released["decisions"]),
+                    "decisions_total": sum(self._released["decisions"].values()),
+                    "pages_completed": self._released["pages_completed"],
+                    "records_completed": self._released["records_completed"],
+                    "spread": self._released["spread"],
+                    "agreement": {k: dict(v) for k, v in self._released["agreement"].items()},
+                    "tool": dict(self.tool_released),
+                },
             }
 
 

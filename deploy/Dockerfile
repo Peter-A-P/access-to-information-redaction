@@ -23,6 +23,12 @@ COPY gate ./gate
 COPY tests ./tests
 RUN .venv/bin/sever site --out /app/site
 
+# The released pages (PLAN.md 12.46): excerpts of published LAC packages, built on the
+# laptop by `sever demo-records` and gitignored, so a checkout without them builds an image
+# without them. Loading them here fails the build instead of the first visitor.
+COPY data/demo ./data/demo
+RUN .venv/bin/python -c "from sever.review.demo import released_items; print(len(released_items()), 'released records')"
+
 # The checkout's own permissions come across with COPY, and a private checkout is often
 # owner-only, which the unprivileged user below could not read.
 RUN chmod -R a+rX /app

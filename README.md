@@ -11,9 +11,10 @@ and how often it keeps what must stay. Days of reading become hours of review.
 document without a reviewer action on every page.
 
 **Try it at https://redaction.peterparker.ca**: the project's website, with every figure
-below read from the results files; the reviewer's screen over six invented records, rules
-only, one private session per visitor, and a truly redacted PDF of the record once you
-have decided every page; and a live dashboard of every decision visitors make, counted
+below read from the results files; the reviewer's screen over six invented records and ten
+short excerpts of records Library and Archives Canada has released, rules only, one private
+session per visitor, and a truly redacted PDF of the record once you have decided every page
+(on a released record, LAC's own scan with the boxes burned into the image); and a live dashboard of every decision visitors make, counted
 without their text.
 
 ## Result
@@ -718,7 +719,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 |---|---|---|
 | Taxonomy, two jurisdictions, all 39 provisions verified | | |
 | Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
-| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records, rules only, and a live dashboard of visitors' decisions | |
+| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records and ten released ones (`sever demo-records`), rules only, and a live dashboard of visitors' decisions | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
 | The model layer, through the gateway on placeholders | | |

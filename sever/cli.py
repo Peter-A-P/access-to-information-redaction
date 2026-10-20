@@ -1418,16 +1418,22 @@ def demo(
         Path | None,
         typer.Option(help="The built website (`sever site`). Built from the records if absent."),
     ] = None,
+    released: Annotated[
+        bool,
+        typer.Option(
+            help="Also serve the released pages in data/demo (`sever demo-records` builds them)."
+        ),
+    ] = True,
 ) -> None:
     """The public demonstration: the project's website, the live dashboard, and one private,
     forgotten reviewer session per visitor.
 
-    Six synthetic records, rules only, no model and no spend. Meant to run behind a TLS
-    proxy; see docs/deploy.md.
+    Six synthetic records and ten short excerpts of published releases, rules only, no
+    model and no spend. Meant to run behind a TLS proxy; see docs/deploy.md.
     """
     import uvicorn
 
-    from sever.review.demo import DemoServer, demo_items
+    from sever.review.demo import DemoServer, demo_items, released_items
 
     typer.echo("preparing the demonstration records...")
     items = demo_items()
@@ -1436,9 +1442,34 @@ def demo(
 
         site = Path(tempfile.mkdtemp(prefix="sever-site-"))
         build_site(site, items=items)
+    if released:
+        items = items + released_items()
     server = DemoServer(items=items, site=site, secure_cookie=not insecure_cookie)
     typer.echo(f"http://{host}:{port}/")
     uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
+
+@app.command("demo-records")
+def demo_records(
+    manifest: Annotated[Path, typer.Option(help="The excerpts to build.")] = Path(
+        "data/demo/manifest.json"
+    ),
+    releases: Annotated[
+        Path, typer.Option(help="Where the downloaded release packages are.")
+    ] = Path("data/releases"),
+    out: Annotated[Path, typer.Option(help="Where to write the excerpts.")] = Path("data/demo"),
+) -> None:
+    """Build the demonstration's released pages from the packages in data/releases, checking
+    each package's sha256 against the manifest first (PLAN.md 12.46)."""
+    from sever.ingest.excerpts import ExcerptError, build
+
+    try:
+        written = build(manifest, releases, out)
+    except ExcerptError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+    for path in written:
+        typer.echo(f"wrote {path}")
+
 
 @app.command()
 def site(

@@ -4,7 +4,9 @@
 {% if demo %}
 {% set kinds = {'case_note': 'Case note', 'correspondence': 'Letter', 'email_chain': 'Email chain', 'hr_memorandum': 'HR memorandum', 'incident_report': 'Incident report', 'meeting_minutes': 'Meeting minutes'} %}
 <header class="hero compact">
-  <p class="eyebrow">Request {{ session.request_id }}, six invented records</p>
+  {% set invented = rows|rejectattr('released')|list %}
+{% set published = rows|selectattr('released')|list %}
+  <p class="eyebrow">Request {{ session.request_id }}: {{ invented|length }} invented records{% if published %}, and {{ published|length }} a public body released{% endif %}</p>
   <h1>Review a record <span class="hl">yourself</span></h1>
   <p class="lead">
     An access-to-information request has come in, and these records answer it. The tool has
@@ -19,8 +21,9 @@
     <li><strong>Mark the page complete</strong>, release the record, and download the redacted PDF. Try selecting the text under a box.</li>
   </ol>
 </header>
+{% if published %}<h2 class="records-heading">Invented records</h2>{% endif %}
 <div class="records">
-  {% for r in rows %}
+  {% for r in invented %}
   <a class="record-card{{ ' done' if not r.remaining else '' }}" href="{{ '/doc/' ~ r.doc_id ~ ('/released' if not r.remaining else '/page/1') }}">
     <span class="record-kind">{{ kinds.get(r.doc_type, r.doc_type) }}</span>
     <span class="record-id">{{ r.doc_id }}</span>
@@ -35,8 +38,35 @@
   </a>
   {% endfor %}
 </div>
+{% if published %}
+<h2 class="records-heading">Records a public body released</h2>
+<p class="lead small">
+  Pages Library and Archives Canada has already released, one to three pages each, from
+  published access-to-information packages. Everything you can read on them was released by
+  a person, so every box the tool proposes there is a box that person decided against, and
+  there is no requester to protect. Some show the tool at its best and some at its worst;
+  each says which. The PDF you download is LAC's own scan, with your boxes burned into the
+  page image.
+</p>
+<div class="records">
+  {% for r in published %}
+  <a class="record-card released{{ ' done' if not r.remaining else '' }}" href="{{ '/doc/' ~ r.doc_id ~ ('/released' if not r.remaining else '/page/1') }}">
+    <span class="record-kind">{{ r.released.title }}</span>
+    <span class="record-id">{{ r.released.request_number }}, {{ r.released.page_label }}</span>
+    <span class="record-meta">{{ r.released.lac_disposition }}. {{ r.proposals }} proposals, {{ r.pages }} page{{ '' if r.pages == 1 else 's' }}</span>
+    <span class="record-progress" aria-hidden="true"><span style="width: {{ (100 * r.decided / r.proposals)|round|int if r.proposals else 0 }}%"></span></span>
+    <span class="record-status">
+      {% if not r.remaining %}Reviewed: release it and get the PDF
+      {% elif r.decided %}{{ r.decided }} of {{ r.proposals }} decided
+      {% else %}Not started{% endif %}
+    </span>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
 <p class="note">
-  Every person and record here is invented, the tool runs its rules only and calls no model,
+  Every person in the invented records is invented, the released pages are as Library and
+  Archives Canada published them, the tool runs its rules only and calls no model,
   and nothing you do is kept: your session and its audit log are deleted after two hours
   idle. What you decide is counted, without the text, on the <a href="/dashboard">live
   dashboard</a>.

@@ -32,6 +32,7 @@ from pathlib import Path
 
 from sever.decide.pipeline import Proposal
 from sever.ingest.document import Document, Offsets
+from sever.ingest.excerpts import Released
 from sever.review.audit import Action, AuditLog
 from sever.review.decisions import FinalSpan, Origin, final_spans
 from sever.review.propagate import PROPAGATED_REASON, Occurrence, Spread, plan
@@ -124,6 +125,9 @@ class Item:
     # Who made the request. The tool is configured with it, so a reviewer has to be told it
     # too, or the unaided arm is being asked a question with half the facts.
     requester: str | None = None
+    # Set on the demonstration's pages from a published release: where it came from, shown
+    # beside it, and the scan its PDF is redacted on. None for an invented record.
+    released: Released | None = None
 
     @property
     def doc_id(self) -> str:
@@ -428,6 +432,7 @@ def build_session(
             arm=i.arm,
             practice=i.practice,
             requester=i.requester,
+            released=i.released,
         )
         for i in items
     )

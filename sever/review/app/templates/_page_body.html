@@ -29,6 +29,15 @@
   {% endif %}
 </div>
 
+{% if item.released %}
+<div class="requester released-note">
+  Released by Library and Archives Canada in request
+  <a href="{{ item.released.details_url }}" rel="noopener noreferrer">{{ item.released.request_number }}</a>,
+  {{ item.released.page_label }} ({{ item.released.lac_disposition|lower }}). Everything you
+  can read here was released by a person; LAC's own severances show as blanks or grey bars.
+  There is no requester. What to look for: {{ item.released.shows }}
+</div>
+{% endif %}
 {% if item.requester %}
 <div class="requester">
   This request was made by <strong>{{ item.requester }}</strong>. Their own information is

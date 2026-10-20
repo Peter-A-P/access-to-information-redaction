@@ -38,7 +38,7 @@ def test_a_new_visitor_gets_a_cookie_and_lands_where_they_asked(server: DemoServ
     assert r.status_code == 303 and COOKIE in r.headers["set-cookie"]
     assert r.headers["location"] == "/review"
     assert "HttpOnly" in r.headers["set-cookie"]
-    assert "Every person and record here is invented" in c.get("/review").text
+    assert "Every person in the invented records is invented" in c.get("/review").text
 
 
 def test_two_visitors_never_see_each_other(server: DemoServer, items: tuple[Item, ...]) -> None:

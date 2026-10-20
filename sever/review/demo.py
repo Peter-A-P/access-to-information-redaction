@@ -7,7 +7,7 @@ This module adds exactly those and nothing else. Every screen is the reviewer's 
 screen, every rule is the same rule, and the release gate is the same gate.
 
 **One session per visitor, forgotten.** A visitor gets a random cookie and a session of
-their own over the same six synthetic records, with an audit log in a temporary file that
+their own over the same records (six synthetic ones, and the released pages below), with an audit log in a temporary file that
 is deleted when the session is evicted: after `IDLE` without a request, or when more than
 `MAX_SESSIONS` are live, oldest first. Nothing is logged about the visitor and nothing is
 written anywhere that outlives the process.
@@ -18,6 +18,13 @@ be made to spend money. The records are generated from a seed at start.
 **The redacted PDF is real.** A visitor who completes a record can download it, built from
 their own decisions by the same export that `sever export` uses, with the leak test run on
 it before it is served. That is the one claim worth demonstrating that a screenshot cannot.
+
+**Pages a public body released** (PLAN.md 12.46). Ten short excerpts of published LAC
+packages, built by `sever demo-records` into `data/demo` and read by `released_items`, sit
+beside the invented records. Their PDF is LAC's own scan with the boxes burned into the
+page image (`redact_scan`), and the leak test adds the two checks a scan needs: the image's
+own pixels under every box, and the file's structure. The dashboard counts decisions on
+them apart, since everything visible on them was already released by a person.
 
 **The website and the dashboard are served without a session.** The project's site (built
 by `sever.site` into `site`) is at `/`, `/how` and their files; the live dashboard is
@@ -38,7 +45,7 @@ import threading
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, MutableMapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +82,39 @@ def demo_items(documents: int = DEMO_DOCUMENTS) -> tuple[Item, ...]:
         proposals = DecisionEngine(config=config, detector=detector).propose(doc)
         items.append(
             Item(document=doc, proposals=tuple(proposals), requester=config.requester_name)
+        )
+    return tuple(items)
+
+
+def released_items(
+    manifest: Path | None = None, directory: Path | None = None
+) -> tuple[Item, ...]:
+    """The pages a public body has already released (`data/demo`), with the tool's
+    rules-only proposals, configured as `sever eval-releases` configures them: no
+    requester, and the archival rule for an archives' release, counted from the year the
+    package was retrieved."""
+    from sever.context.requester import RequestConfig
+    from sever.decide.pipeline import DecisionEngine
+    from sever.detect.engine import SeverDetector
+    from sever.ingest import excerpts
+
+    detector = SeverDetector()
+    directory = directory or excerpts.DEFAULT_DIR
+    items: list[Item] = []
+    for record in excerpts.read_manifest(manifest or excerpts.DEFAULT_MANIFEST):
+        document = excerpts.load(record, directory)
+        config = RequestConfig(
+            request_id=record.doc_id,
+            archival=record.archival,
+            as_of_year=int(record.retrieved_on[:4]),
+        )
+        proposals = DecisionEngine(config=config, detector=detector).propose(document)
+        items.append(
+            Item(
+                document=document,
+                proposals=tuple(proposals),
+                released=replace(record, pdf=directory / record.file_name),
+            )
         )
     return tuple(items)
 
@@ -143,7 +183,13 @@ class DemoServer:
             from sever.taxonomy.loader import default_taxonomy
 
             taxonomy = default_taxonomy()
-            self.stats = DemoStats(taxonomy=taxonomy, tool=tool_counts(self.items, taxonomy))
+            self.stats = DemoStats(
+                taxonomy=taxonomy,
+                tool=tool_counts([i for i in self.items if i.released is None], taxonomy),
+                tool_released=tool_counts(
+                    [i for i in self.items if i.released is not None], taxonomy
+                ),
+            )
         if self.site is not None:
             self._files = load_site(self.site)
 
@@ -260,7 +306,7 @@ def _add_pdf_route(app: FastAPI, session: Session, stats: DemoStats | None = Non
         """The visitor's own decisions, truly redacted, leak-tested before it is served."""
         from sever.eval.pdf_leak import LeakChecker
         from sever.review.decisions import as_released
-        from sever.review.export import apply_redactions, render_pdf
+        from sever.review.export import UnplacedSpan, apply_redactions, redact_scan, render_pdf
         from sever.review.session import NotReviewed
 
         try:
@@ -276,14 +322,28 @@ def _add_pdf_route(app: FastAPI, session: Session, stats: DemoStats | None = Non
             item.document,
             taxonomy=session.taxonomy,
         )
+        scan = item.released.pdf if item.released is not None else None
         with tempfile.TemporaryDirectory(prefix="sever-demo-pdf-") as tmp:
-            source = render_pdf(item.document, Path(tmp) / "source.pdf")
-            result = apply_redactions(source, Path(tmp) / "released.pdf", item.document, applied)
+            out = Path(tmp) / "released.pdf"
+            if scan is not None:
+                # A published release: the boxes go on LAC's own page images.
+                try:
+                    result = redact_scan(scan, out, item.document, applied)
+                except UnplacedSpan as exc:
+                    if stats is not None:
+                        stats.pdf(clean=False, boxes=0, scan=True)
+                    raise HTTPException(
+                        status_code=500,
+                        detail="a withheld span could not be placed on the scan; not served",
+                    ) from exc
+            else:
+                source = render_pdf(item.document, Path(tmp) / "source.pdf")
+                result = apply_redactions(source, out, item.document, applied)
             checker = LeakChecker(use_ocr=False)
-            checker.check(result.path, result.regions, document=doc_id)
+            checker.check(result.path, result.regions, document=doc_id, scan=scan is not None)
             clean = checker.report().clean
             if stats is not None:
-                stats.pdf(clean=clean, boxes=len(result.regions))
+                stats.pdf(clean=clean, boxes=len(result.regions), scan=scan is not None)
             if not clean:
                 raise HTTPException(
                     status_code=500,

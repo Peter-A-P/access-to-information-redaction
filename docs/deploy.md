@@ -4,7 +4,7 @@
 project's website, built by `sever site` into the image from the committed results
 (`sever/site.py`), and at `/dashboard` a live count of visitors' decisions
 (`sever/review/stats.py`); neither sets a cookie. The reviewer's screen is at `/review`: the reviewer's screen over six
-invented records, one private session per visitor, forgotten after two hours, rules only
+invented records and ten short excerpts of records LAC has released (PLAN.md 12.46), one private session per visitor, forgotten after two hours, rules only
 and no model. A visitor who completes a record can download its PDF, built from their own
 decisions and leak-tested before it is served. `sever/review/demo.py` says what the
 demonstration adds to the reviewer application and why. It adds nothing else.
@@ -17,7 +17,7 @@ network so Caddy can reach it by name. The container is read-only, with a 256 MB
 for the visitors' audit logs. It drops every capability and is limited to one CPU and 2 GB.
 
 The image holds no credential and the demonstration calls nothing outside itself, so a
-compromise of it reaches six invented records.
+compromise of it reaches six invented records and nineteen pages LAC has already published.
 
 ## Standing it up
 
@@ -66,7 +66,9 @@ Then, on the host, as `ubuntu`. This repository is private and the host holds no
 credential, so the image is built on the laptop and copied over:
 
 ```bash
-# on the laptop, from this repository
+# on the laptop, from this repository; the released pages are gitignored, so build them
+# first from the packages in data/releases (docs/data.md has where each came from)
+uv run sever demo-records
 docker build --platform linux/amd64 -f deploy/Dockerfile -t sever-demo:latest .
 docker save sever-demo:latest | ssh boundary-vps 'sudo docker load'
 scp deploy/compose.yaml boundary-vps:/srv/redaction/compose.yaml
