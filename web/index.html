@@ -510,21 +510,22 @@
       <div class="stat gold"><span class="figure">{{jev_cost_page}}</span><span class="caption">a page through the gateway ({{model_cost_page_cad}}), {{price_ratio}} times cheaper than Haiku's {{haiku_cost_page}}</span></div>
     </div>
     <div class="verdict">
-      <p><strong>Why a decision model, and not a better language model.</strong> A language
-      model answers by writing: asked for a category it writes one, and asked how sure it is
-      it writes a number, which is more text. Claude Haiku 5.5 is a good model, and on the
-      current code its number means something. But when it is wrong it is sometimes wrong
-      towards release: accepting every one of its answers leaks {{haiku_leak_accept_all}}, against
-      the rules' own {{jev_leak_accept_all}}. So the one control this tool depends on,
-      <em>withhold and escalate when unsure</em>, had to sit at 0.90, where a quarter of its
-      answers, almost all of them right, went to a person. Jev's probabilities are stated by
-      TypeSafe to be calibrated, and here they behave so. Answer for answer it is about as often
-      right as Haiku on a random sample of the residual; what differs is where its mistakes fall.
-      Accepting every one of its answers leaks {{jev_leak_accept_all}}, the rules' own rate: its
-      mistakes withhold what could have been released, and on this corpus none releases a third
-      party (the trap set found the exception, below). That is
-      what lets the threshold sit low enough to use nearly all its work, and the tool release
-      what the requester is entitled to rather than escalate it.</p>
+      <p><strong>Why a decision model, and not a better language model?</strong> A language
+      model answers by writing. Ask it for a category and it writes one; ask how sure it is
+      and it writes a number, which is just more text. Claude Haiku 5.5 is a good model, and
+      its number does mean something here. The trouble is which way it goes wrong: some of its
+      mistakes release what should have been withheld. Take every answer it gives and the
+      leak rate rises to {{haiku_leak_accept_all}}, above the {{jev_leak_accept_all}} the rules
+      leak on their own. To stay safe it had to run at a threshold of 0.90, which sent a
+      quarter of its answers to a person, nearly all of them correct.</p>
+      <p>Jev gets about as many answers right as Haiku on the same random sample of spans. The
+      difference is where its mistakes fall. TypeSafe says Jev's probabilities are calibrated,
+      and here they are. Take every answer Jev gives and the leak rate stays at
+      {{jev_leak_accept_all}}, exactly the rules' own: when Jev is wrong, it withholds
+      something that could have been released, and on this corpus it never released a third
+      party (the trap set found one exception, described below). That is why the threshold
+      can sit low enough to use nearly all of Jev's work, and why the requester gets back what
+      they are entitled to instead of a page of escalations.</p>
       <p><strong>It fits the rest of the design too.</strong> No prose means nothing to parse
       and nothing that could restate the record; "cannot tell" is a low probability rather
       than a refusal, so every span gets a decision and a confidence and the threshold decides
@@ -532,6 +533,17 @@
       same guard that refuses any request with a detected value in it; and at {{jev_secs}}
       seconds a decision, with the rules settling two thirds of the spans first, a page's
       model time is a few seconds. The clip at the top of this page runs at that pace.</p>
+      <p><strong>The open-source alternative did not work.</strong> Kev is an open-weights
+      recreation of Jev, so it was tested on the same requests, in two sizes. Kev 4B ran over
+      the whole corpus through OpenRouter for {{kev4b_cost}}. It does read the records: it got
+      {{kev4b_sample_right}} of a random sample of {{sample_spans}} spans right, against Jev's
+      {{jev_sample_right}}. But it is never sure of itself. Almost every probability it gave
+      was under 0.70, and its answers were no more often right when it sounded surer, so at
+      Jev's threshold it accepts almost nothing and the tool withholds {{kev4b_over}}, the
+      same as the rules alone; taking all its answers instead adds leaks. Kev 0.8B, run on
+      this laptop, got {{kev08b_sample_right}} right, picking categories by their place in
+      the list rather than by reading them. Whether a shorter question would suit Kev better
+      was not tested.</p>
       <p>The portfolio's <a href="https://gate.peterparker.ca">release gate</a>, asked with the
       document as the unit, passes it: {{gate_rules}} of documents leak-free with the rules
       alone, {{gate_model}} with Jev, inside its three-point margin.</p>

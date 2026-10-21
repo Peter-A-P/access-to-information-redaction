@@ -498,6 +498,27 @@ def model_figures(root: Path) -> dict[str, str]:
     f["haiku_leak"] = rate(haiku["leak_rate"], "haiku leak").pct
     f["speed_ratio"] = f"{float(haiku_cost['mean_latency_ms']) / float(jev_cost['mean_latency_ms']):.1f}"
     f["price_ratio"] = f"{float(haiku_cost['usd_per_page']) / float(jev_cost['usd_per_page']):.1f}"
+    # Kev, the open-weights recreation of Jev (PLAN.md 12.51): the four models on one random
+    # sample of the residual, and Kev 4B's full run on the corpus.
+    sample = table_rows(_read(root, "results/decision-sample.md"))
+    for key, label in (
+        ("haiku", "Haiku 5.5"),
+        ("jev", "Jev 1.14"),
+        ("kev4b", "Kev 4B"),
+        ("kev08b", "Kev 0.8B"),
+    ):
+        r = next((x for x in sample if x and x[0].startswith(label + " (")), None)
+        if r is None:
+            raise SiteError(f"results/decision-sample.md has no row for {label}")
+        f[f"{key}_sample_right"] = rate(r[2], f"{label} sample right").pct
+        f["sample_spans"] = r[1]
+    kev = {
+        s["name"]: s for s in json.loads(_read(root, "results/kev/results.json"))["systems"]
+    }[SYSTEMS["full"]]
+    f["kev4b_over"] = rate(kev["over_redaction_rate"], "kev over").pct
+    f["kev4b_cost"] = "US$" + find(
+        _read(root, "results/kev/results.md"), r"model calls, US\$([\d.]+)", "kev cost"
+    ).group(1)[:4]
     for key, path in (("jev", "results/thresholds.md"), ("haiku", "results/haiku/thresholds.md")):
         rows = table_rows(_read(root, path))
         everything = row(rows, "`0.00`", f"{key} accept-all")
