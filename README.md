@@ -841,6 +841,13 @@ demonstration of what the gateway is for: a
 frontier model used on access-to-information records without personal data leaving the
 boundary, measured.
 
+## Licence
+
+MIT, in [LICENSE](LICENSE). The two fonts the website serves are SIL Open Font License 1.1
+and say so in [web/fonts/LICENSE.txt](web/fonts/LICENSE.txt). The published release packages
+are not redistributed: [data/releases/](data/releases/) names each with its source URL and
+checksum, and they are fetched from Library and Archives Canada ([docs/data.md](docs/data.md)).
+
 ## How this was built
 
 I designed this, chose how it is measured and made the judgement calls, from eight years
