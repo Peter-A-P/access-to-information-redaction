@@ -111,10 +111,10 @@ was sent, and it returns a probability for each category rather than prose. Agai
 Haiku 5.5, the published model until 2026-10-21, on the same requests: the same leak rate,
 over-redaction 1.7 percent against 13.8, **a fifth of the price** (US$0.0013 a page against
 US$0.0064) and **seven times faster** (0.24 seconds a call against 1.8). The difference is
-calibration. Haiku reported 0.80 or 0.85 whether it was right or wrong, so the threshold that
-kept its leaks down threw good answers away; Jev's probabilities separate its right answers
-from its wrong ones, and the sweep in [`results/thresholds.md`](results/thresholds.md) shows
-it. Haiku's tables are kept, unchanged, in [`results/haiku/`](results/haiku/).
+where each model's mistakes fall. Accepting every answer, Haiku adds leaks to the rules
+alone, so the rule fixed before looking set its threshold at 0.90, which sends a quarter of
+its answers to a person; Jev adds none at any threshold, so the same rule lets it decide
+almost everything ([`results/thresholds.md`](results/thresholds.md)). Haiku's tables are kept, unchanged, in [`results/haiku/`](results/haiku/).
 
 **Three things weaken that result, and none is small.**
 
@@ -395,21 +395,21 @@ among named options and say how likely each one is**, and that is the shape of t
 this tool asks on every span: given this record, which category of the law is this?
 
 A language model answers by writing. Asked for a category it writes one, and asked how sure
-it is it writes a number, and that number is more text: Claude Haiku 5.5 wrote 0.80 or 0.85
-whether it was right or wrong. So the one control this project relies on, *withhold and
-escalate when unsure*, had nothing to hold on to. To keep Haiku's leaks down the threshold
-had to sit at 0.90, where it threw away a quarter of its answers, most of them right, and
-sent them to a person.
+it is it writes a number, and that number is more text. Claude Haiku 5.5 is a good model and
+on the current code its number means something: on a random sample of the residual it is
+right 98 percent of the time when it says 0.90 or more. But when it is wrong it is sometimes
+wrong towards release, so accepting all its answers adds leaks to the rules alone, and the
+one control this project relies on, *withhold and escalate when unsure*, had to sit at 0.90.
+There it sends a quarter of its answers to a person, almost all of them right.
 
 Jev (TypeSafe AI, September 2026) is a **decision model**. It takes a state and a question
 with named options, here the record's masked page and the categories in the reviewers' own
 words, and returns a probability for every option and no text at all. TypeSafe states that
-the probabilities are calibrated, so a 0.8 is right about eight times in ten. On this corpus
-they behave so, and that is what changes the result. Answer for answer it is not the more
-accurate model: on one random sample of 149 residual spans Jev is right on 94.6 percent and
-Haiku on 96.0 ([`results/decision-sample.md`](results/decision-sample.md)). What differs is
-what its confidence is worth across the whole range, and so how much of its work can be
-used:
+the probabilities are calibrated, so a 0.8 is right about eight times in ten, and on this
+corpus they behave so. Answer for answer it is not the more accurate model: on one random
+sample of 149 residual spans Jev is right on 94.6 percent and Haiku on 96.0
+([`results/decision-sample.md`](results/decision-sample.md)). What differs is where its
+mistakes fall, and so how much of its work can be used:
 
 | On the same 2,294 requests | Claude Haiku 5.5 | Jev 1.14 |
 |---|---|---|
@@ -421,9 +421,11 @@ used:
 | Time per decision | 1.8 s | **0.24 s** |
 
 The row to read is the fourth. Accepting every answer, Jev adds no leak to the rules at any
-threshold in the sweep; its low probabilities are where its mistakes are, so a threshold
-removes mistakes rather than good answers. That is what calibration buys, and it is why the
-tool can release what the requester is entitled to instead of escalating it.
+threshold in the sweep: on this corpus its mistakes withhold what could have been released,
+and none of them releases a third party. The trap set found the exception, an employee
+writing about their own affairs, above. On the sample it made no leak at any threshold where
+Haiku made one. That is why the threshold can sit low enough to use nearly all of its work,
+and why the tool releases what the requester is entitled to instead of escalating it.
 
 It fits this tool in four more ways, each of them measured or enforced rather than claimed:
 

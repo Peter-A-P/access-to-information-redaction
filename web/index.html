@@ -495,17 +495,19 @@
     <div class="verdict">
       <p><strong>Why a decision model, and not a better language model.</strong> A language
       model answers by writing: asked for a category it writes one, and asked how sure it is
-      it writes a number, which is more text. Claude Haiku 5.5 wrote 0.80 or 0.85 whether it
-      was right or wrong, so the one control this tool depends on, <em>withhold and escalate
-      when unsure</em>, had nothing to hold. To keep its leaks down the threshold had to sit at
-      0.90, where it threw away a quarter of its answers, most of them right. Jev's
-      probabilities are stated by TypeSafe to be calibrated, and here they behave so. Answer for
-      answer it is about as often right as Haiku on a random sample of the residual; what
-      differs is what its confidence is worth across the whole range. Accepting
-      every one of its answers leaks {{jev_leak_accept_all}}, the rules' own rate, where Haiku's answers
-      leak {{haiku_leak_accept_all}}. Its mistakes sit at its low probabilities, so a threshold
-      removes mistakes instead of good answers. That is what lets the tool release what the
-      requester is entitled to rather than escalate it.</p>
+      it writes a number, which is more text. Claude Haiku 5.5 is a good model, and on the
+      current code its number means something. But when it is wrong it is sometimes wrong
+      towards release: accepting every one of its answers leaks {{haiku_leak_accept_all}}, against
+      the rules' own {{jev_leak_accept_all}}. So the one control this tool depends on,
+      <em>withhold and escalate when unsure</em>, had to sit at 0.90, where a quarter of its
+      answers, almost all of them right, went to a person. Jev's probabilities are stated by
+      TypeSafe to be calibrated, and here they behave so. Answer for answer it is about as often
+      right as Haiku on a random sample of the residual; what differs is where its mistakes fall.
+      Accepting every one of its answers leaks {{jev_leak_accept_all}}, the rules' own rate: its
+      mistakes withhold what could have been released, and on this corpus none releases a third
+      party (the trap set found the exception, below). That is
+      what lets the threshold sit low enough to use nearly all its work, and the tool release
+      what the requester is entitled to rather than escalate it.</p>
       <p><strong>It fits the rest of the design too.</strong> No prose means nothing to parse
       and nothing that could restate the record; "cannot tell" is a low probability rather
       than a refusal, so every span gets a decision and a confidence and the threshold decides
