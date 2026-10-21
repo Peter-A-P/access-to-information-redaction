@@ -27,7 +27,10 @@
       <a href="#model">Jev</a>, a new kind of AI model: a decision model, which picks among the
       categories of the law and says how likely each one is instead of writing an answer, and
       which took what the tool withholds from the requester from {{rules_over}} with the rules
-      alone to {{full_over}}.
+      alone to {{full_over}}. <a href="#jev-privacy">Jev never sees a name</a>: every person,
+      contact and identifier on the page is replaced with a placeholder before the question
+      leaves, it goes out only through the portfolio's own AI gateway, and what comes back is
+      probabilities, not text.
     </p>
     <figure class="clip">
       <video src="/media/jev-clip.mp4" poster="/media/jev-clip.jpg" autoplay muted loop playsinline preload="metadata" aria-describedby="clip-caption"></video>
@@ -492,6 +495,14 @@
       asks on every span, and a model built to answer it changed the result more than anything
       else in the project.
     </p>
+    <h3 id="jev-privacy">How Jev decides without seeing anyone</h3>
+    <ol class="flowline">
+      <li><strong>Find</strong><span>Project 04's PII engine, with this project's own recognisers, finds every name, contact, identifier, address and date on the page.</span></li>
+      <li><strong>Mask</strong><span>Each is replaced with a typed placeholder, such as [PERSON_2] or [PHONE_1], and a second pass masks anything name- or number-shaped the engine missed. Job titles, organisations and family words stay, because the decision turns on them.</span></li>
+      <li><strong>Check</strong><span>The finished request is searched for every value that was found. If one is still there, the request is refused before anything is sent.</span></li>
+      <li><strong>Send</strong><span>It goes out only through the portfolio's <a href="https://gateway.peterparker.ca">AI gateway</a> (project 04), which records every call as personal data and caps the spend. There is no other route to the model.</span></li>
+      <li><strong>Answer</strong><span>Jev returns a probability for each category and no text, so nothing personal comes back and nothing has to be put back. The answer is matched to its span here, where the real values stayed.</span></li>
+    </ol>
     <div class="headline">
       <div class="stat good"><span class="figure">{{full_over}}</span><span class="caption">of what must be released, withheld with Jev deciding what the rules could not, against {{haiku_over}} with Claude Haiku 5.5 and {{rules_over}} with the rules alone</span></div>
       <div class="stat teal"><span class="figure">{{full_leak}}</span><span class="caption">leak rate, the rules' own: Jev added {{model_extra_leaks}} wrong releases, and adds none at any threshold in the sweep</span></div>
@@ -628,7 +639,8 @@
     </p>
     <ul class="checks">
       <li><strong>Three stages, and only the last can release anything.</strong> The engine proposes, a person decides on the reviewer's screen, and the export applies only those decisions, refusing until every page has one.</li>
-      <li><strong>Rules first, then Jev.</strong> Deterministic rules in a fixed order, each tied to a provision, settle most spans. Jev decides only what they leave, sees placeholders rather than names through project 04's gateway, and below {{model_threshold}} the span is withheld and escalated.</li>
+      <li><strong>Rules first, then Jev.</strong> Deterministic rules in a fixed order, each tied to a provision, settle most spans. Jev decides only what they leave, and below {{model_threshold}} the span is withheld and escalated.</li>
+      <li><strong>No personal information reaches Jev.</strong> Every name, contact and identifier is replaced with a placeholder before a request is built, a check refuses any request that still holds a value that was found, and the request goes out only through the portfolio's AI gateway, which logs it as personal data. Jev answers with probabilities, so nothing personal comes back (<a href="#jev-privacy">how</a>).</li>
       <li><strong>True redaction, tested every time.</strong> The text under every box is removed, not covered, and each export is leak-tested on its text layer and on an OCR of the rendered page.</li>
       <li><strong>A log that cannot be rewritten.</strong> Every reviewer action is an append-only, hash-chained row in DuckDB, and the schedule of severances sent to the requester is generated from that log alone.</li>
       <li><strong>No figure on this page is typed.</strong> Each is read from a table a measurement command wrote, and the site's build fails if one is missing or no longer reads as it did.</li>

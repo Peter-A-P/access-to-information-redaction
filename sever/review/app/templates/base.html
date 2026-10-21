@@ -101,7 +101,7 @@
   .pill { font-size: .78rem; padding: .1rem .5rem; border: 1px solid var(--rule); border-radius: 10px; color: var(--muted); }
   .pill.done { border-color: var(--release); color: var(--release); }
   .pop {
-    position: absolute; z-index: 20; width: min(30rem, calc(100vw - 16px));
+    position: absolute; z-index: 20; width: min(26rem, calc(100vw - 16px));
     background: #fff; border: 1px solid #b9b4a8; border-radius: 6px;
     box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: .7rem .85rem; font-size: .9rem;
   }
@@ -113,7 +113,8 @@
   .pop .actions { margin: .5rem 0; }
   .pop .actions form { display: inline; }
   .pop .recode { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
-  .pop .recode select, #addbar select { max-width: 100%; }
+  .pop .recode label, #addbar label { display: block; width: 100%; min-width: 0; }
+  .pop .recode select, #addbar select { display: block; width: 100%; max-width: 100%; margin-top: .25rem; }
   .pop-foot { margin-top: .5rem; display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
   kbd { font: 600 .75rem/1 "SFMono-Regular", Consolas, monospace; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: .05rem .3rem; background: #f7f6f2; }
   .pop details.meaning { margin: .3rem 0; color: var(--muted); font-size: .85rem; }
@@ -237,16 +238,32 @@ function closePops() {
   document.querySelectorAll('mark.focus').forEach((m) => m.classList.remove('focus'));
 }
 
-// Put a panel next to the text it is about: under it if there is room, above it if not,
-// and never off the side of the screen.
+// Put a panel to the right of the record, level with the text it is about, so it covers
+// as little of the record as it can: beside the record when the window has room, against
+// the window's right edge when it does not, where a record's lines are shortest. On a
+// screen too narrow for that it goes under the text, or above it if there is no room.
 function place(pop, rect) {
   pop.hidden = false;
-  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 6;
+  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 12;
+  const record = document.getElementById('record');
+  const right = window.scrollX + window.innerWidth - w - 8;
+  if (record && window.innerWidth >= 2 * w) {
+    const box = record.getBoundingClientRect();
+    const left = Math.min(box.right + window.scrollX + gap, right);
+    let top = rect.top + window.scrollY - 12;
+    // Never over the highlight itself: if the panel would cover it, drop below its line.
+    if (rect.right + window.scrollX > left) top = rect.bottom + window.scrollY + 6;
+    top = Math.min(top, window.scrollY + window.innerHeight - h - 8);
+    top = Math.max(top, window.scrollY + 8);
+    pop.style.left = Math.max(window.scrollX + 8, left) + 'px';
+    pop.style.top = top + 'px';
+    return;
+  }
   let left = rect.left + window.scrollX;
-  left = Math.max(window.scrollX + 8, Math.min(left, window.scrollX + window.innerWidth - w - 8));
-  let top = rect.bottom + window.scrollY + gap;
-  if (rect.bottom + gap + h > window.innerHeight && rect.top - gap - h > 0) {
-    top = rect.top + window.scrollY - h - gap;
+  left = Math.max(window.scrollX + 8, Math.min(left, right));
+  let top = rect.bottom + window.scrollY + 6;
+  if (rect.bottom + 6 + h > window.innerHeight && rect.top - 6 - h > 0) {
+    top = rect.top + window.scrollY - h - 6;
   }
   pop.style.left = left + 'px';
   pop.style.top = top + 'px';

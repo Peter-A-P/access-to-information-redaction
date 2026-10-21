@@ -628,10 +628,14 @@ on a form with an input named "action" is that input rather than the URL. Every 
 because the tests post forms without a browser. One now checks the script itself, and the fixed screen
 was checked by hand in a browser on 2026-10-02. An automated browser check is not in CI.
 
-At the foot of each page, **Release everything still undecided** releases every span the
-reviewer has not acted on, in one action. It asks first, and names any of those spans the
-tool had proposed to withhold. Each span still gets its own row in the audit log, marked as
-released in bulk, and the page still has to be marked complete separately.
+**The reviewer decides only what must be withheld or escalated; marking the page complete
+releases the rest.** The screen says so above the record. The button asks first, says how
+many spans will be released, and names any of them the tool proposed to withhold, because
+those are released too unless the reviewer withholds them. Each released span still gets its
+own row in the audit log, marked as released in one action, so the log tells them apart from
+spans released one at a time. This replaced a separate "Release everything still undecided"
+button on 2026-10-21 (PLAN.md 12.55). `sever study` keeps that button and refuses an
+incomplete page, because its four reviewers were timed that way.
 
 **Withhold a value once and it is withheld wherever it appears in the record**
 ([`sever/review/propagate.py`](sever/review/propagate.py)). A full name of two words or
@@ -650,8 +654,9 @@ time it appeared, is the case it exists for.
 Two rules are enforced in code rather than promised in prose, and
 [`tests/test_review_app.py`](tests/test_review_app.py) holds both:
 
-- **A page cannot be completed while a span on it is undecided.** The button refuses and
-  names the spans.
+- **A page cannot be completed while a span on it is undecided.** Completing it outside the
+  study is itself the decision on what is left, confirmed by the reviewer and logged span by
+  span; a request without that confirmation is refused, naming the spans.
 - **A record cannot be released while a page is incomplete.** `Session.release_gate` raises
   rather than returning false, because a caller who forgets to check a boolean releases the
   document and a caller who forgets to catch an exception does not.

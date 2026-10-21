@@ -60,6 +60,15 @@
   {{ taxonomy[code].name }} <span class="code">{{ code }}</span>
 {%- endmacro %}
 
+{% if mode.shows_proposals and not study %}
+<div class="requester focus-rule">
+  <strong>Decide only what must be withheld or escalated.</strong> Click each highlight that
+  must not be released, including the ones the tool marks <span class="key p-withhold">W</span>,
+  and withhold or escalate it; select any text the tool missed to withhold it too. When you
+  mark the page complete, <strong>everything you have not withheld or escalated is
+  released</strong>, and you are asked to confirm first.
+</div>
+{% endif %}
 <p class="note how">
   {% if mode.shows_proposals %}
     Click a highlighted name or number to decide it. Select any other text with the mouse to
@@ -210,22 +219,27 @@
 {% endif %}
 
 <div class="pager">
+  {% set risky = outstanding|selectattr('withholds')|list %}
   <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/complete"
-        data-swap="#body">
+        data-swap="#body"
+        {% if outstanding and not complete and not study %}data-confirm="Mark page {{ page.number }} complete? The {{ outstanding|length }} item(s) you have not withheld or escalated will be RELEASED.{% if risky %} {{ risky|length }} of them the tool proposed to WITHHOLD: {{ risky|map(attribute='detection.text')|join(', ')|truncate(200) }}.{% endif %}"{% endif %}>
+    {% if not study %}<input type="hidden" name="release_rest" value="1">{% endif %}
     <button class="primary" type="submit" {{ 'disabled' if complete else '' }}>
       {{ 'Page complete' if complete else 'Mark page ' ~ page.number ~ ' complete' }}
     </button>
   </form>
-  {% if outstanding and not complete %}
-    {% set risky = outstanding|selectattr('withholds')|list %}
+  {# The study keeps the separate button: its reviewers were timed with it. #}
+  {% if outstanding and not complete and study %}
     <form method="post" action="/doc/{{ item.doc_id }}/page/{{ page.number }}/release-rest"
           data-swap="#body"
           data-confirm="Release all {{ outstanding|length }} undecided item(s) on this page?{% if risky %} {{ risky|length }} of them the tool proposed to WITHHOLD: {{ risky|map(attribute='detection.text')|join(', ')|truncate(200) }}.{% endif %}">
       <button type="submit" title="Everything you have not decided on this page is released">Release everything still undecided ({{ outstanding|length }})</button>
     </form>
   {% endif %}
-  {% if outstanding %}
+  {% if outstanding and study %}
     <span class="note">{{ outstanding|length }} span(s) still undecided on this page.</span>
+  {% elif outstanding and not complete %}
+    <span class="note">{{ outstanding|length }} item(s) not withheld or escalated: released when the page is marked complete.</span>
   {% endif %}
   {% if page.number < pages %}
     <a href="/doc/{{ item.doc_id }}/page/{{ page.number + 1 }}">next page</a>

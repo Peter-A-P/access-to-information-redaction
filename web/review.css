@@ -101,7 +101,7 @@ details.spans summary, details.reference summary { cursor: pointer; color: var(-
 /* ------------------------------------------------------------- the decision panel */
 
 .pop {
-  position: absolute; z-index: 20; width: min(31rem, calc(100vw - 16px));
+  position: absolute; z-index: 20; width: min(26rem, calc(100vw - 16px));
   background: var(--paper-soft); color: var(--ink); border: 1px solid var(--line-2); border-radius: var(--radius);
   box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.35); padding: 0.8rem 0.95rem; font-size: 0.9rem; line-height: 1.5;
 }
@@ -113,6 +113,10 @@ body.reviewing .pop .close { border: none; background: none; font-size: 1.3rem; 
 .pop .actions { margin: 0.55rem 0; }
 .pop .actions form { display: inline; }
 .pop .recode { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; font-size: 0.86rem; color: var(--ink-soft); }
+/* The reason list holds long names; it takes the panel's width and never more. */
+.pop .recode label, #addbar label { display: block; width: 100%; min-width: 0; }
+body.reviewing .pop .recode select, body.reviewing #addbar select { display: block; width: 100%; max-width: 100%; margin-top: 0.25rem; text-overflow: ellipsis; }
+.focus-rule .key { vertical-align: baseline; }
 .pop-foot { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .pop details.meaning { margin: 0.3rem 0; color: var(--ink-faint); font-size: 0.85rem; }
 .pop details.meaning summary { cursor: pointer; }

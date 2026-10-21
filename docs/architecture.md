@@ -54,11 +54,13 @@ rule that releases a span because nothing matched.
 record rendered as the characters the redaction will be applied to, every proposal
 highlighted with its reason in words. The reviewer withholds, releases or escalates each span
 (W, R, E), or selects text the tool never proposed and severs it, because a reviewer who can
-only answer the tool's list inherits its misses; a button at the foot of the page releases
-everything still undecided after asking and naming what the tool would have withheld. Every
+only answer the tool's list inherits its misses; marking the page complete releases
+everything not withheld or escalated, after asking and naming what the tool would have
+withheld (the study keeps a separate button for that). Every
 action is an append-only hash-chained audit row (`sever.review.audit`) storing a hash of the
 severed text rather than the text; a change of mind is a second row. Two rules are enforced
-in code: a page cannot be completed while a span on it is undecided, and
+in code: a page cannot be completed while a span on it is undecided unless that confirmed
+release decides it, and
 `Session.release_gate` raises rather than returning false while a page is incomplete
 (`sever.review.session`). `sever export --audit` applies the decisions the reviewer made, not
 the tool's proposals (`sever.review.export`), removes the text under every box, generates the

@@ -2303,3 +2303,25 @@ the one collection the tool was adapted to (ranks, units, layout), and the other
 measure what that adaptation is worth on collections nobody adapted it to, not how it does
 on one it was built for. The page still quotes them, 68.6 and 68.7 percent, in a note
 beside the chart, and the README and the results files keep all three sets.
+
+### 12.55 Completing a page releases the rest; the decision panel moves right; Jev's privacy path on the overview
+
+2026-10-21, at Peter's direction. Outside the reviewer study the screen now says above the
+record to decide only what must be withheld or escalated, and **Mark page complete** releases
+everything not withheld or escalated, after a confirmation that says how many spans will go
+and names any the tool proposed to withhold; those are released too unless the reviewer
+withholds them, which Peter chose over taking untouched spans as proposed. Each is a REJECT
+row with `BULK_RELEASE_REASON`, as the separate "Release everything still undecided" button
+wrote them, and that button is gone outside the study. A completion request without the
+confirmation's field is refused as before, so the rule that a page is complete only when
+every span has a person's decision still holds: the confirmed completion is that decision.
+`sever study` is unchanged, because its four reviewers were timed with the old screen.
+
+The decision panel is narrower, its reason list fits inside it, and it opens to the right of
+the record, level with the span, so it covers as little text as it can.
+
+The overview now says in its opening, in the Jev section and in "How this was built" how a
+question reaches Jev: found by 04's engine, replaced with placeholders by this tool, checked
+by the guard, sent only through the 04 gateway (data class `personal`), and answered with
+probabilities, so there is nothing personal to put back. The gateway carries and records the
+call; the masking happens here, before it (`sever.decide.placeholders`).

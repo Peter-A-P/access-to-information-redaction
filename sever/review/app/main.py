@@ -358,8 +358,11 @@ def create_app(
         than one at a time, and the reviewer study can tell the two apart. The button asks
         first and says how many of the spans the tool had proposed to withhold.
         """
-        item = session.item(doc_id)
-        page = item.document.page(number)
+        _release_rest(doc_id, number)
+        return templates.TemplateResponse(request, "_page_body.html", _page_context(doc_id, number))
+
+    def _release_rest(doc_id: str, number: int) -> None:
+        page = session.item(doc_id).document.page(number)
         for p in session.outstanding(doc_id, number):
             o = p.detection.offsets
             session.record(
@@ -373,10 +376,23 @@ def create_app(
                 final_code=None,
                 reason=BULK_RELEASE_REASON,
             )
-        return templates.TemplateResponse(request, "_page_body.html", _page_context(doc_id, number))
 
     @app.post("/doc/{doc_id}/page/{number}/complete", response_class=HTMLResponse)
-    def complete(request: Request, doc_id: str, number: int) -> Any:
+    def complete(
+        request: Request, doc_id: str, number: int, release_rest: str = Form("")
+    ) -> Any:
+        """Mark the page complete.
+
+        Outside the reviewer study, the screen asks the reviewer to decide only what must be
+        withheld or escalated, and completing the page releases the rest: the button asks
+        first, naming any undecided span the tool proposed to withhold, and the form then
+        carries `release_rest`. Each released span is still its own REJECT row with
+        `BULK_RELEASE_REASON`, as the separate button wrote them, so the log says they were
+        released in one action. The study keeps the separate button and refuses an
+        incomplete page, because its four reviewers were timed that way.
+        """
+        if release_rest and study is None:
+            _release_rest(doc_id, number)
         outstanding = session.outstanding(doc_id, number)
         if outstanding:
             ctx = _page_context(doc_id, number)

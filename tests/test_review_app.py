@@ -486,6 +486,34 @@ def test_release_everything_undecided_records_a_release_per_span_and_spares_deci
     assert not session.page_complete(item.doc_id, 1)
 
 
+def test_completing_a_page_releases_what_was_not_withheld_and_asks_first(
+    client: TestClient, session: Session, item: Item
+) -> None:
+    """Outside the study the reviewer decides only what must be withheld or escalated, and
+    completing the page releases the rest, each span its own logged REJECT. The button
+    asks first and names the spans the tool proposed to withhold."""
+    from sever.review.app.main import BULK_RELEASE_REASON
+
+    spans = spans_on(session, item.doc_id, 1)
+    body = client.get(f"/doc/{item.doc_id}/page/1").text
+    assert "Release everything still undecided" not in body
+    assert "Decide only what must be withheld or escalated" in body
+    assert 'name="release_rest"' in body and "will be RELEASED" in body
+    if any(p.withholds for p in spans):
+        assert "the tool proposed to WITHHOLD" in body
+    act(client, item.doc_id, 1, spans[0], "approve")
+    # Without the confirmation's field, an incomplete page is still refused.
+    client.post(f"/doc/{item.doc_id}/page/1/complete")
+    assert not session.page_complete(item.doc_id, 1)
+    r = client.post(f"/doc/{item.doc_id}/page/1/complete", data={"release_rest": "1"})
+    assert r.status_code == 200
+    assert session.page_complete(item.doc_id, 1)
+    acted = session.acted_spans(item.doc_id, 1)
+    assert acted[(spans[0].detection.offsets.start, spans[0].detection.offsets.end)] is Action.APPROVE
+    bulk = [x for x in session.log.rows(request_id=REQUEST) if x.reason == BULK_RELEASE_REASON]
+    assert len(bulk) == len(spans) - 1 and all(x.action is Action.REJECT for x in bulk)
+
+
 def test_every_highlight_says_what_is_proposed_without_being_opened(
     client: TestClient, session: Session, item: Item
 ) -> None:
