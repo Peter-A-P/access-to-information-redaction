@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from sever.context.record import ContextRecord
 from sever.context.requester import normalise, normalise_identifier
 from sever.detect.types import Detection, EntityType
+from sever.ingest.document import BlockKind, DocumentType
 
 # Strings short enough that requiring their absence would be meaningless: a two-letter
 # surname fragment appears in ordinary prose. Substitution still replaces them; the guard
@@ -406,6 +407,24 @@ class PlaceholderPolicy:
         after = r"(?![^\W_])" if needle[-1].isdigit() else r"(?![^\W\d_])"
         return re.search(before + re.escape(needle) + after, haystack) is not None
 
+    @staticmethod
+    def _contains_spread(haystack: str, identifier: str) -> bool:
+        """Whether a letters-and-digits identifier occurs with any separators between its
+        characters, bounded as `_contains_word` bounds a value.
+
+        The digits-only comparison is a substring test on the payload with everything but
+        letters and digits removed, which is right for a telephone number and wrong for a
+        value with letters in it: on a Defence record the detector found the date "9 APR
+        08", and "19 APR 08" two lines down, a different date, contained it once the spaces
+        were gone. So an identifier with a letter in it must also be found here, where "19"
+        is still a different number from "9". An all-digit identifier keeps the plain test,
+        so "17095550142" still counts as "709-555-0142".
+        """
+        pattern = r"[^a-z0-9]*".join(re.escape(c) for c in identifier)
+        before = r"(?<![a-z0-9])" if identifier[0].isdigit() else r"(?<![a-z])"
+        after = r"(?![a-z0-9])" if identifier[-1].isdigit() else r"(?![a-z])"
+        return re.search(before + pattern + after, haystack.casefold()) is not None
+
     def guard(self, payload: str, *, where: str = "outbound request") -> None:
         """Refuse to let a raw entity leave.
 
@@ -432,7 +451,12 @@ class PlaceholderPolicy:
             # The residual risk is a real person whose name is exactly a vocabulary word,
             # a Ms March or a Mr Page. They are still substituted, so nothing of theirs
             # leaves; only the assertion is relaxed, and only for one-word values.
-            if " " not in value.strip() and value.strip().casefold() in SAFE_CAPITALISED:
+            #
+            # The payload's own field values are exempt the same way: on a Library and
+            # Archives Canada scan the detector typed the word "signature" as an entity,
+            # and every request from a signature block says `"block": "signature"`.
+            word = value.strip().casefold()
+            if " " not in word and (word in SAFE_CAPITALISED or word in PAYLOAD_WORDS):
                 continue
             if self._contains_word(haystack, value):
                 offenders.append(value)
@@ -443,7 +467,9 @@ class PlaceholderPolicy:
                 continue
             if any(ch.isdigit() for ch in value):
                 d = normalise_identifier(value)
-                if len(d) >= 6 and d in digits_haystack:
+                if len(d) >= 6 and d in digits_haystack and (
+                    d.isdigit() or self._contains_spread(haystack, d)
+                ):
                     offenders.append(value)
         if offenders:
             raise RawEntityLeak(
@@ -628,6 +654,11 @@ _SAFE_GROUPS: tuple[str, ...] = (
 # leave the model nothing to reason from, and none of them identifies an individual.
 SAFE_CAPITALISED = frozenset(
     word.casefold() for group in _SAFE_GROUPS for word in group.split()
+)
+# Words a request carries as its own field values: the kind of block a span sits in and the
+# words of the document type. They are this module's constants, not record content.
+PAYLOAD_WORDS = frozenset(k.value for k in BlockKind) | frozenset(
+    word for t in DocumentType for word in t.value.split("_")
 )
 
 def scrub_unrecognised(text: str) -> str:

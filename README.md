@@ -12,10 +12,17 @@ document without a reviewer action on every page.
 
 **Try it at https://redaction.peterparker.ca**: the project's website, with every figure
 below read from the results files; the reviewer's screen over six invented records and ten
-short excerpts of records Library and Archives Canada has released, rules only, one private
-session per visitor, and a truly redacted PDF of the record once you have decided every page
-(on a released record, LAC's own scan with the boxes burned into the image); and a live dashboard of every decision visitors make, counted
-without their text.
+short excerpts of records Library and Archives Canada has released, proposed by the rules
+and then Jev (its answers for those records recorded once and replayed, so the server calls
+no model), one private session per visitor, and a truly redacted PDF of the record once you
+have decided every page (on a released record, LAC's own scan with the boxes burned into the
+image); and a live dashboard of every decision visitors make, counted without their text.
+
+[![Two invented records decided by the tool, the rules' decisions landing at once and each of Jev's 0.24 seconds after the last, then six pages with only the withheld spans boxed](web/media/jev-clip.jpg)](https://redaction.peterparker.ca)
+
+The clip on the site, rendered from the engine's own output by [`tools/clip.py`](tools/clip.py):
+the rules' decisions land at once, and each of Jev's 0.24 seconds after the last, the mean
+latency of its 7,549 calls in the published run.
 
 ## Result
 
@@ -26,27 +33,27 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 
 **Corpus:** 210 synthetic documents, 210 pages, 5460 labelled spans, seed 20270802. Labels known by construction. Detector: sever-detector. Jurisdiction: federal. Generated 2026-10-21 by `sever report`.
 
-**Model layer:** anthropic/claude-haiku-5-5, through the 04 gateway with data class `personal`. 9921 answers replayed from the cache, nothing spent, of which 2294 were the tool's own residual and 7627 the model-only baseline.
+**Model layer:** openrouter/typesafe/jev-1.14 at a confidence threshold of 0.60, below which its answer is escalated to a person, through the 04 gateway with data class `personal`. 9921 answers replayed from the cache, nothing spent, of which 2294 were the tool's own residual and 7627 the model-only baseline.
 
-**Cost:** US$0.00644 per page (CA$0.00869 at 1.35 CAD/USD), from project 04's gateway ledger: US$1.3522 over 2257 paid calls and 210 pages. The pipeline asked 2294 times and paid 2257 of them, because 2% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.00654 each, which is the figure to read if your documents are not generated from templates. A further US$3.0941 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
+**Cost:** US$0.00129 per page (CA$0.00174 at 1.35 CAD/USD), from project 04's gateway ledger: US$0.2708 over 2257 paid calls and 210 pages. The pipeline asked 2294 times and paid 2257 of them, because 2% of its requests were byte-identical to one already made. Without that deduplication the same pages would cost about US$0.00131 each, which is the figure to read if your documents are not generated from templates. A further US$0.6351 bought the model-only baseline, which asks about every span rather than the residual. That is a cost of measuring the tool and not of running it, so it is named here rather than divided into the figure above.
 
 **Per category, this tool**
 
 | Category | Spans | Leak rate (must-redact released) | Over-redaction (must-keep withheld) | Escalation rate |
 |---|---:|---|---|---|
-| `K1` | 980 | n/a | 4.2% (3.0% to 5.5%), n=980 | 3.6% (2.4% to 4.8%), n=980 |
-| `K2` | 2170 | n/a | 22.0% (20.2% to 23.9%), n=2170 | 22.0% (20.2% to 23.9%), n=2170 |
-| `K3` | 280 | n/a | 0.4% (0.0% to 1.1%), n=280 | 0.4% (0.0% to 1.1%), n=280 |
+| `K1` | 980 | n/a | 1.7% (0.8% to 2.8%), n=980 | 1.7% (0.8% to 2.8%), n=980 |
+| `K2` | 2170 | n/a | 2.1% (1.5% to 2.8%), n=2170 | 1.8% (1.3% to 2.5%), n=2170 |
+| `K3` | 280 | n/a | 0.0% (0.0% to 3.4%), n=280 | 0.0% (0.0% to 3.4%), n=280 |
 | `K4` | 70 | n/a | 1.4% (0.0% to 4.3%), n=70 | 1.4% (0.0% to 4.3%), n=70 |
 | `K6` | 280 | n/a | 0.0% (0.0% to 1.4%), n=280 | 0.0% (0.0% to 1.4%), n=280 |
-| `R1` | 1680 | 1.1% (0.7% to 1.7%), n=1680 | n/a | 5.4% (3.8% to 7.2%), n=1680 |
+| `R1` | 1680 | 1.1% (0.7% to 1.7%), n=1680 | n/a | 2.3% (1.4% to 3.1%), n=1680 |
 
 **Against the baselines**
 
 | System | Leak rate | Over-redaction rate | Escalation rate | Detector recall |
 |---|---|---|---|---|
-| sever, rules then the model on the residual | 1.1% (0.7% to 1.7%), n=1680 | 13.8% (12.6% to 15.0%), n=3780 | 11.1% (10.1% to 12.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
-| model-only, no rules | 1.6% (1.1% to 2.2%), n=1680 | 38.4% (36.7% to 40.1%), n=3780 | 30.5% (29.1% to 31.8%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| sever, rules then the model on the residual | 1.1% (0.7% to 1.7%), n=1680 | 1.7% (1.3% to 2.2%), n=3780 | 1.8% (1.3% to 2.2%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
+| model-only, no rules | 2.7% (2.0% to 3.5%), n=1680 | 7.2% (6.3% to 8.2%), n=3780 | 8.4% (7.5% to 9.4%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 | sever, rules only | 1.1% (0.7% to 1.7%), n=1680 | 23.8% (22.3% to 25.3%), n=3780 | 35.7% (34.3% to 37.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 | blunt redact-all-PII | 1.1% (0.6% to 1.6%), n=1680 | 98.4% (97.9% to 99.0%), n=3780 | 0.0% (0.0% to 1.1%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
 | sentence-only, no document context | 7.4% (5.6% to 9.3%), n=1680 | 51.9% (49.8% to 54.0%), n=3780 | 58.9% (57.2% to 60.6%), n=5460 | 98.6% (98.2% to 99.0%), n=5460 |
@@ -56,7 +63,7 @@ number below is produced by `sever report` and spliced in by it; none is typed b
 | System | Leaks | Never found | Found, called impersonal | Box too short | The decision was wrong |
 |---|---:|---:|---:|---:|---:|
 | sever, rules then the model on the residual | 19 | 17 | 1 | 1 | 0 |
-| model-only, no rules | 27 | 17 | 1 | 1 | 8 |
+| model-only, no rules | 46 | 17 | 1 | 3 | 25 |
 | sever, rules only | 19 | 17 | 1 | 1 | 0 |
 | blunt redact-all-PII | 18 | 17 | 0 | 1 | 0 |
 | sentence-only, no document context | 124 | 17 | 106 | 1 | 0 |
@@ -67,7 +74,7 @@ The middle column is the one worth knowing about. A span typed as a place or an 
 
 | Redaction boxes applied | Boxes with recoverable text | Channels checked |
 |---:|---:|---|
-| 2220 | 0 | text layer and OCR |
+| 1796 | 0 | text layer and OCR |
 
 Intervals are 95 percent bootstrap percentile intervals resampled over the 210 documents,
 not over the spans, because spans within a document are not independent: one
@@ -79,63 +86,70 @@ to within Monte Carlo noise; `tests/test_confusion.py` pins that.
 
 **The number that matters is the second column.** Any tool can get the leak rate down by
 redacting everything, and the blunt baseline in the table does exactly that: it withholds
-98.5 percent of the information that must be released. A record that comes back with the
+98.4 percent of the information that must be released to leak 18 spans. This tool leaks 19
+and withholds 1.7 percent. A record that comes back with the
 signing officer's name, the minister on the letterhead, the department and the requester's
 own address blacked out has been answered in form and refused in substance. That column is
 what nobody publishes.
 
 ## The honest limitation
 
-**The model layer now earns its place on the synthetic corpus, and much less of it on real
-records, and some of what it knows it was taught on the corpus it is scored on.**
+**Jev made the model layer worth having, and both thresholds it runs at were set after the
+results they protect had been seen.**
 
-With the rules alone the tool leaks 2.5 percent and withholds 22.4 percent of what must be
-released. With Claude Haiku 5.5 deciding what the rules could not, at the confidence
-threshold in [`results/thresholds.md`](results/thresholds.md), it leaks 2.6 percent and
-withholds 16.1 percent. In counts, over 5,460 labelled spans: turning the model on
-correctly releases **241 spans the rules had withheld** and wrongly releases **one that had
-to go**. Until 2026-10-20 the same comparison read 105 against 35, on Claude Haiku 4.5.
+With the rules alone the tool leaks 1.1 percent of what must be withheld and withholds 23.8
+percent of what must be released, most of it escalated to a person. With **Jev 1.14**
+deciding what the rules leave, it leaks the same 1.1 percent, the same 19 spans, and
+withholds **1.7 percent**: about 64 of the 3,780 spans the requester is entitled to, where
+the rules alone withhold about 900. None of the 19 is a wrong decision; 17 are spans the
+detector never found.
 
-**What changed was the evidence, not the model.** The model used to be shown one sentence
-around the span. Asked to decide with that, Claude Opus 5.5 did no better than Haiku 4.5:
-it answered "cannot tell" on 627 of the 3,780 spans that had to be released, and said why,
-over and over: the sentence did not show who the person was. So the model is now shown the
-whole page, masked (every person, contact and identifier replaced by the same placeholder
-everywhere it appears), which placeholder is the requester, which email addresses are on the
-public body's own domain, and the full category guide with its traps, generated from
-`taxonomy/`. Haiku 5.5, at a tenth of Haiku 4.5's price per token, then decides almost all
-of it. The rejected approach and the evidence are [`docs/rejected.md`](docs/rejected.md)
-section 7.
+Jev is a decision model (TypeSafe's; its size and base model are not disclosed), reached
+through OpenRouter and project 04's gateway. It is sent the masked page the language model
+was sent, and it returns a probability for each category rather than prose. Against Claude
+Haiku 5.5, the published model until 2026-10-21, on the same requests: the same leak rate,
+over-redaction 1.7 percent against 13.8, **a fifth of the price** (US$0.0013 a page against
+US$0.0064) and **seven times faster** (0.24 seconds a call against 1.8). The difference is
+calibration. Haiku reported 0.80 or 0.85 whether it was right or wrong, so the threshold that
+kept its leaks down threw good answers away; Jev's probabilities separate its right answers
+from its wrong ones, and the sweep in [`results/thresholds.md`](results/thresholds.md) shows
+it. Haiku's tables are kept, unchanged, in [`results/haiku/`](results/haiku/).
 
 **Three things weaken that result, and none is small.**
 
-- **The guide was improved by reading this corpus's errors.** Given the page, Haiku 5.5
-  first released employee numbers and an outside physician's practice address, both
-  against rulings this project had made. Those rulings were then written into the taxonomy,
-  the prompt and, for employee numbers, a deterministic rule. They are real rulings, made
-  before, but the corpus that exposed them is the corpus scored here. This is not a
-  held-out number.
-- **On real records the gain is much smaller.** On the held-out release packages, which
-  nothing in this repository was tuned on, the share of possibly personal spans withheld
-  falls from 100 percent with the rules alone to **84.5 percent** with the model
-  ([`results/releases-heldout-model.md`](results/releases-heldout-model.md)); on the first
-  six packages, from 65.7 to 61.0. Scanned forms are the hard case and the model helps least
-  there.
-- **The threshold throws a third of the model's answers away.** It was set on the
-  validation split by a rule fixed before looking: the lowest threshold at which the model
-  adds no leaks over the rules alone. That is 0.90. Accepting every answer instead would cut
-  over-redaction to 3.5 percent at a leak rate of 2.7, about two more third-party spans
-  released for about 475 more spans returned correctly. Which side of that to take is a
-  public body's decision and this repository does not make it; the sweep is published so it
-  can be made.
+- **The threshold the tool runs at is not the one the rule picked.** The rule fixed before
+  looking, the lowest threshold at which the model adds no leak to the rules alone on the
+  validation split, picked 0.00: accept every answer. Scored once on the test split, that
+  leaks 1.2 percent, as the rules alone do, and withholds **1.1 percent** where they withhold
+  24.7. That is the reported result. The tool runs at **0.60**, chosen by Peter after the
+  test split was seen, because a model that is never unsure breaks the rule that an
+  undecided span is withheld and escalated; on the test split that costs half a point, 1.6
+  percent. The tables above are at 0.60, because they describe the tool as it ships.
+- **Jev leaked on the trap set, and the fix came after.** Its first run on the 30 trap
+  records leaked **3.3 percent** (8 of 240), where the rules alone and Haiku leaked none:
+  an employee writing from their work address about their own leave or grievance, released
+  as an official or as the requester at 0.60 to 0.70. In such a message a model's release
+  now needs 0.75 ([docs/escalation.md](docs/escalation.md) case 8), and the trap set leaks
+  nothing and withholds 18.8 percent of what must be released, against 82.4 for the rules
+  alone. Forbidding every release there instead would have left it at 82.4. The bar was set
+  on the records it is scored on, so the trap set is no longer a blind test of it.
+- **Some of what the model knows came from this corpus's errors, and real records are
+  harder.** The category guide both models are given was improved by reading Haiku 5.5's
+  mistakes on this corpus (employee numbers, an outside physician's practice address).
+  Those rulings existed before, but the corpus that exposed them is the corpus scored here,
+  so this is not a held-out number. On records a public body actually released, Jev cuts
+  what the tool withholds of what a person released on all three sets, but scanned forms
+  with no layout and no requester stay hard: 28.4 percent on the Defence packages the
+  vocabulary was written from (52.2 with the rules alone), and **68.6 and 68.7 percent** on
+  the two held-out sets (89.0 and 86.5) ([`results/releases-heldout.md`](results/releases-heldout.md),
+  [`results/releases-fresh.md`](results/releases-fresh.md)).
 
-**Project 03's release gate passes the model layer.** It blocked the Haiku 4.5 layer, with
-35 documents worse on leaks and none better. Asked again, its paired non-inferiority test,
-with the document as the item and a three-point margin, finds documents with no leak at
-83.3 percent with the rules alone and 82.9 with the model, a difference of -0.5 points
-(-1.4 to +1.4) that sits inside the margin; the requester's own information gains 21.9
-points and what is not personal information 13.1. The publicly available category is still
-too small to decide. [`gate/decision.md`](gate/decision.md) is the gate's own output.
+**Project 03's release gate passes Jev.** Its paired non-inferiority test, with the
+document as the item and a three-point margin, finds documents with no leak at 91.0 percent
+with the rules alone and 91.0 with Jev, a difference of 0.0 points (-1.4 to +1.4); the
+requester's own information gains 29.0 points. What is not personal information and what is
+already public are too small to decide. [`gate/decision.md`](gate/decision.md) is the gate's
+own output.
 
 **Where it broke, found by a trap the headline corpus could not set.** Every government
 email address in the corpus belongs to an official doing their job, so a rule that releases
@@ -144,18 +158,16 @@ work contacts could not leak there however wrong it was. The trap set
 employee emailing from their work address about their own leave and grievance. The rules
 alone leaked **62.5 percent** of what had to be withheld in it, releasing the employee for
 the title in their own signature block. They now stand aside in such a message
-([docs/escalation.md](docs/escalation.md) case 8) and leak none of it, with or without the
-model, at the cost of withholding 86.7 percent of what could have been released there. The
+([docs/escalation.md](docs/escalation.md) case 8) and leave the reading to the model. Jev
+read it wrongly at first, above, and a release there now needs 0.75. The
 trap set is scored apart from the headline corpus, because adding a template to the corpus
 renumbers every document and would detach the frozen reviewer study from its records.
 
-**Read the leak decomposition above before deciding the model is the weak part.** Of the 42
-leaks in the rules-only row, 17 are spans the detector never found, 24 are spans it found and
-typed as a place or an organisation, which the rule then releases as not personal
-information, and 1 is a box too short. The rules decide none of them wrongly and the model
-adds one. The model-only row makes the typing mistake 3 times where the rules make it 24,
-because the model reads the page and sees a person where the detector saw a place. That is
-the next thing to fix, and it is a change to which spans reach the model, not to the model.
+**Read the leak decomposition above before deciding the model is the weak part.** Of the
+tool's 19 leaks, 17 are spans the detector never found, 1 is a span it found and typed as a
+place or an organisation, which the rule then releases as not personal information, and 1
+is a box too short. Neither the rules nor Jev decides any of them wrongly. Jev on its own,
+with no rules, makes 25 wrong decisions, which is what the rules are for (below).
 
 **Every leak rate on this page now counts a partial box the way a reader would.** Until
 2026-10-10 the tables asked whether the box that overlapped a span most was a withholding
@@ -167,12 +179,16 @@ The reviewer study uses the same rule. It moved every leak rate by one span, the
 every row: "Desmond Ivany of Happy Valley" detected as one name, which leaves "Goose Bay"
 showing, and that names the town. It is in the decomposition as "Box too short".
 
-**And the leak rate is still above the blunt baseline's 1.1 percent.** That gap is
-what releasing anything at all costs. A tool that never released a span would have no leak
-rate and no reason to exist.
+**And the leak rate is the blunt baseline's.** 19 spans against 18, for withholding 1.7
+percent of what must be released against 98.4. The one span between them is a place name
+the detector called a place; a tool that never released a span would have no leak rate and
+no reason to exist.
 
 **Three reviewers have done the study, and with proposals every one of them was more than
-twice as fast.** Each reviewed twenty test records, ten unaided and then ten with
+twice as fast.** The proposals they were timed with were the rules alone, frozen before Jev
+existed, so the study measured the weaker tool: those proposals withheld 23.2 percent of
+what had to be released on the study's records, where the tool now withholds 1.7 across the
+corpus. How much faster Jev's proposals are to review is not yet measured. Each reviewed twenty test records, ten unaided and then ten with
 proposals, after a practice page in each half, with the halves swapped between reviewers
 so every record was reviewed in both arms ([results/reviewer.md](results/reviewer.md)).
 Unaided and then with proposals, in minutes a page: reviewer 1, eight years in
@@ -312,6 +328,12 @@ Three more limitations, none of them small:
   nothing to read; and LAC's longer stamp ("Bibliothèque et Archives Canada" on a line of its
   own) was a person 26 times, a form of the stamp the screen was not written for. Both are
   findings about the fresh set, so neither is fixed against it.
+
+  **With Jev on what the rules leave** (2026-10-21), over the same spans as the rows above:
+  28.4 percent on the Defence set, 68.6 on the held-out set and 68.7 on the fresh one, each
+  scored once with the code unchanged. The rules-alone figures on today's code are 52.2,
+  89.0 and 86.5, higher than the ones above, because the rules have changed since those
+  tables were written; PLAN.md 12.52 says that is not yet analysed.
 - **The published corpus is easier than the province.** Every one of its 5,355 spans is
   plain ASCII: no apostrophe, no Mac or Mc, no accent, in a tool named after Newfoundland
   and Labrador, where O'Brien and MacDonald are ordinary. On a corpus identical in every
@@ -347,13 +369,13 @@ Three more limitations, none of them small:
   [`results/names.md`](results/names.md); `tests/test_name_shapes_detected.py` pins the
   diagnosis and `tests/test_name_sweep.py` pins the fix. The published tables stay on the
   plain corpus so they stay comparable; the harder numbers sit beside them.
-- **29.5 percent over-redaction on officials acting in an official capacity** is the
-  weakest number in the table, and 19.1 of those 29.5 points are escalation rather than a
-  wrong answer: names and work addresses the rules could not pair with a title anywhere in
-  the record, which the model was also unwilling to place. A published staff directory is
-  the remedy a person would use, and [results/directory.md](results/directory.md) measures
-  it: matched on the work email address alone it takes the rules-only figure from 30.1 to
-  18.8 percent with no leak at all, and matched on names it multiplies the leak rate by
+- **Officials acting in an official capacity were the weakest number in the table, and
+  with Jev they are 2.1 percent.** The rules alone withhold 22.0 percent of them, almost all
+  as escalation: names and work addresses the rules could not pair with a title anywhere in
+  the record. Jev reads that from the page. A published staff directory was the remedy a
+  person would use, and [results/directory.md](results/directory.md) measures it with the
+  rules alone: matched on the work email address it takes the officials' figure from 30.1
+  to 18.8 percent with no leak at all, and matched on names it multiplies the leak rate by
   nine, because an employee who files a grievance is in the directory too.
   [docs/rejected.md](docs/rejected.md) entry 6 has the account. The headline tables use no
   directory, because a directory is something a public body supplies.
@@ -365,30 +387,82 @@ Three more limitations, none of them small:
   Reading them changed three mappings; [docs/escalation.md](docs/escalation.md) says which
   and why.
 
+## Why Jev, and what it is
+
+**Jev is not a chatbot that was asked to classify. It is a model built to make one decision
+among named options and say how likely each one is**, and that is the shape of the question
+this tool asks on every span: given this record, which category of the law is this?
+
+A language model answers by writing. Asked for a category it writes one, and asked how sure
+it is it writes a number, and that number is more text: Claude Haiku 5.5 wrote 0.80 or 0.85
+whether it was right or wrong. So the one control this project relies on, *withhold and
+escalate when unsure*, had nothing to hold on to. To keep Haiku's leaks down the threshold
+had to sit at 0.90, where it threw away a quarter of its answers, most of them right, and
+sent them to a person.
+
+Jev (TypeSafe AI, September 2026) is a **decision model**. It takes a state and a question
+with named options, here the record's masked page and the categories in the reviewers' own
+words, and returns a probability for every option and no text at all. TypeSafe states that
+the probabilities are calibrated, so a 0.8 is right about eight times in ten. On this corpus
+they behave so, and that is what changes the result. Answer for answer it is not the more
+accurate model: on one random sample of 149 residual spans Jev is right on 94.6 percent and
+Haiku on 96.0 ([`results/decision-sample.md`](results/decision-sample.md)). What differs is
+what its confidence is worth across the whole range, and so how much of its work can be
+used:
+
+| On the same 2,294 requests | Claude Haiku 5.5 | Jev 1.14 |
+|---|---|---|
+| Answers accepted at the threshold the tool runs at | 74% (at 0.90) | 97% (at 0.60) |
+| Leak rate, rules then the model | 1.1% | 1.1% |
+| Over-redaction, rules then the model | 13.8% | **1.7%** |
+| Leak rate accepting every answer | 1.4% | **1.1%**, the rules' own |
+| Cost per page | US$0.0064 | **US$0.0013** |
+| Time per decision | 1.8 s | **0.24 s** |
+
+The row to read is the fourth. Accepting every answer, Jev adds no leak to the rules at any
+threshold in the sweep; its low probabilities are where its mistakes are, so a threshold
+removes mistakes rather than good answers. That is what calibration buys, and it is why the
+tool can release what the requester is entitled to instead of escalating it.
+
+It fits this tool in four more ways, each of them measured or enforced rather than claimed:
+
+- **No prose, so nothing to parse and nothing to leak.** A language model can invent a
+  category, wrap its answer in commentary or restate the record; Jev's reply is a
+  probability for each code it was offered and nothing else.
+- **"Cannot tell" is a number, not a refusal.** The language model needed an escalation
+  category to say it was unsure. Jev says it with its probabilities, so every span gets a
+  decision and a confidence, and the threshold, not the model, decides what a person sees.
+- **The boundary is unchanged.** It is sent exactly what the language model was sent, built
+  by the same code and refused by the same guard: placeholders, never a name, through the
+  04 gateway as personal data.
+- **It is fast and cheap enough to sit in front of every page.** 0.24 seconds a decision, and
+  the rules settle two thirds of the spans before it is asked, so a page's model time is a
+  few seconds and its cost about a tenth of a cent. That is what the clip above shows, at the
+  measured pace.
+
+What it is not: open. Its size and base model are not disclosed, it is reached through
+OpenRouter, and Kev, the open-weights recreation run here on the same requests, spreads its
+probabilities too thin to use ([`results/kev/`](results/kev/)). Every answer Jev gave is in
+[`results/model-answers.jsonl`](results/model-answers.jsonl), so every table replays without
+it, but re-asking it needs an account.
+
 ## What the deterministic rules are worth
 
-The results table has a `model-only, no rules` row: the same model, the same page and the
-same threshold, with the rules removed so every span is sent rather than only the residual.
-The difference between it and the full configuration is the deterministic layer and nothing
+The results table has a `model-only, no rules` row: Jev, the same page and the same
+threshold, with the rules removed so every span is sent rather than only the residual. The
+difference between it and the full configuration is the deterministic layer and nothing
 else.
 
-**It now leaks less than the full configuration, 1.5 percent against 2.6, and withholds far
-more, 42.8 percent against 16.1.** Until 2026-10-20 it leaked three times as much, and this
-section said the rules were the safety net under the model. Two things reversed that. The
-model now gets the page, so it sees the person the detector typed as a place: that is 3 of
-the model-only row's leaks against 24 in every row with rules. And it gets the category guide,
-so the reviewers' rulings the rules were written to apply (a family word goes with the name,
-both parties to a confidential complaint are third parties) reach the model as well.
-
-What the rules still buy is decisiveness and price. Asked about everything, the model is
-unsure about a third of it and withholds what it is unsure of; asked only about what the
-rules leave, it settles nearly all of it. And the rules decide two thirds of the spans for
-nothing, where the model-only baseline cost US$3.09 against the pipeline's US$1.10 for the
-same pages. The leak gap points the other way, at a rule: the one that releases a span the
-detector typed as a place or an organisation.
+**Without the rules Jev leaks 2.7 percent, against 1.1 with them, and withholds 7.2 percent
+against 1.7.** Its 46 leaks include 25 wrong decisions, where the rules then Jev make none:
+the requester's own information, a family word that points at a third party, a party to a
+confidential complaint, a contact the record calls personal. Those are rulings the rules
+apply every time and the model applies most of the time. The rules also decide about two
+thirds of the spans for nothing, so the pipeline paid US$0.27 for the corpus where Jev on
+everything paid US$0.64 more.
 
 Read that against the `sentence-only` row, which is the same rules with the document context
-blanked: 49.3 percent over-redaction and 8.8 percent leaks. Whether a record is a
+blanked: 51.9 percent over-redaction and 7.4 percent leaks. Whether a record is a
 confidential complaint, or who signed it, is a fact about the document and not the sentence.
 
 ## What this does not do
@@ -433,39 +507,32 @@ that names them. It is three inches lower, in the signature block.
 **Deterministic rules** decide the clear cases in a fixed order that is itself the design:
 the requester's own information first, then inherently sensitive identifiers (a director's
 health number is not about being a director), then non-personal entity types, then
-capacity, then the public register, then the twenty-year rule. Whatever is left goes to a
-**model** (Claude Haiku 5.5) through the portfolio's gateway (project 04, `boundary`) with
-the personal data class. It sees the whole page with every person, contact and identifier
-replaced by a typed placeholder, the same one everywhere, so it can tell who signed and who
-wrote to whom without seeing a single name; it is told which placeholder is the requester and
-which email addresses are on the public body's own domain, and it is given the full category
-guide from `taxonomy/`. Its answer is taken only above a measured confidence threshold;
-below it the span is escalated with the model's reasoning attached.
+capacity, then the public register, then the twenty-year rule. Whatever is left goes to
+**Jev 1.14**, a decision model, through the portfolio's gateway (project 04, `boundary`)
+with the personal data class (`sever/decide/decision_model.py`). It sees the whole page with
+every person, contact and identifier replaced by a typed placeholder, the same one
+everywhere, so it can tell who signed and who wrote to whom without seeing a single name; it
+is told which placeholder is the requester and which email addresses are on the public
+body's own domain, and each category is described to it in the reviewers' own words from
+`taxonomy/`. It is asked one question, which category, and returns a probability for each.
+Its answer is taken at 0.60 or above, 0.75 for a release in a message about an employee's
+own affairs; below that the span is withheld and escalated with the probabilities attached.
 
-The model can also be a **decision model**: Jev, TypeSafe's, through OpenRouter, or Kev, an
-open-weights recreation of it, on this machine (`--model-name openrouter/typesafe/jev-1.14`
-or `kev/kev-latest`; `sever/decide/decision_model.py`). It is sent the same masked record and
-asked one question, which category, with the reviewers' category text as the options, and
-it returns a probability for each rather than an answer in prose. That is aimed at what the
-language model gets wrong: its confidence does not separate its right answers from its wrong
-ones, so the threshold throws good answers away. Jev's probabilities are claimed to be
-calibrated, and on this corpus they behave so: with Jev 1.14 the threshold the rule fixed
-in advance chose is 0.00, accept every answer, and on the test split that adds no leak to
-the rules alone (1.2 percent either way) while over-redaction falls from 24.7 percent to
-1.1. The tool still runs Jev at 0.60, so its coin flips go to a reviewer. Its tables are in
-`results/jev/`, not above, until the published model is chosen; PLAN.md 12.50 has the run.
-Kev does not carry over. On one random sample of 149 residual spans, the same requests
-for every model ([`results/decision-sample.md`](results/decision-sample.md), `sever
-eval-sample`), Jev is right on 94.6 percent and Haiku 5.5 on 96.0, Kev 4B on 67.1 with every
-stated probability under 0.70, so no threshold separates its right answers from its wrong
-ones, and Kev 0.8B on none, choosing by an option's place in the list. PLAN.md 12.51.
+The same request can go to a language model instead: Claude Haiku 5.5, published until
+2026-10-21 (`--model-name anthropic/claude-haiku-5-5`), which answers in prose with a
+stated confidence and a reason, or Kev, an open-weights recreation of Jev
+(`kev/kev-latest`), which does not carry over. On one random sample of 149 residual spans,
+the same requests for every model ([`results/decision-sample.md`](results/decision-sample.md),
+`sever eval-sample`), Jev is right on 94.6 percent and Haiku 5.5 on 96.0, Kev 4B on 67.1 with
+every stated probability under 0.70, so no threshold separates its right answers from its
+wrong ones, and Kev 0.8B on none, choosing by an option's place in the list.
 
 When neither is sure, the proposal is to withhold and escalate. There is no rule that
 releases a span because nothing matched.
 
 That the class is actually recorded is checkable rather than asserted: the gateway keeps
-its own ledger, and as of 2026-09-20 all 999 rows this project has written carry
-`data_class = personal`, across 999 calls costing US$1.10 in total.
+its own ledger, and as of 2026-10-21 all 44,625 rows this project has written carry
+`data_class = personal`, across every model it has tried, costing US$28.61 in total.
 
 **And the boundary turns out not to cost accuracy.** The paired ablation in
 [`results/placeholders.md`](results/placeholders.md) runs the same spans through the same
@@ -614,17 +681,23 @@ sever study                           # the reviewer time study, one person at a
 sever site --out site                 # the website, from the results files; fails on any figure it cannot read
 sever demo --insecure-cookie          # the public demonstration, locally; docs/deploy.md
 sever study report                    # score it: minutes per page and accuracy, per arm
-sever report --readme README.md       # every number above
-sever report --jurisdiction nl        # the same corpus under the NL statute
+sever report --model --replay-only --answer-cache results/model-answers.jsonl --readme README.md
+                                      # every number above, Jev's answers replayed
+sever report --model --replay-only --answer-cache results/model-answers.jsonl --jurisdiction nl --no-pdf-leak --out results/nl
+                                      # the same corpus under the NL statute
 sever eval-scanned --documents 50     # render, scan, read back, and score it (needs Tesseract)
 sever eval-layout                     # what the layout is worth, and how much reads back from text
 sever gate-export                     # the files project 03's release gate decides on
+sever eval-releases --model --replay-only   # the real-record track, Jev's answers replayed
+sever demo-answers                    # record Jev's answers for the demonstration (spends, once)
+uv sync --extra detect --extra clip && uv run python tools/clip.py   # the website's clip
 ```
 
 `sever report` is the one command behind every published figure. With no flags it runs
-the rules-only configuration, spends nothing and needs no gateway: the model layer is off
+the rules-only configuration, spends nothing and needs no gateway: the model flag is off
 by default because a corpus run is thousands of calls, and the safe default is the one
-that cannot spend money by accident.
+that cannot spend money by accident. The tool as it ships, and every table above, is the
+rules then Jev, which `--model --replay-only` reproduces from the committed answers.
 
 The model row reproduces for nothing too. Every answer the model gave is committed in
 `results/model-answers.jsonl`, and `--replay-only` reads it instead of calling out:
@@ -637,8 +710,8 @@ sever eval-traps --model --replay-only # the trap set: records written to break 
 
 The cache is publishable for the same reason the requests are: it holds what the model
 said about typed placeholders, and a test asserts that no persona value appears in it.
-Reproducing the paid run itself needs the gateway and costs about US$1.10 for the pipeline,
-or US$4.19 with the model-only baseline. The gateway is
+Reproducing the paid run itself needs the gateway and an OpenRouter account, and costs about
+US$0.27 for the pipeline, or US$0.91 with the model-only baseline. The gateway is
 project 04's library, `boundary`, which is public at
 [Peter-A-P/compliant-ai-gateway](https://github.com/Peter-A-P/compliant-ai-gateway) but not
 on PyPI, so it is not a declared dependency here and cannot be: the `boundary` package on
@@ -728,10 +801,10 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 |---|---|---|
 | Taxonomy, two jurisdictions, all 39 provisions verified | | |
 | Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
-| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records and ten released ones (`sever demo-records`), rules only, and a live dashboard of visitors' decisions | |
+| 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records and ten released ones (`sever demo-records`), proposed by the rules then Jev with its answers replayed (`sever demo-answers`), and a live dashboard of visitors' decisions | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |
-| The model layer, through the gateway on placeholders | | |
+| The model layer, Jev 1.14, through the gateway on placeholders; Haiku 5.5 and Kev measured beside it | | |
 | All four baselines (blunt, rules-only, sentence-only, model-only), with intervals | | |
 | The placeholders ablation, and the threshold sweep | | |
 | The scanned track, four degradation profiles, CER measured | |

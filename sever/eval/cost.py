@@ -65,7 +65,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -79,20 +79,21 @@ DEFAULT_COST_PATH = Path("results/cost.json")
 
 # The runs behind the tool's own rows, and the only ones whose spend is a cost of running
 # the pipeline over a page.
-PIPELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2:pipeline",)
+PIPELINE_RUNS: tuple[str, ...] = ("sever-jev114-210:pipeline",)
 
 # The model-only baseline. It asks about every span rather than the residual the rules
 # could not settle, so it paid for 1,357 answers the pipeline never needs. Its spend is a
 # cost of measuring the tool, not a cost of running it, and folding the two together would
 # have doubled the published cost per page for a configuration nobody would deploy.
-BASELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2:baseline",)
+BASELINE_RUNS: tuple[str, ...] = ("sever-jev114-210:baseline",)
 
 # Everything that paid for a line in the committed answer cache. The integrity check is
 # against this, because the cache does not record which run bought which answer, and a
 # check over a subset would pass while a whole run was missing.
-PUBLISHED_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2",)
-# The published run began at 23:17 UTC on 2026-10-20, after the error fixes of PLAN.md
-# 12.49; nothing earlier under its id belongs to it.
+PUBLISHED_RUNS: tuple[str, ...] = ("sever-jev114-210",)
+# The published run, Jev 1.14's, began at 23:17 UTC on 2026-10-20, after the error fixes
+# of PLAN.md 12.49; nothing earlier under its id belongs to it. Haiku 5.5's run of the same
+# requests, published until 2026-10-21, was sever-haiku55-210-r2 from the same minute.
 PUBLISHED_SINCE = "2026-10-20T23:00:00Z"
 
 
@@ -125,6 +126,9 @@ class RunCost:
     asks: int
     per_run: dict[str, float] = field(default_factory=dict)
     calls_per_run: dict[str, int] = field(default_factory=dict)
+    # The mean wall time of a paid call, as the gateway timed it. None in a file written
+    # before it was recorded.
+    mean_latency_ms: float | None = None
 
     def with_asks(self, asks: int) -> RunCost:
         """The same ledger facts, against a fresh count of what the pipeline asked.
@@ -296,7 +300,13 @@ def from_ledger(
         asks=asks,
         per_run={k: round(v, 6) for k, v in sorted(per_run.items())},
         calls_per_run=dict(sorted(calls_per_run.items())),
+        mean_latency_ms=_mean_latency(rows),
     )
+
+
+def _mean_latency(rows: Sequence[Mapping[str, Any]]) -> float | None:
+    timed = [float(r["latency_ms"]) for r in rows if r.get("latency_ms") is not None]
+    return round(sum(timed) / len(timed), 1) if timed else None
 
 
 def write(cost: RunCost, path: Path = DEFAULT_COST_PATH) -> Path:
@@ -329,7 +339,7 @@ def read(path: Path = DEFAULT_COST_PATH) -> RunCost | None:
     kept = {k: v for k, v in data.items() if k in fields}
     kept["run_ids"] = tuple(kept.get("run_ids", ()))
     kept["pipeline_runs"] = tuple(kept.get("pipeline_runs", ()))
-    if missing := fields - set(kept) - {"per_run", "calls_per_run"}:
+    if missing := fields - set(kept) - {"per_run", "calls_per_run", "mean_latency_ms"}:
         # A stale file from an older schema. Named rather than raised as a TypeError from
         # the constructor, because the reader of that traceback is someone running
         # `sever report` and wondering why the tables will not generate.

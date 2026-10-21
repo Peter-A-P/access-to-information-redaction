@@ -77,14 +77,15 @@ MODELS: tuple[SampleModel, ...] = (
     SampleModel(
         "Haiku 5.5",
         "anthropic/claude-haiku-5-5",
-        Path("results/model-answers.jsonl"),
+        Path("results/model-answers-haiku.jsonl"),
         False,
         "language model, stated confidence",
     ),
     SampleModel(
         "Jev 1.14",
         "openrouter/typesafe/jev-1.14",
-        Path("results/model-answers-jev.jsonl"),
+        # The published model's answers since PLAN.md 12.52, hence no suffix.
+        Path("results/model-answers.jsonl"),
         True,
         "TypeSafe, through OpenRouter",
     ),

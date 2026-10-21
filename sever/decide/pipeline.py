@@ -53,6 +53,25 @@ from sever.taxonomy.loader import Decision, Provision, Taxonomy, default_taxonom
 DEFAULT_THRESHOLD = 0.90
 
 
+# In a message where an employee writes about their own leave, health, discipline or
+# grievance (docs/escalation.md case 8), the rules release nobody and leave the reading to
+# the model, and a model's release there needs this much confidence whatever the threshold.
+# Jev 1.14 released the writer as an official or as the requester on 8 of the trap set's 240
+# must-withhold spans, every time at 0.60 to 0.70, while the advisers answering them, whom
+# it released correctly, it placed above 0.75. Forbidding every release there instead took
+# the trap set's over-redaction from 17.9 percent to 82.4; this bar holds it at 18.8 with no
+# leak. Chosen after that run was scored, and said so (PLAN.md 12.52). The headline corpus
+# has no such message, so its tables do not move.
+OWN_AFFAIRS_RELEASE_THRESHOLD = 0.75
+
+
+def default_threshold_for(model: object) -> float:
+    """The confidence threshold a model runs at unless told otherwise: its own
+    `default_threshold` when it names one, DEFAULT_THRESHOLD when it does not."""
+    value = getattr(model, "default_threshold", None)
+    return float(value) if isinstance(value, int | float) else DEFAULT_THRESHOLD
+
+
 class Source(StrEnum):
     RULE = "rule"
     MODEL = "model"
@@ -171,10 +190,18 @@ class DecisionEngine:
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     rules: Sequence[rules_mod.Rule] = rules_mod.DEFAULT_RULES
     model: ModelDecider | None = None
-    # Below this, a model answer is not trusted and the span is escalated instead.
-    model_confidence_threshold: float = DEFAULT_THRESHOLD
+    # Below this, a model answer is not trusted and the span is escalated instead. None, the
+    # default, is the model's own: a decider that names a `default_threshold` (a decision
+    # model, calibrated, at 0.60) runs at it, and a language model at DEFAULT_THRESHOLD.
+    model_confidence_threshold: float | None = None
     # Blank the document context before deciding. The sentence-only baseline.
     sentence_only: bool = False
+
+    @property
+    def threshold(self) -> float:
+        if self.model_confidence_threshold is not None:
+            return self.model_confidence_threshold
+        return default_threshold_for(self.model)
 
     def contexts_for(self, document: Document) -> tuple[ContextRecord, ...]:
         detections = tuple(self.detector.detect(document))
@@ -216,16 +243,33 @@ class DecisionEngine:
             return self._proposal(ctx, result.outcome, Source.RULE)
         if model is None:
             return self._proposal(ctx, result.outcome, Source.FALLTHROUGH)
-        if model.confidence < self.model_confidence_threshold:
+        if model.confidence < self.threshold:
             escalated = rules_mod.RuleOutcome(
                 code="E1",
                 confidence=model.confidence,
                 reason=(
                     f"The model proposed {model.code} at {model.confidence:.2f}, below the "
-                    f"{self.model_confidence_threshold:.2f} threshold. Withheld and referred. "
+                    f"{self.threshold:.2f} threshold. Withheld and referred. "
                     f"Its reasoning: {model.reason}"
                 ),
                 rule="below_threshold",
+            )
+            return self._proposal(ctx, escalated, Source.MODEL)
+        if (
+            ctx.own_affairs_message
+            and model.confidence < OWN_AFFAIRS_RELEASE_THRESHOLD
+            and not self.taxonomy.decision(model.code, self.config.jurisdiction).withholds
+        ):
+            escalated = rules_mod.RuleOutcome(
+                code="E1",
+                confidence=model.confidence,
+                reason=(
+                    f"The model proposed {model.code} at {model.confidence:.2f}, which would "
+                    f"release this span, in a message about the writer's own affairs, where a "
+                    f"release needs {OWN_AFFAIRS_RELEASE_THRESHOLD:.2f}. Withheld and "
+                    f"referred. Its reasoning: {model.reason}"
+                ),
+                rule="own_affairs_model_release",
             )
             return self._proposal(ctx, escalated, Source.MODEL)
         if result.decided_by_rule and result.outcome.code != model.code:

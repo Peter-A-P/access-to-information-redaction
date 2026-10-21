@@ -12,8 +12,13 @@ is deleted when the session is evicted: after `IDLE` without a request, or when 
 `MAX_SESSIONS` are live, oldest first. Nothing is logged about the visitor and nothing is
 written anywhere that outlives the process.
 
-**Rules only.** No model is called, so the demonstration costs nothing to run and cannot
-be made to spend money. The records are generated from a seed at start.
+**Rules, then Jev, replayed.** The proposals are the tool's as it ships: the rules, then Jev
+1.14 on what they leave. Jev's answers for these records were recorded once by `sever
+demo-answers` into `results/model-answers-demo.jsonl` and are replayed from it, with no
+gateway and no network, so the demonstration still calls nothing, costs nothing to run and
+cannot be made to spend money. A record the file does not answer fails the start rather than
+being proposed by the rules alone without saying so. The records are generated from a seed
+at start.
 
 **The redacted PDF is real.** A visitor who completes a record can download it, built from
 their own decisions by the same export that `sever export` uses, with the leak test run on
@@ -60,6 +65,8 @@ IDLE = 2 * 60 * 60
 MAX_SESSIONS = 200
 DEMO_DOCUMENTS = 6
 DEMO_REQUEST = "DEMO-2026"
+# Jev's answers for the demonstration's records, recorded by `sever demo-answers`.
+DEMO_ANSWERS = Path("results/model-answers-demo.jsonl")
 
 Scope = MutableMapping[str, Any]
 Receive = Callable[[], Awaitable[MutableMapping[str, Any]]]
@@ -67,8 +74,38 @@ Send = Callable[[MutableMapping[str, Any]], Awaitable[None]]
 ASGIApp = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 
-def demo_items(documents: int = DEMO_DOCUMENTS) -> tuple[Item, ...]:
-    """One record of each document type, with the tool's rules-only proposals."""
+def demo_model(
+    *,
+    answer_cache: Path = DEMO_ANSWERS,
+    public_body_domains: tuple[str, ...] = (),
+    gateway: Any = None,
+    run_id: str | None = None,
+) -> Any:
+    """The published model over the demonstration's answers: replayed when `gateway` is
+    None, and a miss is an error; recorded through the gateway when one is given, which
+    is what `sever demo-answers` does and the only branch that spends."""
+    from sever.decide.decision_model import DecisionModelDecider
+    from sever.decide.model import DEFAULT_MODEL
+
+    if gateway is None and not answer_cache.is_file():
+        raise FileNotFoundError(
+            f"no recorded answers at {answer_cache}; run `sever demo-answers`, or start "
+            f"the demonstration with --no-model"
+        )
+    return DecisionModelDecider(
+        gateway=gateway,
+        model=DEFAULT_MODEL,
+        enabled=True,
+        run_id=run_id,
+        cache_path=answer_cache,
+        replay_only=gateway is None,
+        public_body_domains=public_body_domains,
+    )
+
+
+def demo_items(documents: int = DEMO_DOCUMENTS, model: Any = None) -> tuple[Item, ...]:
+    """One record of each document type, with the tool's proposals: the rules alone, or
+    the rules then `model` on what they leave, as `sever report` configures it."""
     from sever.corpus.generate import build
     from sever.decide.pipeline import DecisionEngine
     from sever.detect.engine import SeverDetector
@@ -79,7 +116,7 @@ def demo_items(documents: int = DEMO_DOCUMENTS) -> tuple[Item, ...]:
     for corpus_item in build(documents=documents):
         config = config_for(corpus_item)
         doc = corpus_item.rendered.document
-        proposals = DecisionEngine(config=config, detector=detector).propose(doc)
+        proposals = DecisionEngine(config=config, detector=detector, model=model).propose(doc)
         items.append(
             Item(document=doc, proposals=tuple(proposals), requester=config.requester_name)
         )
@@ -87,12 +124,12 @@ def demo_items(documents: int = DEMO_DOCUMENTS) -> tuple[Item, ...]:
 
 
 def released_items(
-    manifest: Path | None = None, directory: Path | None = None
+    manifest: Path | None = None, directory: Path | None = None, model: Any = None
 ) -> tuple[Item, ...]:
     """The pages a public body has already released (`data/demo`), with the tool's
-    rules-only proposals, configured as `sever eval-releases` configures them: no
-    requester, and the archival rule for an archives' release, counted from the year the
-    package was retrieved."""
+    proposals (the rules, then `model` when one is given), configured as `sever
+    eval-releases` configures them: no requester, and the archival rule for an archives'
+    release, counted from the year the package was retrieved."""
     from sever.context.requester import RequestConfig
     from sever.decide.pipeline import DecisionEngine
     from sever.detect.engine import SeverDetector
@@ -108,7 +145,9 @@ def released_items(
             archival=record.archival,
             as_of_year=int(record.retrieved_on[:4]),
         )
-        proposals = DecisionEngine(config=config, detector=detector).propose(document)
+        proposals = DecisionEngine(config=config, detector=detector, model=model).propose(
+            document
+        )
         items.append(
             Item(
                 document=document,
@@ -130,7 +169,11 @@ class _Visitor:
 # The site's pages by the path they are served at, and the content types of its files.
 PAGES = {"/": "index.html", "/index.html": "index.html", "/how": "how.html",
          "/dashboard": "dashboard.html"}
-_ASSET = re.compile(r"^/(?:[a-z]+\.(?:css|js)|fonts/[A-Za-z0-9-]+\.(?:woff2|txt)|data/site\.json)$")
+_ASSET = re.compile(
+    r"^/(?:[a-z]+\.(?:css|js)|fonts/[A-Za-z0-9-]+\.(?:woff2|txt)|data/site\.json"
+    r"|media/[a-z0-9-]+\.(?:mp4|jpg))$"
+)
+_RANGE = re.compile(r"^bytes=(\d*)-(\d*)$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,6 +308,12 @@ class DemoServer:
             if f is None:
                 await _plain(send, 404, b"not found")
                 return
+            wanted = _header(scope, b"range")
+            if wanted is not None:
+                # A browser plays a video only from a server that answers a byte range,
+                # Safari most strictly, so the site's clip is served in parts on request.
+                await _send_range(send, f, wanted)
+                return
             await _send(send, 200, f.body, f.content_type, f.cache)
             return
         key, visitor, created = self.visitor(_cookie(scope, COOKIE))
@@ -382,6 +431,52 @@ async def _send(send: Send, status: int, body: bytes, content_type: str, cache: 
         }
     )
     await send({"type": "http.response.body", "body": body})
+
+
+def _header(scope: Scope, name: bytes) -> str | None:
+    for header, value in scope.get("headers", ()):
+        if header == name:
+            raw: bytes = value
+            return raw.decode("latin-1")
+    return None
+
+
+async def _send_range(send: Send, f: _File, wanted: str) -> None:
+    """One byte range of a file, or 416 for a range that is not one of it."""
+    size = len(f.body)
+    m = _RANGE.match(wanted.strip())
+    first: int | None = None
+    if m and (m.group(1) or m.group(2)):
+        if m.group(1):
+            first = int(m.group(1))
+            last = min(int(m.group(2)), size - 1) if m.group(2) else size - 1
+        else:
+            first, last = max(size - int(m.group(2)), 0), size - 1
+    if first is None or first > last or first >= size:
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 416,
+                "headers": [(b"content-range", f"bytes */{size}".encode())],
+            }
+        )
+        await send({"type": "http.response.body", "body": b""})
+        return
+    part = f.body[first : last + 1]
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 206,
+            "headers": [
+                (b"content-type", f.content_type.encode()),
+                (b"cache-control", f.cache.encode()),
+                (b"accept-ranges", b"bytes"),
+                (b"content-range", f"bytes {first}-{last}/{size}".encode()),
+                (b"content-length", str(len(part)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": part})
 
 
 async def _plain(send: Send, status: int, body: bytes) -> None:

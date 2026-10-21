@@ -1360,10 +1360,10 @@ ul.reasons .why { color: var(--ink-faint); }
 .system:focus .pt { stroke: var(--ink); }
 .pt-label { fill: var(--ink); font-size: 12.5px; font-weight: 600; }
 .pt-sub { fill: var(--ink-faint); font-size: 11px; font-variant-numeric: tabular-nums; }
-.sys-rules .pt { fill: var(--accent); }
-.sys-rules .whisker { stroke: var(--accent); }
-.sys-full .pt, .sys-model_only .pt { fill: var(--alt); }
-.sys-full .whisker, .sys-model_only .whisker { stroke: var(--alt); }
+.sys-full .pt { fill: var(--accent); }
+.sys-full .whisker { stroke: var(--accent); }
+.sys-rules .pt, .sys-model_only .pt { fill: var(--alt); }
+.sys-rules .whisker, .sys-model_only .whisker { stroke: var(--alt); }
 .sys-model_only .pt { fill-opacity: 0.55; }
 .sys-sentence .pt { fill: var(--ink-faint); }
 .sys-sentence .whisker { stroke: var(--ink-faint); }
@@ -1500,3 +1500,13 @@ kbd { font: 600 0.74rem/1 var(--mono); border: 1px solid var(--line-2); border-b
    and a soft gold in the dark, so a dollar figure never reads as one more green. */
 .hero .point.gold { border-top-color: var(--escalate); }
 .point.gold .point-figure { color: var(--escalate); }
+
+/* The clip at the top of the overview: the tool deciding two pages, then redacting six
+   (tools/clip.py). Portrait, so it is held to a column's width and centred. */
+.clip { margin: 1.6rem auto 0.4rem; max-width: 25rem; }
+.clip video {
+  display: block; width: 100%; height: auto; aspect-ratio: 1080 / 1350;
+  background: #f5f3ee; border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.clip figcaption { font-size: 0.85rem; color: var(--ink-faint); margin-top: 0.7rem; }

@@ -9,6 +9,7 @@ the committed answer cache replaying.
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
 from sever.context.record import ContextBuilder
 from sever.context.requester import RequestConfig
@@ -17,6 +18,11 @@ from sever.decide.rules import apply as apply_rules
 from sever.eval.report import config_for
 
 from .test_no_raw_entity_leaves import MIN_LENGTH, _persona_secrets
+
+if TYPE_CHECKING:
+    from sever.decide.placeholders import PlaceholderPolicy as PlaceholderPolicyT
+
+EntityTypeName = str
 
 
 def test_page_off_leaves_the_request_unchanged() -> None:
@@ -110,3 +116,50 @@ def test_a_surname_span_is_the_person_its_sentence_names() -> None:
     assert official is not None and official != witness
     assert official in policy.apply("To: Odette Yetman <o@example.com>")
     assert policy.span_in("Yetman", "From: Maeve Yetman") is None
+
+
+def _guarded(*values: tuple[str, EntityTypeName]) -> PlaceholderPolicyT:
+    from sever.decide.placeholders import PlaceholderPolicy
+    from sever.detect.types import Detection, EntityType
+    from sever.ingest.document import Offsets
+
+    return PlaceholderPolicy.for_detections(
+        Detection(
+            page=1, offsets=Offsets(0, len(t)), text=t, entity_type=EntityType[k], score=1.0,
+            recogniser="t",
+        )
+        for t, k in values
+    )
+
+
+def test_a_date_inside_a_different_date_is_not_refused() -> None:
+    """On a Defence record the detector found "9 APR 08", and "19 APR 08" two lines down
+    contained it once the spaces were stripped for the identifier comparison."""
+    import pytest
+
+    from sever.decide.placeholders import RawEntityLeak
+
+    policy = _guarded(("9 APR 08", "DATE"))
+    policy.guard("(F) 19 APR 08/FLY BACK TO CM")
+    for copy in ("(E) 9 APR 08/VISIT", "(E) 9APR08 VISIT", "(E) 9-apr-08"):
+        with pytest.raises(RawEntityLeak):
+            policy.guard(copy)
+
+
+def test_an_all_digit_number_is_still_found_inside_a_longer_one() -> None:
+    """The plain digits comparison stays for numbers: a country code in front of a
+    telephone number does not make it a different number."""
+    import pytest
+
+    from sever.decide.placeholders import RawEntityLeak
+
+    policy = _guarded(("709-555-0142", "PHONE"))
+    with pytest.raises(RawEntityLeak):
+        policy.guard("call 17095550142 after nine")
+
+
+def test_the_request_s_own_block_word_is_not_refused() -> None:
+    """On an LAC scan the detector typed "signature" as an entity, and every request from a
+    signature block carries `"block": "signature"`."""
+    policy = _guarded(("signature", "PERSON"))
+    policy.guard('{"block": "signature", "page_text": "[PERSON_1] wrote"}')

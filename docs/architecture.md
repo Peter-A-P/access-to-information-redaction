@@ -36,12 +36,14 @@ heading, whether a title is paired with the person, the register, the letterhead
 coreference and the requester. The rules (`sever.decide.rules`) run in an order that is itself
 the design: the requester's own information first, then inherently sensitive identifiers,
 then non-personal entity types, then capacity, then the public register, then the
-twenty-year rule. A clear case becomes a proposal at once. Whatever is left goes to the model
-(`sever.decide.model`) through the gateway with the personal data class, seeing typed
-placeholders and never a name, which the gateway's own ledger makes checkable rather than
-asserted. The model's answer is taken only above a measured confidence threshold
-(`results/thresholds.md`); below it the span is escalated with the model's reasoning attached
-and withheld meanwhile. Every proposal carries the exemption code it rests on, and there is no
+twenty-year rule. A clear case becomes a proposal at once. Whatever is left goes to the model,
+Jev 1.14, a decision model that returns a probability for every category and no text
+(`sever.decide.decision_model`, on the request `sever.decide.model` builds), through the
+gateway with the personal data class, seeing typed placeholders and never a name, which the
+gateway's own ledger makes checkable rather than asserted. The model's answer is taken only
+above a confidence threshold, 0.60 (`results/thresholds.md` has the sweep and the rule fixed
+before looking), and a release in a message about an employee's own affairs needs 0.75; below
+it the span is escalated with the model's probabilities attached and withheld meanwhile. Every proposal carries the exemption code it rests on, and there is no
 rule that releases a span because nothing matched.
 
 ## The reviewer decides

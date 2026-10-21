@@ -53,7 +53,7 @@
         <div class="node"><strong>Detection</strong><span>Presidio and spaCy, Canadian identifier patterns, and a sweep that finds every other mention of a name already found</span></div>
         <div class="node"><strong>Context record</strong><span>for every span: its block, heading, title, other mentions, register entry, requester match</span></div>
         <div class="node"><strong>Rules</strong><span>fixed order, each tied to a provision; what is left is escalated</span></div>
-        <div class="node optional"><strong>Model, optional</strong><span>through project 04's gateway on placeholders; off by default</span></div>
+        <div class="node"><strong>Jev</strong><span>a decision model on what the rules leave, through project 04's gateway on placeholders; below {{model_threshold}} it escalates</span></div>
       </div>
       <div class="lane person">
         <p class="lane-title">A person decides</p>
@@ -89,9 +89,10 @@
     </ol>
     <div class="verdict">
       <p><strong>There is no rule that releases something because nothing matched.</strong>
-      The last step is always "withhold and ask a person", and the optional model is asked
-      only about what reaches it, with its answer accepted only above a confidence threshold
-      measured on separate records.</p>
+      The last step is always "withhold and ask a person", and Jev is asked only about what
+      reaches it, with its answer accepted only above a confidence threshold, {{model_threshold}}.
+      In a message where an employee writes about their own leave, health or grievance, its
+      release needs {{own_affairs_bar}}.</p>
     </div>
   </section>
 
@@ -137,8 +138,9 @@
     <h2>Where this demonstration runs</h2>
     <p class="section-lead">
       One container beside project 04's gateway on a small virtual server in Beauharnois,
-      Quebec, behind the same Caddy. It calls no model, so it costs nothing to run and cannot
-      be made to spend money.
+      Quebec, behind the same Caddy. Jev's answers for the demonstration's records were
+      recorded once and are replayed from a file, so it calls no model, costs nothing to run
+      and cannot be made to spend money.
     </p>
     <div class="arch narrow">
       <div class="lane">

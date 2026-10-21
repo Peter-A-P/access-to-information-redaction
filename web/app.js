@@ -65,9 +65,9 @@ function xAxis(svg, x, ticks, top, bottom, title, fmt) {
 /* ------------------------------------------------------------------ the trade-off */
 
 const SYSTEM_LABELS = {
-  rules: "The tool (rules only)",
-  full: "Rules, then a model",
-  model_only: "A model, no rules",
+  full: "The tool: rules, then Jev",
+  rules: "The rules alone",
+  model_only: "Jev alone, no rules",
   sentence: "Rules, no context",
   blunt: "Blunt privacy tool",
 };
@@ -99,11 +99,11 @@ function drawTradeoff(systems) {
       "aria-label": `${SYSTEM_LABELS[s.key]}: leak ${pct(s.leak[0])}, over-redaction ${pct(s.over[0])}` });
     g.append(el("line", { x1: x(s.over[1]), x2: x(s.over[2]), y1: y(s.leak[0]), y2: y(s.leak[0]), class: "whisker" }));
     g.append(el("line", { x1: x(s.over[0]), x2: x(s.over[0]), y1: y(s.leak[1]), y2: y(s.leak[2]), class: "whisker" }));
-    g.append(el("circle", { cx: x(s.over[0]), cy: y(s.leak[0]), r: s.key === "rules" ? 7 : 5.5, class: "pt" }));
-    /* The two sever rows sit close together, so the model's label goes above and to the
-       left of its point and the shipped tool's to the right. */
-    const left = s.over[0] > 70 || s.key === "full";
-    const dy = s.key === "full" ? -28 : -9;
+    g.append(el("circle", { cx: x(s.over[0]), cy: y(s.leak[0]), r: s.key === "full" ? 7 : 5.5, class: "pt" }));
+    /* The tool sits at the left edge, so its label goes to the right; the model alone sits
+       close to it, so its label goes above. */
+    const left = s.over[0] > 70;
+    const dy = s.key === "model_only" ? -28 : -9;
     const tx = x(s.over[0]) + (left ? -12 : 12);
     g.append(el("text", { x: tx, y: y(s.leak[0]) + dy, "text-anchor": left ? "end" : "start",
       class: "pt-label halo" }, SYSTEM_LABELS[s.key]));
@@ -196,7 +196,7 @@ function drawLeaks(systems) {
     ["box_short", "seg-short", "Box too short"],
     ["decision", "seg-decision", "The decision was wrong"],
   ];
-  const order = ["rules", "full", "sentence", "model_only", "blunt"];
+  const order = ["full", "rules", "model_only", "sentence", "blunt"];
   const rows = order.map((k) => systems.find((s) => s.key === k)).filter(Boolean);
   const W = 720, L = 190, R = 50, T = 8, barH = 22, rowGap = 14;
   const H = T + rows.length * (barH + rowGap) + 34;
@@ -350,3 +350,15 @@ async function main() {
 }
 
 main();
+
+/* The clip plays by itself, muted, unless the reader has asked for less motion; then it
+   waits with its controls showing. */
+(function () {
+  const clip = document.querySelector(".clip video");
+  if (!clip || !window.matchMedia) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    clip.removeAttribute("autoplay");
+    clip.pause();
+    clip.controls = true;
+  }
+})();

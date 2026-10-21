@@ -4,10 +4,12 @@
 
 **Corpus:** 6 published release packages, 123 pages with visible text, from Library and Archives Canada (RG10 records, found under RG13), Library and Archives Canada (RG13 records, found under RG13), Library and Archives Canada (RG29 records, found under RG29), Library and Archives Canada (RG76 records, found under RG76). Track: real releases.
 
+**Decided by:** the rules, then openrouter/typesafe/jev-1.14 on what they left at a confidence threshold of 0.60, through the 04 gateway on placeholders. Every row of the ablation table below is the rules alone except the last, which is the tool as it ships, with the model.
+
 | Denominator | Spans | Over-redaction |
 |---|---:|---|
-| Spans that could be personal information | 426 | 99.8% (99.5% to 100.0%), n=426 |
-| Every detected span, including the types the tool releases by design | 1599 | 26.6% (19.9% to 35.3%), n=1599 |
+| Spans that could be personal information | 426 | 77.9% (59.6% to 89.7%), n=426 |
+| Every detected span, including the types the tool releases by design | 1599 | 24.6% (14.9% to 36.6%), n=1599 |
 
 **Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
@@ -19,13 +21,14 @@ Every row is scored over the 483 spans the first row called possibly personal, s
 
 | Configuration | Of those spans, withheld | Withholding boxes over released text, any type |
 |---|---|---:|
-| as scored until 2026-10-17: flat text, no military vocabulary | 99.8% (99.6% to 100.0%), n=483 | 482 |
-| layout recovered (a rank under a signature counts as a title) | 99.8% (99.6% to 100.0%), n=483 | 482 |
-| vocabulary and screens: ranks, units, OCR noise, the stamp | 88.0% (81.2% to 94.4%), n=483 | 425 |
-| layout and vocabulary, no archival rule | 88.0% (81.2% to 94.4%), n=483 | 425 |
-| all of it, with the 110-year archival rule (as it now ships) | 88.0% (81.2% to 94.4%), n=483 | 425 |
+| as scored until 2026-10-17: flat text, no military vocabulary | 98.3% (96.6% to 100.0%), n=483 | 840 |
+| layout recovered (a rank under a signature counts as a title) | 98.3% (96.6% to 100.0%), n=483 | 840 |
+| vocabulary and screens: ranks, units, OCR noise, the stamp | 86.5% (81.2% to 91.4%), n=483 | 779 |
+| layout and vocabulary, no archival rule | 86.5% (81.2% to 91.4%), n=483 | 779 |
+| all of it, with the 110-year archival rule, the rules alone | 86.5% (81.2% to 91.4%), n=483 | 779 |
+| all of it, then openrouter/typesafe/jev-1.14 on what the rules left (as it now ships) | 68.7% (48.6% to 83.3%), n=483 | 394 |
 
-The 88.0% here and the 99.8% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 426 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
+The 68.7% here and the 77.9% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 426 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
 
 In the shipping configuration the screen dropped 58 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 0 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
 
@@ -35,13 +38,15 @@ In the shipping configuration the screen dropped 58 person spans with no name-sh
 
 | Rule | Spans that could be personal information |
 |---|---:|
-| `unresolved` | 367 |
+| `model` | 286 |
+| `below_threshold` | 74 |
 | `family_relationship` | 58 |
-| `deceased_over_twenty_years` | 1 |
+| `deceased_over_twenty_years` | 8 |
 
 **What the tool would have withheld, by category**
 
 | Category | Spans withheld over text a reviewer released |
 |---|---:|
-| `E1` | 367 |
-| `R1` | 58 |
+| `R1` | 252 |
+| `E1` | 74 |
+| `E2` | 6 |

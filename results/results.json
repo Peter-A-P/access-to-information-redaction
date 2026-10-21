@@ -14,19 +14,20 @@
   }
  },
  "detector": "sever-detector",
- "model": "anthropic/claude-haiku-5-5",
+ "model": "openrouter/typesafe/jev-1.14",
  "model_run": "9921 answers replayed from the cache, nothing spent",
  "model_asks": 2294,
  "model_only_asks": 7627,
+ "model_threshold": 0.6,
  "jurisdiction": "federal",
  "cost": {
   "run_ids": [
-   "sever-haiku55-210-r2:baseline",
-   "sever-haiku55-210-r2:pipeline"
+   "sever-jev114-210:baseline",
+   "sever-jev114-210:pipeline"
   ],
-  "usd_per_page": 0.006438838095238095,
-  "undeduplicated_usd_per_page": 0.00654439281811085,
-  "cost_usd": 4.446247699999997,
+  "usd_per_page": 0.0012895,
+  "undeduplicated_usd_per_page": 0.001310639344262295,
+  "cost_usd": 0.905891658000003,
   "paid_calls": 7549,
   "asks": 2294
  },
@@ -36,12 +37,12 @@
    "note": "The full configuration. The rules decide what they can; what is left goes to the model on typed placeholders through the 04 gateway, and an answer below the confidence threshold is escalated rather than used.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "13.8% (12.6% to 15.0%), n=3780",
+   "over_redaction_rate": "1.7% (1.3% to 2.2%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "11.1% (10.1% to 12.1%), n=5460",
+   "escalation_rate": "1.8% (1.3% to 2.2%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 40,
+   "unlabelled_detections_withheld": 75,
    "decomposition_leaks": 19,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 1,
@@ -51,11 +52,11 @@
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
    "leak_rate": "1.1% (0.7% to 1.7%), n=1680",
-   "category_accuracy": "94.5% (92.7% to 96.2%), n=1661",
+   "category_accuracy": "97.7% (96.8% to 98.6%), n=1661",
    "per_code_over_redaction": {
-    "K1": "4.2% (3.0% to 5.5%), n=980",
-    "K2": "22.0% (20.2% to 23.9%), n=2170",
-    "K3": "0.4% (0.0% to 1.1%), n=280",
+    "K1": "1.7% (0.8% to 2.8%), n=980",
+    "K2": "2.1% (1.5% to 2.8%), n=2170",
+    "K3": "0.0% (0.0% to 3.4%), n=280",
     "K4": "1.4% (0.0% to 4.3%), n=70",
     "K6": "0.0% (0.0% to 1.4%), n=280"
    },
@@ -69,32 +70,32 @@
    "note": "The same model, the same context record and the same confidence threshold, with the deterministic layer removed: every span is sent rather than only the residual. The difference between this row and the one above is what the deterministic rules are worth.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "38.4% (36.7% to 40.1%), n=3780",
+   "over_redaction_rate": "7.2% (6.3% to 8.2%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "30.5% (29.1% to 31.8%), n=5460",
+   "escalation_rate": "8.4% (7.5% to 9.4%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 313,
-   "decomposition_leaks": 27,
+   "unlabelled_detections_withheld": 228,
+   "decomposition_leaks": 46,
    "decomposition_detector_missed": 17,
    "decomposition_detector_mislabelled": 1,
-   "decomposition_box_too_short": 1,
-   "decomposition_decision_wrong": 8,
+   "decomposition_box_too_short": 3,
+   "decomposition_decision_wrong": 25,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "1.6% (1.1% to 2.2%), n=1680",
-   "category_accuracy": "83.2% (80.8% to 85.4%), n=1653",
+   "leak_rate": "2.7% (2.0% to 3.5%), n=1680",
+   "category_accuracy": "84.5% (82.5% to 86.3%), n=1634",
    "per_code_over_redaction": {
-    "K1": "11.5% (9.1% to 14.1%), n=980",
-    "K2": "52.3% (50.0% to 54.8%), n=2170",
-    "K3": "47.5% (42.1% to 53.2%), n=280",
+    "K1": "5.2% (3.8% to 6.7%), n=980",
+    "K2": "6.2% (4.9% to 7.4%), n=2170",
+    "K3": "6.1% (3.6% to 8.6%), n=280",
     "K4": "100.0% (93.2% to 100.0%), n=70",
     "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "1.6% (1.1% to 2.2%), n=1680"
+    "R1": "2.7% (2.0% to 3.5%), n=1680"
    }
   },
   {
@@ -198,7 +199,7 @@
   }
  ],
  "pdf_leak_test": {
-  "boxes_tested": 2220,
+  "boxes_tested": 1796,
   "recoverable": 0,
   "documents": 210,
   "ocr_channel_ran": true,

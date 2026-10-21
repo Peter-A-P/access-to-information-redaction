@@ -2191,3 +2191,68 @@ Not tested: whether the question's shape, ten options each a paragraph of the ca
 is outside what Kev was trained on and part of both Kev results. Kev's server offers a
 `permute` endpoint that would show 0.8B's position bias directly, and shorter options would
 test the shape; neither was run. `docs/rejected.md` section 8.
+
+### 12.52 Jev is the published model; the website leads with it
+
+2026-10-21. Peter chose Jev 1.14 over Claude Haiku 5.5 as the model on the residual, at
+0.60, and asked for every table, the README and the website to describe the tool with it.
+This entry resolves 12.50's "until the published model is chosen".
+
+**What moved.** `DEFAULT_MODEL` is Jev; a decision model runs at its own threshold wherever
+an engine is built without one (`default_threshold_for`), so `sever report`, the gate export,
+the release track and the demonstration all run Jev at 0.60 rather than the language model's
+0.90. The report states the threshold beside the model. The answer caches follow the rule
+"unsuffixed is the published model's": Jev's corpus answers are now
+`results/model-answers.jsonl`, and Haiku's corpus, trap and release answers carry `-haiku`.
+Haiku's published tables are kept unchanged in `results/haiku/`, with a cost file rewritten
+from the same ledger run so the comparison has its latency; `results/jev/` is gone, since its
+tables are now the top-level ones. `sever cost` records the mean call latency: 244 ms for Jev,
+1,826 ms for Haiku. Cost per page US$0.00129 against US$0.00644.
+
+**The headline did not move from 12.50**: leak 1.1 percent, over-redaction 1.7, escalation
+1.8, at 0.60. `sever eval-thresholds` now writes the selection rule's result itself, from the
+splits, rather than leaving it to prose: it picks 0.00, test split leak 1.2 and
+over-redaction 1.1, and 1.6 at 0.60.
+
+**The trap set, run on Jev for the first time (US$0.06), leaked.** 8 of 240 must-withhold
+spans, 3.3 percent, where the rules alone and Haiku leaked none: in every case an employee
+writing from their work address about their own leave or grievance (docs/escalation.md case
+8), called an official or the requester at 0.60 to 0.70. Three fixes were measured on the
+recorded answers, and Peter chose the third: forbid any model release in such a message (no
+leak, over-redaction 82.4 percent, the rules alone's), raise the threshold everywhere to 0.75
+(no leak, 18.8, and the headline's over-redaction to 3.3), or require 0.75 for a release in
+such a message only (no leak, 18.8, headline unchanged): `OWN_AFFAIRS_RELEASE_THRESHOLD`,
+rule `own_affairs_model_release`. Chosen after the trap set was scored, so the trap set is no
+longer a blind test of it. The headline corpus has no such message and does not move.
+
+**The release track stopped twice on the guard, which was right to stop and wrong about
+why.** On the Defence set a detected date "9 APR 08" was found inside "19 APR 08" by the
+identifier comparison, which strips separators; on the fresh set a span the detector typed
+from the word "signature" matched the request's own `"block": "signature"`. Neither was a
+leak and nothing was sent. An identifier with a letter in it must now also be found with its
+boundaries (`_contains_spread`; all-digit numbers keep the plain test), and the request's own
+field words are exempt as the document-type words already were (`PAYLOAD_WORDS`). The corpus
+answers replay byte for byte after the change, so no request the guard passed has changed.
+
+**Real records with Jev** (US$0.32 for the three sets, 2,442 calls including two runs cut short by the network): of the spans a person released,
+the tool withholds 28.4 percent on the Defence set (52.2 with the rules alone), 68.6 on the
+held-out set (89.0) and 68.7 on the fresh set (86.5). The rules-alone figures are
+higher than the ones published on 2026-10-18 (41.6 on the Defence set), because the rules have
+changed since and the release tables had not been regenerated; that change is not analysed
+here and should be, before the release track is quoted against the rules again.
+
+**Project 03's gate passes Jev**: documents with no leak 91.0 percent either way, the
+requester's own information +29.0 points, two suites under-powered. The NL configuration,
+last run on Haiku 4.5, replays from the same answers: leak 1.1, over-redaction 1.8.
+
+**The demonstration replays Jev.** `sever demo-answers` recorded Jev's answers for the six
+invented records and ten released excerpts once (254 calls, US$0.03) into
+`results/model-answers-demo.jsonl`; the container replays them and still calls nothing. The
+site leads with a clip of the tool deciding two pages and redacting six, rendered from the
+engine's output by `tools/clip.py` at Jev's measured pace, and serves it with byte ranges,
+which a browser needs to play a video.
+
+**Not re-measured with Jev**: the reviewer study (frozen rules-only proposals by design, so
+the timed tool is the weaker one), the scanned track (OCR text has not been sent to Jev), and
+the directory and name-shape tables (rules and detector only). Each says so where it is
+quoted.

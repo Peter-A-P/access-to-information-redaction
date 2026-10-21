@@ -2,15 +2,23 @@
 
 # The model confidence threshold, swept
 
-**Corpus:** 210 documents, 210 pages. Model: anthropic/claude-haiku-5-5. 18352 answers replayed from the cache, nothing spent.
+**Corpus:** 210 documents, 210 pages. Model: openrouter/typesafe/jev-1.14. 18352 answers replayed from the cache, nothing spent.
 
 | Confidence threshold | Model answers accepted | Leak rate | Over-redaction | Escalation |
 |---|---:|---|---|---|
-| `0.00` (accept every answer) | 2294/2294 (100%) | 1.4% (0.8% to 2.0%), n=1680 | 1.9% (1.4% to 2.4%), n=3780 | 1.6% (1.1% to 2.1%), n=5460 |
-| `0.50` | 2294/2294 (100%) | 1.4% (0.8% to 2.0%), n=1680 | 1.9% (1.4% to 2.4%), n=3780 | 1.6% (1.1% to 2.1%), n=5460 |
-| `0.60` | 2289/2294 (100%) | 1.4% (0.8% to 2.0%), n=1680 | 1.9% (1.4% to 2.4%), n=3780 | 1.6% (1.1% to 2.1%), n=5460 |
-| `0.70` | 2232/2294 (97%) | 1.4% (0.8% to 2.0%), n=1680 | 2.4% (1.8% to 2.9%), n=3780 | 2.0% (1.5% to 2.5%), n=5460 |
-| `0.80` | 2108/2294 (92%) | 1.2% (0.7% to 1.7%), n=1680 | 5.0% (4.2% to 5.7%), n=3780 | 4.0% (3.3% to 4.6%), n=5460 |
-| `0.90` | 1692/2294 (74%) | 1.1% (0.7% to 1.7%), n=1680 | 13.8% (12.6% to 15.0%), n=3780 | 11.1% (10.1% to 12.1%), n=5460 |
-| `0.95` | 524/2294 (23%) | 1.1% (0.7% to 1.7%), n=1680 | 21.8% (20.3% to 23.2%), n=3780 | 29.2% (27.6% to 30.8%), n=5460 |
+| `0.00` (accept every answer) | 2294/2294 (100%) | 1.1% (0.7% to 1.7%), n=1680 | 1.2% (0.8% to 1.6%), n=3780 | 1.2% (0.8% to 1.6%), n=5460 |
+| `0.50` | 2281/2294 (99%) | 1.1% (0.7% to 1.7%), n=1680 | 1.3% (0.9% to 1.7%), n=3780 | 1.4% (1.0% to 1.8%), n=5460 |
+| `0.60` | 2227/2294 (97%) | 1.1% (0.7% to 1.7%), n=1680 | 1.7% (1.3% to 2.2%), n=3780 | 1.8% (1.3% to 2.2%), n=5460 |
+| `0.70` | 2102/2294 (92%) | 1.1% (0.7% to 1.7%), n=1680 | 2.5% (2.0% to 3.0%), n=3780 | 2.7% (2.2% to 3.2%), n=5460 |
+| `0.80` | 1916/2294 (84%) | 1.1% (0.7% to 1.7%), n=1680 | 4.5% (3.9% to 5.2%), n=3780 | 4.7% (4.1% to 5.4%), n=5460 |
+| `0.90` | 1633/2294 (71%) | 1.1% (0.7% to 1.7%), n=1680 | 8.7% (7.8% to 9.7%), n=3780 | 8.9% (7.9% to 9.8%), n=5460 |
+| `0.95` | 1258/2294 (55%) | 1.1% (0.7% to 1.7%), n=1680 | 14.7% (13.1% to 16.2%), n=3780 | 14.8% (13.3% to 16.2%), n=5460 |
 | `1.01` (accept none: rules only) | 0/2294 (0%) | 1.1% (0.7% to 1.7%), n=1680 | 23.8% (22.3% to 25.3%), n=3780 | 35.7% (34.3% to 37.1%), n=5460 |
+
+**The threshold rule, fixed before looking.** The lowest threshold at which the model adds no leak over the rules alone on the validation split (1 leaks with the rules alone there) picks `0.00`. Scored once on the test split:
+
+| On the test split | Leak rate | Over-redaction |
+|---|---|---|
+| the rules alone | 1.2% (0.6% to 2.0%), n=818 | 24.7% (22.4% to 27.1%), n=1794 |
+| `0.00`, the threshold the rule picked (the reported result) | 1.2% (0.6% to 2.0%), n=818 | 1.1% (0.7% to 1.5%), n=1794 |
+| `0.60`, the threshold the tool runs at, chosen after the test split was seen | 1.2% (0.6% to 2.0%), n=818 | 1.6% (1.1% to 2.1%), n=1794 |

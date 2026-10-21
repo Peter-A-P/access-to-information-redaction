@@ -1,5 +1,6 @@
-# The public demonstration: `sever demo`, rules only, behind the shared host's Caddy.
-# Built from a checkout; see docs/deploy.md. Nothing in the image calls a model and the
+# The public demonstration: `sever demo`, behind the shared host's Caddy. Built from a
+# checkout; see docs/deploy.md. The proposals are the rules then Jev 1.14, whose answers are
+# replayed from results/model-answers-demo.jsonl: nothing in the image calls a model and the
 # image holds no credential.
 FROM python:3.13-slim
 
@@ -27,7 +28,7 @@ RUN .venv/bin/sever site --out /app/site
 # laptop by `sever demo-records` and gitignored, so a checkout without them builds an image
 # without them. Loading them here fails the build instead of the first visitor.
 COPY data/demo ./data/demo
-RUN .venv/bin/python -c "from sever.review.demo import released_items; print(len(released_items()), 'released records')"
+RUN .venv/bin/python -c "from sever.review.demo import demo_model, released_items; print(len(released_items(model=demo_model())), 'released records')"
 
 # The checkout's own permissions come across with COPY, and a private checkout is often
 # owner-only, which the unprivileged user below could not read.

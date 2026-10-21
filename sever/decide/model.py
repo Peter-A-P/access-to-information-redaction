@@ -51,7 +51,12 @@ from sever.taxonomy.loader import Taxonomy, default_taxonomy
 # happens here, in sever.decide.placeholders, before the request is built.
 DATA_CLASS = "personal"
 CAPS_PROJECT = "access-to-information-redaction"
-DEFAULT_MODEL = "anthropic/claude-haiku-5-5"
+# The published model since 2026-10-21: Jev 1.14, a decision model, which the CLI builds as a
+# `DecisionModelDecider` and runs at its own threshold (sever/decide/decision_model.py,
+# PLAN.md 12.52). Claude Haiku 5.5, published before it, is `HAIKU_MODEL`, and the settings
+# below are its: a decision model takes no token ceiling, effort or temperature.
+DEFAULT_MODEL = "openrouter/typesafe/jev-1.14"
+HAIKU_MODEL = "anthropic/claude-haiku-5-5"
 # Haiku 5.5 thinks before it answers and the thinking counts against this ceiling, so it
 # is set for the thinking and the answer together. A run at low effort used about 300
 # output tokens a call; 400 was set for Haiku 4.5, which did not think.
@@ -237,7 +242,7 @@ class GatewayModelDecider:
     """
 
     gateway: Any = None
-    model: str = DEFAULT_MODEL
+    model: str = HAIKU_MODEL
     taxonomy: Taxonomy = field(default_factory=default_taxonomy)
     max_tokens: int = DEFAULT_MAX_TOKENS
     # None, because Haiku 5.5 (like every 5.5 model) refuses a non-default temperature with

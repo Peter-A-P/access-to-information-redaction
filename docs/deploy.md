@@ -4,8 +4,10 @@
 project's website, built by `sever site` into the image from the committed results
 (`sever/site.py`), and at `/dashboard` a live count of visitors' decisions
 (`sever/review/stats.py`); neither sets a cookie. The reviewer's screen is at `/review`: the reviewer's screen over six
-invented records and ten short excerpts of records LAC has released (PLAN.md 12.46), one private session per visitor, forgotten after two hours, rules only
-and no model. A visitor who completes a record can download its PDF, built from their own
+invented records and ten short excerpts of records LAC has released (PLAN.md 12.46), one private session per visitor, forgotten after two hours.
+The proposals are the tool as it ships, the rules then Jev 1.14, and Jev's answers for these
+records are replayed from `results/model-answers-demo.jsonl` (recorded once by `sever
+demo-answers`, PLAN.md 12.52), so no model is called. A visitor who completes a record can download its PDF, built from their own
 decisions and leak-tested before it is served. `sever/review/demo.py` says what the
 demonstration adds to the reviewer application and why. It adds nothing else.
 
@@ -17,7 +19,8 @@ network so Caddy can reach it by name. The container is read-only, with a 256 MB
 for the visitors' audit logs. It drops every capability and is limited to one CPU and 2 GB.
 
 The image holds no credential and the demonstration calls nothing outside itself, so a
-compromise of it reaches six invented records and nineteen pages LAC has already published.
+compromise of it reaches six invented records, nineteen pages LAC has already published, and
+the model answers recorded for them, which are probabilities over categories and no text.
 
 ## Standing it up
 

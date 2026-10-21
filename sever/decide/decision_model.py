@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 from sever.context.record import ContextRecord
 from sever.decide.model import GatewayModelDecider, PageView
@@ -91,6 +91,8 @@ class DecisionModelDecider(GatewayModelDecider):
     temperature: float | None = None
     effort: str | None = None
     name: str = "decision-model"
+    # What `DecisionEngine` runs this decider at when no threshold is given.
+    default_threshold: ClassVar[float] = DEFAULT_DECISION_THRESHOLD
     _question: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:

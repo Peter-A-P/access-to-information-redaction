@@ -4,10 +4,12 @@
 
 **Corpus:** 6 published release packages, 82 pages with visible text, from Library and Archives Canada (Department of National Defence records, RG24). Track: real releases.
 
+**Decided by:** the rules, then openrouter/typesafe/jev-1.14 on what they left at a confidence threshold of 0.60, through the 04 gateway on placeholders. Every row of the ablation table below is the rules alone except the last, which is the tool as it ships, with the model.
+
 | Denominator | Spans | Over-redaction |
 |---|---:|---|
-| Spans that could be personal information | 341 | 65.7% (56.8% to 81.5%), n=341 |
-| Every detected span, including the types the tool releases by design | 1679 | 13.3% (9.9% to 17.1%), n=1679 |
+| Spans that could be personal information | 341 | 34.9% (23.7% to 52.6%), n=341 |
+| Every detected span, including the types the tool releases by design | 1679 | 14.5% (9.4% to 18.7%), n=1679 |
 
 **Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
@@ -19,13 +21,14 @@ Every row is scored over the 538 spans the first row called possibly personal, s
 
 | Configuration | Of those spans, withheld | Withholding boxes over released text, any type |
 |---|---|---:|
-| as scored until 2026-10-17: flat text, no military vocabulary | 100.0% (67.3% to 100.0%), n=538 | 538 |
-| layout recovered (a rank under a signature counts as a title) | 95.7% (92.0% to 99.4%), n=538 | 515 |
-| vocabulary and screens: ranks, units, OCR noise, the stamp | 43.7% (34.8% to 66.3%), n=538 | 235 |
-| layout and vocabulary, no archival rule | 41.6% (32.7% to 63.4%), n=538 | 224 |
-| all of it, with the 110-year archival rule (as it now ships) | 41.6% (32.7% to 63.4%), n=538 | 224 |
+| as scored until 2026-10-17: flat text, no military vocabulary | 100.0% (67.3% to 100.0%), n=538 | 1159 |
+| layout recovered (a rank under a signature counts as a title) | 95.7% (92.0% to 99.4%), n=538 | 1136 |
+| vocabulary and screens: ranks, units, OCR noise, the stamp | 54.3% (49.7% to 68.2%), n=538 | 891 |
+| layout and vocabulary, no archival rule | 52.2% (47.9% to 65.5%), n=538 | 880 |
+| all of it, with the 110-year archival rule, the rules alone | 52.2% (47.9% to 65.5%), n=538 | 880 |
+| all of it, then openrouter/typesafe/jev-1.14 on what the rules left (as it now ships) | 28.4% (23.4% to 40.2%), n=538 | 244 |
 
-The 41.6% here and the 65.7% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 341 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
+The 28.4% here and the 34.9% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 341 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
 
 In the shipping configuration the screen dropped 29 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 22 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
 
@@ -35,8 +38,9 @@ In the shipping configuration the screen dropped 29 person spans with no name-sh
 
 | Rule | Spans that could be personal information |
 |---|---:|
-| `unresolved` | 219 |
+| `model` | 136 |
 | `military_rank` | 90 |
+| `below_threshold` | 83 |
 | `official_capacity_title` | 17 |
 | `official_capacity_contact` | 9 |
 | `family_relationship` | 5 |
@@ -46,5 +50,5 @@ In the shipping configuration the screen dropped 29 person spans with no name-sh
 
 | Category | Spans withheld over text a reviewer released |
 |---|---:|
-| `E1` | 219 |
-| `R1` | 5 |
+| `E1` | 83 |
+| `R1` | 36 |

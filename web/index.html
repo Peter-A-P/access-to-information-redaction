@@ -25,6 +25,17 @@
       the section of the law it rests on, and leaves the decision on every page to a person,
       with a log nobody can quietly edit.
     </p>
+    <figure class="clip">
+      <video src="/media/jev-clip.mp4" poster="/media/jev-clip.jpg" autoplay muted loop playsinline preload="metadata" aria-describedby="clip-caption"></video>
+      <figcaption id="clip-caption">
+        Two invented records, decided by the tool as it ships. The rules' decisions land at
+        once; each of Jev's lands 0.24 seconds after the last, its measured pace. Green is
+        released, red withheld, amber withheld and sent to a person, grey not personal
+        information at all. Then six pages as the export leaves them: only what is withheld,
+        with the text under each box removed. Rendered from the engine's own output by
+        <a data-repo href="{{repository}}/blob/main/tools/clip.py">tools/clip.py</a>.
+      </figcaption>
+    </figure>
     <div class="hero-points">
       <div class="point">
         <span class="point-figure">{{speedup}}&times;</span>
@@ -58,8 +69,8 @@
       hours and dollars a year, multiply the measured saving by the government's own published
       page count and pay scale, and <a href="#reviewers">the study</a> says how. The button above
       is the reviewer's own screen over {{demo_records_word}} invented records and ten short excerpts
-      of records Library and Archives Canada has already released, with nothing kept once you
-      leave. <a href="/how">See how it's built</a>.
+      of records Library and Archives Canada has already released, proposed by the rules and
+      then Jev, with nothing kept once you leave. <a href="/how">See how it's built</a>.
     </p>
   </header>
 
@@ -76,7 +87,7 @@
       <li><a href="#pdf">A black box is not a redaction</a></li>
       <li><a href="#scans">Scanned paper</a></li>
       <li><a href="#real">Real released records</a></li>
-      <li><a href="#model">The language model, measured and switched off</a></li>
+      <li><a href="#model">Jev, on what the rules leave</a></li>
       <li><a href="#law">The law, as data</a></li>
       <li><a href="#rejected">What did not work</a></li>
       <li><a href="#limits">What this does not do</a></li>
@@ -130,7 +141,7 @@
   <section class="section" id="example">
     <h2>One memorandum, read the way a reviewer reads it</h2>
     <p class="section-lead">
-      This is the tool's own output, produced when this page was built, on an invented
+      This is the tool's own output, the rules and then Jev, produced when this page was built, on an invented
       human-resources memorandum from the demonstration: the findings of a confidential
       workplace complaint. The request was made by <strong>{{example_requester}}</strong>, a
       member of the public who is named in it. Every highlight is a proposal: the colour is
@@ -166,10 +177,12 @@
       identifies the one person who holds it. The Program Officer who wrote the memorandum is an
       official doing their job, so their name and work email are released. The requester gets their
       own name back and nothing else of a file about other people.</p>
-      <p><strong>When it is unsure, it withholds and asks.</strong> The memorandum's recipient,
-      Desmond Okonkwo, is escalated, though a reviewer would release the name: the title sits
-      beside it on the To: line, and the rules do not yet pair the two there. That is the
-      direction the tool errs in on purpose, and the reviewer releases it with one key.</p>
+      <p><strong>Where the rules stopped, Jev read the page.</strong> The memorandum's
+      recipient, Desmond Okonkwo, sits on the To: line with their title beside it, a pairing the
+      rules do not make there, so with the rules alone the name was withheld and sent to a person.
+      Jev, given the masked page, placed them as an official and released the name. When it is
+      unsure it does the opposite: below its threshold, the span is withheld and asked
+      about.</p>
     </div>
   </section>
 
@@ -185,7 +198,7 @@
       <li><span class="step">2</span><strong>Find</strong><span>Every name, number, address and title that could be personal information.</span></li>
       <li><span class="step">3</span><strong>Place</strong><span>Build each person's context: their title, their block, every other mention of them.</span></li>
       <li><span class="step">4</span><strong>Decide</strong><span>Fixed rules in a fixed order, each tied to a section of the law.</span></li>
-      <li><span class="step">5</span><strong>Ask</strong><span>Optionally, a model on what is left, seeing placeholders, never a name.</span></li>
+      <li><span class="step">5</span><strong>Ask</strong><span>Jev, a decision model, on what is left, seeing placeholders, never a name. Unsure, it escalates.</span></li>
       <li><span class="step">6</span><strong>Review</strong><span>A person approves or overrules every proposal, page by page, all of it logged.</span></li>
       <li><span class="step">7</span><strong>Release</strong><span>Remove the text under every box, then test that nothing is left.</span></li>
     </ol>
@@ -216,20 +229,22 @@
     </p>
     <figure class="chart-figure">
       <div id="tradeoff-chart" class="chart"></div>
-      <figcaption>Each configuration with its 95% interval on both rates, resampled over documents. The tool ships as the rules alone.</figcaption>
+      <figcaption>Each configuration with its 95% interval on both rates, resampled over documents. The tool ships as the rules, then Jev on what they leave.</figcaption>
     </figure>
     <div class="headline">
-      <div class="stat up"><span class="figure">{{rules_over}}</span><span class="caption">of what must be released, withheld by the tool ({{rules_over_ci}}), against {{blunt_over}} for the blunt tool</span></div>
-      <div class="stat"><span class="figure">{{rules_leak}}</span><span class="caption">of what must be withheld, released ({{rules_leak_ci}}), against {{blunt_leak}} for the blunt tool</span></div>
-      <div class="stat"><span class="figure">{{rules_esc}}</span><span class="caption">of spans sent to a person as undecidable ({{rules_esc_ci}}); every one is withheld until they say otherwise</span></div>
+      <div class="stat up"><span class="figure">{{full_over}}</span><span class="caption">of what must be released, withheld by the tool ({{full_over_ci}}), against {{blunt_over}} for the blunt tool and {{rules_over}} for the rules alone</span></div>
+      <div class="stat"><span class="figure">{{full_leak}}</span><span class="caption">of what must be withheld, released ({{full_leak_ci}}), against {{blunt_leak}} for the blunt tool</span></div>
+      <div class="stat"><span class="figure">{{full_esc}}</span><span class="caption">of spans sent to a person as undecidable ({{full_esc_ci}}); every one is withheld until they say otherwise</span></div>
       <div class="stat"><span class="figure">{{recall}}</span><span class="caption">of labelled spans found by the detector at all; a span never found cannot be decided</span></div>
     </div>
     <div class="verdict">
-      <p><strong>The leak rate is above the blunt tool's, and it is meant to be visible.</strong>
-      The gap, {{rules_leak}} against {{blunt_leak}}, is what releasing anything at all costs. A
-      tool that never released a span would have the lowest leak rate on the page and no reason
-      to exist. A person reviews every proposal precisely because of that gap, and
-      <a href="#reviewers">the study</a> measures what is left after they do.</p>
+      <p><strong>It releases what must be released, and leaks about as often as withholding
+      everything does.</strong> {{full_leaks}} spans that had to be withheld were released
+      against {{blunt_leaks}} for the blunt tool, which withholds {{blunt_over}} of what the
+      requester was entitled to in order to get there. None of the {{full_leaks}} is a decision
+      the tool got wrong: they are spans the detector never found or found and mislabelled,
+      <a href="#leaks">below</a>. A person still reviews every proposal, because a leak cannot
+      be taken back, and <a href="#reviewers">the study</a> measures what is left after they do.</p>
     </div>
     <details class="disclose">
       <summary>For the technical reader: the five configurations and the interval</summary>
@@ -237,15 +252,16 @@
         <table class="tight">
           <thead><tr><th scope="col">Configuration</th><th scope="col">Leak rate</th><th scope="col">Over-redaction</th><th scope="col">Escalated</th></tr></thead>
           <tbody>
-            <tr class="reference"><th scope="row" class="wrap">The tool: rules only, as it ships</th><td>{{rules_leak}} <span class="interval">{{rules_leak_ci}}</span></td><td>{{rules_over}} <span class="interval">{{rules_over_ci}}</span></td><td>{{rules_esc}}</td></tr>
-            <tr><th scope="row" class="wrap">Rules, then a model on the rest</th><td>{{full_leak}} <span class="interval">{{full_leak_ci}}</span></td><td>{{full_over}} <span class="interval">{{full_over_ci}}</span></td><td>{{full_esc}}</td></tr>
-            <tr><th scope="row" class="wrap">A model on everything, no rules</th><td>{{model_only_leak}} <span class="interval">{{model_only_leak_ci}}</span></td><td>{{model_only_over}} <span class="interval">{{model_only_over_ci}}</span></td><td>{{model_only_esc}}</td></tr>
+            <tr class="reference"><th scope="row" class="wrap">The tool: rules, then Jev on the rest, as it ships</th><td>{{full_leak}} <span class="interval">{{full_leak_ci}}</span></td><td>{{full_over}} <span class="interval">{{full_over_ci}}</span></td><td>{{full_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">The rules alone</th><td>{{rules_leak}} <span class="interval">{{rules_leak_ci}}</span></td><td>{{rules_over}} <span class="interval">{{rules_over_ci}}</span></td><td>{{rules_esc}}</td></tr>
+            <tr><th scope="row" class="wrap">Jev on everything, no rules</th><td>{{model_only_leak}} <span class="interval">{{model_only_leak_ci}}</span></td><td>{{model_only_over}} <span class="interval">{{model_only_over_ci}}</span></td><td>{{model_only_esc}}</td></tr>
             <tr><th scope="row" class="wrap">The rules, with the document's context blanked</th><td>{{sentence_leak}} <span class="interval">{{sentence_leak_ci}}</span></td><td>{{sentence_over}} <span class="interval">{{sentence_over_ci}}</span></td><td>{{sentence_esc}}</td></tr>
             <tr><th scope="row" class="wrap">Blunt: withhold every detected span</th><td>{{blunt_leak}} <span class="interval">{{blunt_leak_ci}}</span></td><td>{{blunt_over}} <span class="interval">{{blunt_over_ci}}</span></td><td>{{blunt_esc}}</td></tr>
           </tbody>
         </table>
       </div>
       <ul>
+        <li><strong>Jev runs at a confidence threshold of {{model_threshold}}.</strong> Below it, its answer is withheld and sent to a person. The rule fixed before looking picked {{thr_picked}}; <a href="#model">Jev, on what the rules leave</a> says why the tool runs higher, and what each scores on the test split.</li>
         <li><strong>Denominators.</strong> The leak rate is over the {{must_withhold}} spans that must be withheld; over-redaction over the {{must_release}} that must be released. Escalations withhold, so they count against over-redaction and never against the leak rate.</li>
         <li><strong>A partial box counts the way a reader would.</strong> A span is withheld only when every letter and digit of it is under a box, or what shows identifies nobody: four or fewer digits of a long number, or a job title with its role word withheld.</li>
         <li><strong>Intervals are bootstrap percentiles resampled over the {{corpus_documents}} documents</strong>, not over spans, because one invented person produces many spans and resampling them would count one fact many times. Project 03 implemented the same estimator independently; a test pins that the two agree.</li>
@@ -266,21 +282,22 @@
       doubles.
     </p>
     <div class="headline">
-      <div class="stat up"><span class="figure">{{rules_over}}</span><span class="caption">over-redaction with the document's context ({{rules_over_ci}})</span></div>
+      <div class="stat up"><span class="figure">{{rules_over}}</span><span class="caption">over-redaction by the rules alone with the document's context ({{rules_over_ci}})</span></div>
       <div class="stat down"><span class="figure">{{sentence_over}}</span><span class="caption">the same rules judging each name from its sentence alone ({{sentence_over_ci}})</span></div>
       <div class="stat"><span class="figure">{{layout_flat_over}}</span><span class="caption">if every block is read as a paragraph, as on a flat scan; reading the layout back from the text restores {{layout_recovered_over}}</span></div>
     </div>
     <h3>Category by category</h3>
     <p>
-      What each kind of release costs. Officials are most of what must be released, so theirs is
-      the figure to watch, and most of it is escalation rather than a wrong answer: a name or a
-      work address the record never pairs with a title, which the tool will not guess at. The
-      twenty-year rule withholds about half of what it should release, because it acts only when
-      the record states a date of death.
+      What each kind of release costs, with Jev deciding what the rules leave. Officials are
+      most of what must be released, so theirs is the figure to watch: {{k2_over}} withheld,
+      where the rules alone withhold {{rules_k2_over}}, almost all of it escalation, a name or a
+      work address the record never pairs with a title. The rules will not guess at that; Jev
+      reads it from the page. The twenty-year rule, which the rules apply only when the record
+      states a date of death, goes from {{rules_k4_over}} withheld to {{k4_over}}.
     </p>
     <figure class="chart-figure">
       <div id="category-chart" class="chart"></div>
-      <figcaption>Rules only. Bars are over-redaction for each category that must be released, and the leak rate for the one that must be withheld, with 95% intervals.</figcaption>
+      <figcaption>The tool as it ships, rules then Jev. Bars are over-redaction for each category that must be released, and the leak rate for the one that must be withheld, with 95% intervals.</figcaption>
     </figure>
     <details class="disclose">
       <summary>For the technical reader: what a published staff directory would do to the officials' figure</summary>
@@ -306,11 +323,11 @@
       <figcaption>Leaked spans per configuration, out of {{must_withhold}} that must be withheld.</figcaption>
     </figure>
     <div class="verdict">
-      <p><strong>The rules themselves leak nothing.</strong> Of the rules-only row's
-      {{rules_leaks}} leaks, {{rules_never_found}} were never found, {{rules_mislabelled}} were
-      found and typed as a place or an organisation, {{rules_box_short}} left part of a name showing,
-      and <strong>{{rules_decision_wrong}}</strong> were a wrong decision. The weak part is
-      detection, and that is where the work goes.</p>
+      <p><strong>The decisions are not where the leaks are.</strong> Of the tool's
+      {{full_leaks}} leaks, {{tool_never_found}} were never found, {{tool_mislabelled}} were
+      found and typed as a place or an organisation, {{tool_box_short}} left part of a name showing,
+      and <strong>{{tool_decision_wrong}}</strong> were a wrong decision, by the rules or by Jev.
+      The weak part is detection, and that is where the work goes.</p>
     </div>
   </section>
 
@@ -364,7 +381,7 @@
       <summary>For the technical reader: what the study can and cannot say</summary>
       <ul>
         <li><strong>{{reviewers_word_cap}} people</strong>, the first with eight years in access-to-information work. Every reviewer did the proposals half second, so some of the gain is familiarity with the templates; the interval resamples records, not people.</li>
-        <li><strong>The proposals are frozen</strong> as they stood for the first reviewer, so every later reviewer saw the same tool and the arms stay comparable as the tool improves.</li>
+        <li><strong>The proposals are frozen</strong> as they stood for the first reviewer, so every later reviewer saw the same tool and the arms stay comparable as the tool improves. They were the rules alone: Jev came after the study. The proposals the reviewers timed withheld {{study_tool_over}} of what had to be released on their records; the tool as it ships withholds {{full_over}} across the corpus, so the study measured the weaker tool, and the time with Jev's proposals is not yet measured.</li>
         <li><strong>The reviewers changed the labels twice</strong>, and every table carries both rulings: a family word that points at a third party is withheld with the name, and the parties to a confidential workplace complaint are withheld with their titles. Where a reviewer departed from a label and the label stood, it counts against the reviewer.</li>
         <li>Seconds are the server's own, from serving a page to its completion row in the log. <a data-repo href="{{repository}}/blob/main/results/reviewer.md">results/reviewer.md</a> and <a data-repo href="{{repository}}/blob/main/docs/reviewer-study.md">docs/reviewer-study.md</a>.</li>
       </ul>
@@ -405,6 +422,7 @@
       <figcaption>Leak rate and over-redaction by input, rules only, with 95% intervals. The character error rate is under each name.</figcaption>
     </figure>
     <div class="verdict">
+      <p>This track is measured with the rules alone; Jev has not been run on OCR text.</p>
       <p><strong>A scanner or a photocopier costs about a point; a fax costs the record.</strong>
       Reading the layout back takes an office scanner's over-redaction from
       {{scan_scanner_flat_over}} to {{scan_scanner_over}}, against {{scan_native_over}} on the
@@ -427,16 +445,17 @@
     <figure class="chart-figure">
       <div id="release-chart" class="chart"></div>
       <div class="legend" id="release-legend"></div>
-      <figcaption>Share of the spans a person released that the tool would have withheld, before and after the 2026-10-17 changes, with 95% intervals for the tool as it ships.</figcaption>
+      <figcaption>Share of the spans a person released that the tool would have withheld: as first scored, with the rules alone and no vocabulary, and as the tool ships, the rules then Jev, with 95% intervals for the second.</figcaption>
     </figure>
     <div class="verdict">
       <p><strong>This is the tool's weakest result, and it is published as such.</strong> On the
-      Defence records it learned from, teaching it military ranks and reading layout back took
-      it from withholding everything to {{rel_defence_now}}. On records it never saw, it still
-      withholds {{rel_heldout_now}} and {{rel_fresh_now}}: heads of state it has no register for,
-      family words in century-old immigration files that the archive opened because everyone in
-      them was born more than 110 years ago. The gain did not travel, and the page says so rather
-      than quoting only the first set.</p>
+      Defence records it learned from, military ranks, layout read back from the text and Jev
+      take it from withholding everything to {{rel_defence_now}}. On records it never saw it
+      still withholds {{rel_heldout_now}} and {{rel_fresh_now}}: heads of state it has no
+      register for, family words in century-old immigration files that the archive opened
+      because everyone in them was born more than 110 years ago. Jev cuts what the rules
+      alone withhold on every set, but these are scanned forms with no layout and no
+      requester, and the page says so rather than quoting only the first set.</p>
     </div>
     <details class="disclose">
       <summary>For the technical reader: why a leak rate cannot be reported here</summary>
@@ -450,39 +469,58 @@
   </section>
 
   <section class="section" id="model">
-    <h2>The language model, shown the page</h2>
+    <h2>Jev, on what the rules leave</h2>
     <p class="section-lead">
-      The rules decide what has a settled answer and escalate the rest. A language model is
-      asked about what is left, through the portfolio's own
-      <a href="https://gateway.peterparker.ca">AI gateway</a>. It sees the whole page with every
-      name, contact and identifier replaced by a typed placeholder, the same one wherever that
-      person appears, so it can tell who signed and who wrote to whom without seeing a single
-      name. Its answers are taken at a confidence threshold chosen on separate records.
+      The rules decide what has a settled answer. What they leave goes to <strong>Jev 1.14</strong>,
+      and Jev is not a chatbot asked to classify. It is a <strong>decision model</strong>: it takes
+      a state and a question with named options and returns a probability for every option,
+      and no text at all. Here the state is the whole page with every name, contact and
+      identifier replaced by a typed placeholder, sent through the portfolio's own
+      <a href="https://gateway.peterparker.ca">AI gateway</a>, and the options are the
+      categories of the law in the reviewers' own words. That is exactly the question this tool
+      asks on every span, and a model built to answer it changed the result more than anything
+      else in the project.
     </p>
     <div class="headline">
-      <div class="stat up"><span class="figure">{{full_over}}</span><span class="caption">over-redaction with the model deciding what the rules could not, against {{rules_over}} with the rules alone</span></div>
-      <div class="stat down"><span class="figure">{{model_extra_leaks}}</span><span class="caption">of the model's decisions released a third party's details that had to be withheld: a leak rate of {{full_leak}} against {{rules_leak}}</span></div>
-      <div class="stat"><span class="figure">{{model_cost_page}}</span><span class="caption">a page through the gateway ({{model_cost_page_cad}}), with {{model_name}}</span></div>
-      <div class="stat up"><span class="figure">{{gate_verdict}}</span><span class="caption">project 03's release gate: {{gate_worse}} documents worse with the model, {{gate_better}} better</span></div>
+      <div class="stat up"><span class="figure">{{full_over}}</span><span class="caption">of what must be released, withheld with Jev deciding what the rules could not, against {{haiku_over}} with Claude Haiku 5.5 and {{rules_over}} with the rules alone</span></div>
+      <div class="stat up"><span class="figure">{{full_leak}}</span><span class="caption">leak rate, the rules' own: Jev added {{model_extra_leaks}} wrong releases, and adds none at any threshold in the sweep</span></div>
+      <div class="stat up"><span class="figure">{{jev_secs}} s</span><span class="caption">a decision, {{speed_ratio}} times faster than Haiku's {{haiku_secs}} s, mean over every call in the published run</span></div>
+      <div class="stat up"><span class="figure">{{jev_cost_page}}</span><span class="caption">a page through the gateway ({{model_cost_page_cad}}), {{price_ratio}} times cheaper than Haiku's {{haiku_cost_page}}</span></div>
     </div>
     <div class="verdict">
-      <p><strong>A stronger model was not the answer; showing the model the page was.</strong>
-      Given one sentence around each name, even the largest model available said "cannot tell"
-      on hundreds of spans, and said why: the sentence did not show who the person was. Given
-      the page, the reviewers' category guide and which addresses are the public body's own,
-      the smallest one decides nearly all of it. The portfolio's
-      <a href="https://gate.peterparker.ca">release gate</a>, asked with the document as the
-      unit, passes it: {{gate_rules}} of documents leak-free with the rules alone,
-      {{gate_model}} with the model, inside its three-point margin. Which to run is still a
-      public body's decision, and the tool runs the rules alone unless told otherwise.</p>
+      <p><strong>Why a decision model, and not a better language model.</strong> A language
+      model answers by writing: asked for a category it writes one, and asked how sure it is
+      it writes a number, which is more text. Claude Haiku 5.5 wrote 0.80 or 0.85 whether it
+      was right or wrong, so the one control this tool depends on, <em>withhold and escalate
+      when unsure</em>, had nothing to hold. To keep its leaks down the threshold had to sit at
+      0.90, where it threw away a quarter of its answers, most of them right. Jev's
+      probabilities are stated by TypeSafe to be calibrated, and here they behave so. Answer for
+      answer it is about as often right as Haiku on a random sample of the residual; what
+      differs is what its confidence is worth across the whole range. Accepting
+      every one of its answers leaks {{jev_leak_accept_all}}, the rules' own rate, where Haiku's answers
+      leak {{haiku_leak_accept_all}}. Its mistakes sit at its low probabilities, so a threshold
+      removes mistakes instead of good answers. That is what lets the tool release what the
+      requester is entitled to rather than escalate it.</p>
+      <p><strong>It fits the rest of the design too.</strong> No prose means nothing to parse
+      and nothing that could restate the record; "cannot tell" is a low probability rather
+      than a refusal, so every span gets a decision and a confidence and the threshold decides
+      what a person sees; it is sent exactly what the language model was sent, through the
+      same guard that refuses any request with a detected value in it; and at {{jev_secs}}
+      seconds a decision, with the rules settling two thirds of the spans first, a page's
+      model time is a few seconds. The clip at the top of this page runs at that pace.</p>
+      <p>The portfolio's <a href="https://gate.peterparker.ca">release gate</a>, asked with the
+      document as the unit, passes it: {{gate_rules}} of documents leak-free with the rules
+      alone, {{gate_model}} with Jev, inside its three-point margin.</p>
     </div>
     <details class="disclose">
       <summary>For the technical reader: what weakens the result</summary>
       <ul>
-        <li><strong>Some of what the model knows came from this corpus's errors.</strong> Given the page, it first released employee numbers and an outside physician's practice address. Both rulings existed; neither was in the prompt. They are now, and the corpus that exposed them is the one scored here.</li>
-        <li><strong>On real released records the gain is smaller.</strong> On packages nothing here was tuned on, the share of possibly personal spans withheld falls from 100 percent to 84.5 with the model.</li>
-        <li><strong>Without the rules the model leaks {{model_only_leak}}</strong> against {{full_leak}} with them, and withholds far more. It reads a person where the detector saw a place, which the rules cannot; the rules settle two thirds of the spans for nothing.</li>
-        <li><strong>No raw entity leaves.</strong> A test asserts that no detected value appears in any outbound request, page included; the gateway records the data class of every call. {{model_asks}} questions were asked for the published tables, and answers are cached so the tables reproduce for nothing.</li>
+        <li><strong>The threshold the tool runs at is not the one the rule picked.</strong> The rule fixed before looking, the lowest threshold that adds no leak on the validation split, picked {{thr_picked}}. On the test split that leaks {{thr_test_picked_leak}} and withholds {{thr_test_picked_over}}, against {{thr_test_rules_leak}} and {{thr_test_rules_over}} for the rules alone; that is the reported result. The tool runs at {{model_threshold}}, chosen after the test split was seen so that Jev's coin flips go to a person: {{thr_test_running_over}} there.</li>
+        <li><strong>It leaked on the trap set, and the fix came after.</strong> An employee writing from their work address about their own leave was released as an official on 8 of 240 must-withhold spans, at 0.60 to 0.70, where the rules alone and Haiku released none. A release in such a message now needs {{own_affairs_bar}}: the trap set then leaks {{trap_leak}} and withholds {{trap_over}}, against {{trap_rules_over}} for the rules alone. The bar was set on the records it is scored on.</li>
+        <li><strong>Some of what it is told came from this corpus's errors.</strong> The category guide was improved by reading Haiku's mistakes here; the rulings existed before, but the corpus that exposed them is the one scored.</li>
+        <li><strong>Without the rules Jev leaks {{model_only_leak}}</strong> against {{full_leak}} with them, and makes wrong decisions the rules never make: the requester's own information, a family word, a party to a confidential complaint. The rules also settle two thirds of the spans for nothing.</li>
+        <li><strong>It is not open.</strong> TypeSafe does not disclose its size or base model, and it is reached through OpenRouter. Every answer it gave is committed, so every table replays without it; an open-weights recreation run on the same requests spread its probabilities too thin to use.</li>
+        <li><strong>No raw entity leaves.</strong> A test asserts that no detected value appears in any outbound request, page included; the gateway records the data class of every call. {{model_asks}} questions were asked for the published tables.</li>
       </ul>
     </details>
   </section>
@@ -549,7 +587,7 @@
     </div>
     <ul class="chips" aria-label="Tools and techniques">
       <li>Python 3.13</li><li>Presidio</li><li>spaCy</li><li>PyMuPDF</li><li>Tesseract</li>
-      <li>FastAPI</li><li>Jinja</li><li>DuckDB</li><li>Pydantic</li><li>YAML taxonomy</li>
+      <li>Jev 1.14 decision model</li><li>FastAPI</li><li>Jinja</li><li>DuckDB</li><li>Pydantic</li><li>YAML taxonomy</li>
       <li>Hash-chained audit log</li><li>Bootstrap intervals</li><li>Paired non-inferiority</li>
       <li>mypy --strict</li><li>ruff</li><li>pytest</li><li>uv</li><li>Docker</li><li>Caddy</li>
       <li>GitHub Actions</li><li>OVHcloud</li><li>Cloudflare</li>

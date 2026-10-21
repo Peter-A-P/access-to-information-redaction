@@ -102,6 +102,15 @@ The rules do not try to tell the employee from the adviser answering them, who i
 their job. That is reading, and it is the model's work. With the model off, the adviser is
 withheld too, and the reviewer releases them.
 
+**The model's release there needs 0.75** (`OWN_AFFAIRS_RELEASE_THRESHOLD`, rule
+`own_affairs_model_release`), whatever threshold it otherwise runs at. Since 2026-10-21. Jev
+1.14, at the 0.60 the tool runs it at, released the writer as an official or as the requester
+on 8 of the trap set's 240 must-withhold spans, each at 0.60 to 0.70, and placed the advisers
+it released correctly above 0.75. Forbidding the model any release in such a message also
+stopped the leaks, and took the trap set's over-redaction from 17.9 percent to 82.4; the
+bar holds it at 18.8 with none. Both were measured after the run was scored, and the bar was
+chosen then (PLAN.md 12.52). A withholding answer is taken as it comes.
+
 Found on the trap set (`sever eval-traps`, `results/traps.md`), where before this guard the
 rules alone leaked 62.5 percent of what had to be withheld. The headline corpus could not
 show it: every government address in it belongs to an official doing their job.

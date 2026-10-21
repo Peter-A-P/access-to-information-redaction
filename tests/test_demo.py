@@ -131,6 +131,22 @@ def test_a_file_the_site_does_not_have_is_a_404_not_a_session(with_site: DemoSer
     assert r.status_code == 404 and len(with_site) == 0
 
 
+def test_the_clip_is_served_in_byte_ranges(with_site: DemoServer) -> None:
+    """A browser plays a video only from a server that answers a range; Safari asks for
+    the first two bytes before anything else."""
+    c = TestClient(with_site)
+    whole = c.get("/media/jev-clip.mp4")
+    assert whole.status_code == 200 and whole.headers["content-type"] == "video/mp4"
+    size = len(whole.content)
+    r = c.get("/media/jev-clip.mp4", headers={"range": "bytes=0-1"})
+    assert r.status_code == 206 and r.content == whole.content[:2]
+    assert r.headers["content-range"] == f"bytes 0-1/{size}"
+    tail = c.get("/media/jev-clip.mp4", headers={"range": "bytes=-10"})
+    assert tail.status_code == 206 and tail.content == whole.content[-10:]
+    assert c.get("/media/jev-clip.mp4", headers={"range": f"bytes={size}-"}).status_code == 416
+    assert len(with_site) == 0
+
+
 def test_the_dashboard_counts_decisions_and_never_their_text(
     with_site: DemoServer, items: tuple[Item, ...]
 ) -> None:

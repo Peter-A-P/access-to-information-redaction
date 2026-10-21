@@ -14,7 +14,9 @@ Served at redaction.peterparker.ca by the same process as the demonstration
   results cannot disagree. A figure that is missing or no longer parses fails the build;
 - `sever/taxonomy/*.yaml`, through the loader, for the table of categories and provisions;
 - one invented letter from the demonstration's own records, run through the tool at build
-  time, so the example of what a reviewer sees is the engine's output, not a drawing of it.
+  time (the rules, then Jev's recorded answers replayed), so the example of what a
+  reviewer sees is the engine's output, not a drawing of it;
+- the clip in `web/media/`, rendered by `tools/clip.py` from the same engine output.
 
 Nothing inline in the site's own pages: the scripts and styles are files, so they work
 under a content security policy that allows nothing inline. (The reviewer's screen keeps
@@ -204,6 +206,11 @@ def corpus_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
             }
         )
         if key == "rules":
+            f["rules_k2_over"] = rate(s["per_code_over_redaction"]["K2"], "rules K2").pct
+            f["rules_k4_over"] = rate(s["per_code_over_redaction"]["K4"], "rules K4").pct
+        # The tool as it ships, the rules then Jev, is what the category chart and the
+        # leak account describe.
+        if key == "full":
             chart["per_code"] = {
                 code: rate(v, f"over-redaction {code}").as_json()
                 for code, v in s["per_code_over_redaction"].items()
@@ -212,12 +219,13 @@ def corpus_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
                 code: rate(v, f"leak {code}").as_json() for code, v in s["per_code_leak"].items()
             }
             f["recall"] = rate(s["detector_recall"], "recall").pct
-            f["rules_mislabelled"] = str(s["decomposition_detector_mislabelled"])
-            f["rules_never_found"] = str(s["decomposition_detector_missed"])
-            f["rules_decision_wrong"] = str(s["decomposition_decision_wrong"])
-            f["rules_box_short"] = str(s["decomposition_box_too_short"])
+            f["tool_mislabelled"] = str(s["decomposition_detector_mislabelled"])
+            f["tool_never_found"] = str(s["decomposition_detector_missed"])
+            f["tool_decision_wrong"] = str(s["decomposition_decision_wrong"])
+            f["tool_box_short"] = str(s["decomposition_box_too_short"])
             f["k2_over"] = rate(s["per_code_over_redaction"]["K2"], "K2").pct
             f["k1_over"] = rate(s["per_code_over_redaction"]["K1"], "K1").pct
+            f["k4_over"] = rate(s["per_code_over_redaction"]["K4"], "K4").pct
     corpus = results["corpus"]
     labels = sum(int(v) for v in corpus["labels_by_code"].values())
     f["corpus_pages"] = str(corpus["pages"])
@@ -237,6 +245,9 @@ def corpus_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
     f["model_cost_page_cad"] = f"CA${cost['usd_per_page'] * 1.35:.4f}"
     f["model_name"] = results["model"].split("/")[-1]
     f["model_asks"] = thousands(int(results["model_asks"]))
+    if results.get("model_threshold") is None:
+        raise SiteError("results.json does not say what threshold the model ran at")
+    f["model_threshold"] = f"{float(results['model_threshold']):.2f}"
     # The model's trade in counts: what it released correctly and what it leaked.
     rules, full = by_name[SYSTEMS["rules"]], by_name[SYSTEMS["full"]]
     f["model_extra_leaks"] = str(
@@ -426,6 +437,66 @@ def gate_figures(root: Path) -> dict[str, str]:
     f["gate_worse"] = str(sum(1 for k, ok in base.items() if ok and not cand.get(k, ok)))
     f["gate_better"] = str(sum(1 for k, ok in base.items() if not ok and cand.get(k, ok)))
     return f
+
+
+def threshold_figures(root: Path) -> dict[str, str]:
+    """The threshold rule fixed before looking, and what it and the running threshold
+    score on the test split (`sever eval-thresholds`)."""
+    text = _read(root, "results/thresholds.md")
+    picked = find(text, r"picks `([\d.]+)`", "selected threshold").group(1)
+    rows = table_rows(text)
+    rules = row(rows, "the rules alone", "test split, rules")
+    chosen = row(rows, f"`{picked}`, the threshold the rule picked (the reported result)", "test split, picked")
+    f = {
+        "thr_picked": picked,
+        "thr_test_rules_leak": rate(rules[1], "rules leak").pct,
+        "thr_test_rules_over": rate(rules[2], "rules over").pct,
+        "thr_test_picked_leak": rate(chosen[1], "picked leak").pct,
+        "thr_test_picked_over": rate(chosen[2], "picked over").pct,
+    }
+    running = next((r for r in rows if r and "the threshold the tool runs at" in r[0]), None)
+    if running is None:
+        raise SiteError("results/thresholds.md has no row for the threshold the tool runs at")
+    f["thr_test_running_leak"] = rate(running[1], "running leak").pct
+    f["thr_test_running_over"] = rate(running[2], "running over").pct
+    return f
+
+
+def model_figures(root: Path) -> dict[str, str]:
+    """Jev beside Claude Haiku 5.5, the model it replaced, on the same requests: the
+    published tables against the ones kept in results/haiku/."""
+    jev_cost = json.loads(_read(root, "results/cost.json"))
+    haiku_cost = json.loads(_read(root, "results/haiku/cost.json"))
+    haiku = {
+        s["name"]: s for s in json.loads(_read(root, "results/haiku/results.json"))["systems"]
+    }[SYSTEMS["full"]]
+    f: dict[str, str] = {}
+    for key, cost in (("jev", jev_cost), ("haiku", haiku_cost)):
+        if cost.get("mean_latency_ms") is None:
+            raise SiteError(f"{key}'s cost file records no latency; re-run `sever cost`")
+        f[f"{key}_secs"] = f"{float(cost['mean_latency_ms']) / 1000:.2f}".rstrip("0").rstrip(".")
+        f[f"{key}_cost_page"] = f"US${float(cost['usd_per_page']):.4f}"
+    f["haiku_over"] = rate(haiku["over_redaction_rate"], "haiku over").pct
+    f["haiku_leak"] = rate(haiku["leak_rate"], "haiku leak").pct
+    f["speed_ratio"] = f"{float(haiku_cost['mean_latency_ms']) / float(jev_cost['mean_latency_ms']):.1f}"
+    f["price_ratio"] = f"{float(haiku_cost['usd_per_page']) / float(jev_cost['usd_per_page']):.1f}"
+    for key, path in (("jev", "results/thresholds.md"), ("haiku", "results/haiku/thresholds.md")):
+        rows = table_rows(_read(root, path))
+        everything = row(rows, "`0.00`", f"{key} accept-all")
+        f[f"{key}_leak_accept_all"] = rate(everything[2], f"{key} accept-all leak").pct
+    return f
+
+
+def trap_figures(root: Path) -> dict[str, str]:
+    """The trap set, scored apart (`sever eval-traps`)."""
+    rows = table_rows(_read(root, "results/traps.md"))
+    tool = row(rows, SYSTEMS["full"], "traps, the tool")
+    rules = row(rows, SYSTEMS["rules"], "traps, the rules")
+    return {
+        "trap_leak": rate(tool[1], "trap leak").pct,
+        "trap_over": rate(tool[2], "trap over").pct,
+        "trap_rules_over": rate(rules[2], "trap rules over").pct,
+    }
 
 
 def directory_figures(root: Path) -> dict[str, str]:
@@ -761,9 +832,11 @@ def build(
     """Write the site to `out`. `items` are the demonstration's records; built from the
     seed when not given, which runs the detector."""
     if items is None:
-        from sever.review.demo import demo_items
+        from sever.corpus.personas import PUBLIC_BODY_DOMAIN
+        from sever.review.demo import demo_items, demo_model
 
-        items = demo_items()
+        # The tool as it ships: the rules, then Jev's recorded answers, replayed.
+        items = demo_items(model=demo_model(public_body_domains=(PUBLIC_BODY_DOMAIN,)))
     values: dict[str, str] = {}
     data: dict[str, Any] = {}
     for f, d in (
@@ -775,6 +848,12 @@ def build(
         values.update(f)
         data.update(d)
     values.update(gate_figures(root))
+    from sever.decide.pipeline import OWN_AFFAIRS_RELEASE_THRESHOLD
+
+    values["own_affairs_bar"] = f"{OWN_AFFAIRS_RELEASE_THRESHOLD:.2f}"
+    values.update(threshold_figures(root))
+    values.update(trap_figures(root))
+    values.update(model_figures(root))
     values.update(directory_figures(root))
     values.update(engineering(root))
     rows, law = taxonomy_table()
@@ -821,6 +900,7 @@ def build(
     for name in ASSETS:
         shutil.copy2(WEB / name, out / name)
     shutil.copytree(WEB / "fonts", out / "fonts")
+    shutil.copytree(WEB / "media", out / "media")
     (out / "data" / "site.json").write_text(json.dumps(data, indent=1), encoding="utf-8")
     return Built(out=out, pages=PAGES, figures=len(values))
 

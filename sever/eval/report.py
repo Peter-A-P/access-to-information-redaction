@@ -34,10 +34,10 @@ from sever.context.requester import RequestConfig
 from sever.corpus.generate import Corpus, CorpusItem, build
 from sever.corpus.personas import PersonaRole
 from sever.decide.pipeline import (
-    DEFAULT_THRESHOLD,
     DecisionEngine,
     ModelDecider,
     blunt_baseline,
+    default_threshold_for,
 )
 from sever.detect.engine import SeverDetector
 from sever.detect.types import Detection, Detector
@@ -143,6 +143,10 @@ class Report:
     # span rather than the residual, so folding the two together would misreport both the
     # tool's cacheability and its cost per page.
     model_only_asks: int = 0
+    # The confidence below which a model answer was escalated rather than used. Stated
+    # beside the model's name, because the same answers at another threshold are another
+    # result (results/thresholds.md).
+    model_threshold: float | None = None
     jurisdiction: str = "federal"
     # Read from results/cost.json rather than measured here, because the ledger that holds
     # it lives in project 04. None when that file is absent, which is the CI case.
@@ -166,6 +170,7 @@ class Report:
             "model_run": self.model_note or None,
             "model_asks": self.model_asks or None,
             "model_only_asks": self.model_only_asks or None,
+            "model_threshold": self.model_threshold,
             "jurisdiction": self.jurisdiction,
             "cost": (
                 {
@@ -221,7 +226,7 @@ def run(
     with_pdf_leak: bool = True,
     tmp_dir: Path | None = None,
     model: ModelDecider | None = None,
-    model_confidence_threshold: float = DEFAULT_THRESHOLD,
+    model_confidence_threshold: float | None = None,
     cost_path: Path | None = DEFAULT_COST_PATH,
     jurisdiction: str = "federal",
     with_model_only: bool = True,
@@ -317,6 +322,13 @@ def run(
         model_note=_spend_summary(model),
         model_asks=_asks(model) - model_only_asks,
         model_only_asks=model_only_asks,
+        model_threshold=(
+            None
+            if model is None
+            else model_confidence_threshold
+            if model_confidence_threshold is not None
+            else default_threshold_for(model)
+        ),
         jurisdiction=jurisdiction,
         cost=_cost_for(cost_path, c, _asks(model) - model_only_asks),
     )
@@ -426,8 +438,14 @@ def to_markdown(report: Report) -> str:
         "",
         *(
             [
-                f"**Model layer:** {report.model_name}, through the 04 gateway with data "
-                f"class `personal`. {report.model_note}"
+                f"**Model layer:** {report.model_name}"
+                + (
+                    f" at a confidence threshold of {report.model_threshold:.2f}, below which "
+                    f"its answer is escalated to a person"
+                    if report.model_threshold is not None
+                    else ""
+                )
+                + f", through the 04 gateway with data class `personal`. {report.model_note}"
                 + (
                     f", of which {report.model_asks} were the tool's own residual and "
                     f"{report.model_only_asks} the model-only baseline."

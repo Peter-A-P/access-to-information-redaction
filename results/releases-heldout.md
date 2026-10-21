@@ -4,10 +4,12 @@
 
 **Corpus:** 3 published release packages, 83 pages with visible text, from Library and Archives Canada (Department of External Affairs records, RG25), Library and Archives Canada (Immigration records, RG76). Track: real releases.
 
+**Decided by:** the rules, then openrouter/typesafe/jev-1.14 on what they left at a confidence threshold of 0.60, through the 04 gateway on placeholders. Every row of the ablation table below is the rules alone except the last, which is the tool as it ships, with the model.
+
 | Denominator | Spans | Over-redaction |
 |---|---:|---|
-| Spans that could be personal information | 692 | 100.0% (46.7% to 100.0%), n=692 |
-| Every detected span, including the types the tool releases by design | 1742 | 39.7% (35.7% to 43.3%), n=1742 |
+| Spans that could be personal information | 665 | 75.0% (59.0% to 85.9%), n=665 |
+| Every detected span, including the types the tool releases by design | 1687 | 34.6% (25.1% to 42.1%), n=1687 |
 
 **Leak rate is not reported and cannot be.** What sat under the existing black boxes was removed before publication, so there is no must-redact denominator on this track. `Scored.leak_rate` raises on an observed-label track rather than returning a number with nothing behind it.
 
@@ -19,27 +21,33 @@ Every row is scored over the 727 spans the first row called possibly personal, s
 
 | Configuration | Of those spans, withheld | Withholding boxes over released text, any type |
 |---|---|---:|
-| as scored until 2026-10-17: flat text, no military vocabulary | 100.0% (46.7% to 100.0%), n=727 | 727 |
-| layout recovered (a rank under a signature counts as a title) | 100.0% (46.7% to 100.0%), n=727 | 727 |
-| military vocabulary | 95.2% (93.8% to 97.0%), n=727 | 692 |
-| both (the tool as it now ships) | 95.2% (93.8% to 97.0%), n=727 | 692 |
+| as scored until 2026-10-17: flat text, no military vocabulary | 99.9% (99.3% to 100.0%), n=727 | 1100 |
+| layout recovered (a rank under a signature counts as a title) | 99.9% (99.3% to 100.0%), n=727 | 1100 |
+| vocabulary and screens: ranks, units, OCR noise, the stamp | 91.3% (86.7% to 94.4%), n=727 | 1032 |
+| layout and vocabulary, no archival rule | 91.3% (86.7% to 94.4%), n=727 | 1032 |
+| all of it, with the 110-year archival rule, the rules alone | 89.0% (86.7% to 93.1%), n=727 | 1015 |
+| all of it, then openrouter/typesafe/jev-1.14 on what the rules left (as it now ships) | 68.6% (51.1% to 80.6%), n=727 | 584 |
 
-The 95.2% here and the 100.0% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 692 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
+The 68.6% here and the 75.0% in the first table measure the same tool over different spans. The first table's denominator is what the tool as it ships calls possibly personal, 665 spans; a span it re-typed as a rank or a unit, or dropped as noise, has left it. This table holds the spans fixed, which is the only way to compare the rows.
 
 In the shipping configuration the screen dropped 35 person spans with no name-shaped token in them ("wu", "pour lui") and re-typed 0 as ranks, appointments or units ("LCol", "KAF", "TFK Comd").
 
-**These packages are held out.** They were chosen by a rule written before any was downloaded (docs/data.md), from record groups other than Defence, and scored once with the code as it stood; nothing was changed in response before this table was published. So the rows below the first say how far the 2026-10-17 changes carry to records nobody tuned them against.
+**These packages are held out.** They were chosen by a rule written before any was downloaded (docs/data.md), from record groups other than Defence, and scored once with the code as it stood; nothing was changed in response before this table was published. So the rows below the first say how far the changes in them carry to records nobody tuned them against.
 
 **What the shipping configuration decides, by rule**
 
 | Rule | Spans that could be personal information |
 |---|---:|
-| `unresolved` | 576 |
-| `family_relationship` | 116 |
+| `model` | 413 |
+| `below_threshold` | 119 |
+| `family_relationship` | 115 |
+| `archival_age` | 17 |
+| `deceased_over_twenty_years` | 1 |
 
 **What the tool would have withheld, by category**
 
 | Category | Spans withheld over text a reviewer released |
 |---|---:|
-| `E1` | 576 |
-| `R1` | 116 |
+| `R1` | 376 |
+| `E1` | 119 |
+| `E2` | 4 |

@@ -54,6 +54,13 @@ ocr = [
   "pytesseract>=0.3,<1",
   "pillow>=11,<12",
 ]
+# The website's clip (tools/clip.py). Pillow draws the frames, the same 11.x line as the OCR
+# extra; imageio-ffmpeg encodes them with an ffmpeg binary it carries, so nothing has to be
+# installed system-wide. 0.6 is the current line and its write_frames API is what is used.
+clip = [
+  "pillow>=11,<12",
+  "imageio-ffmpeg>=0.6,<1",
+]
 # There is no `gateway` extra, and there cannot be one. Model decisions go through project
 # 04's library, `boundary`, which is a private repository and not on PyPI. The name
 # `boundary` on PyPI belongs to an unrelated package that stops at 0.3.4, so a dependency

@@ -46,7 +46,12 @@ from pathlib import Path
 
 from sever.context.requester import RequestConfig
 from sever.decide import rules as rules_mod
-from sever.decide.pipeline import DEFAULT_THRESHOLD, DecisionEngine, ModelDecider, Proposal
+from sever.decide.pipeline import (
+    DecisionEngine,
+    ModelDecider,
+    Proposal,
+    default_threshold_for,
+)
 from sever.detect import recognisers as rec
 from sever.detect.engine import SeverDetector
 from sever.detect.military import has_name_shaped_token
@@ -104,8 +109,11 @@ CONFIGURATIONS: tuple[Configuration, ...] = (
     Configuration("layout recovered (a rank under a signature counts as a title)", True, False),
     Configuration("vocabulary and screens: ranks, units, OCR noise, the stamp", False, True),
     Configuration("layout and vocabulary, no archival rule", True, True),
-    Configuration("all of it, with the 110-year archival rule (as it now ships)", True, True, True),
+    Configuration("all of it, with the 110-year archival rule", True, True, True),
 )
+# Appended to the row that is the tool as it ships: the last configuration with no model,
+# or the model's own row after it.
+SHIPS = " (as it now ships)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,6 +157,7 @@ class ReleaseResult:
     held_out: bool = False
     # The model that decided the residual of the first table, or "" for rules only.
     model_name: str = ""
+    threshold: float | None = None
 
     @property
     def personal_candidates(self) -> list[VisibleSpan]:
@@ -202,9 +211,15 @@ class ReleaseResult:
             "",
             *(
                 [
-                    f"**Decided by:** the rules, then {self.model_name} on what they left, "
-                    f"through the 04 gateway on placeholders. The ablation table below is "
-                    f"rules only.",
+                    f"**Decided by:** the rules, then {self.model_name} on what they left"
+                    + (
+                        f" at a confidence threshold of {self.threshold:.2f}"
+                        if self.threshold is not None
+                        else ""
+                    )
+                    + ", through the 04 gateway on placeholders. Every row of the ablation "
+                    "table below is the rules alone except the last, which is the tool as "
+                    "it ships, with the model.",
                     "",
                 ]
                 if self.model_name
@@ -342,7 +357,7 @@ def _propose(
     detector: Detector,
     configuration: Configuration,
     model: ModelDecider | None = None,
-    threshold: float = DEFAULT_THRESHOLD,
+    threshold: float | None = None,
 ) -> list[VisibleSpan]:
     taxonomy = default_taxonomy()
     det = detector
@@ -406,7 +421,7 @@ def run(
     ablation: bool = True,
     held_out: bool = False,
     model: ModelDecider | None = None,
-    threshold: float = DEFAULT_THRESHOLD,
+    threshold: float | None = None,
 ) -> ReleaseResult:
     """Propose redactions over every visible span, and count the ones that would land.
 
@@ -418,24 +433,44 @@ def run(
     det = detector or SeverDetector()
 
     shipping = CONFIGURATIONS[-1]
-    # The model, when there is one, decides the shipping configuration's residual only. The
+    # The model, when there is one, decides the shipping configuration's residual. The
     # ablation rows stay rules-only, so they still measure what layout and vocabulary are
-    # worth and nothing else.
+    # worth and nothing else, and the model's row is added after them.
     spans = _propose(data, det, shipping, model, threshold)
 
     rows: list[AblationRow] = []
     dropped = 0
     if ablation and data.releases:
-        runs = {c: (spans if c == shipping else _propose(data, det, c)) for c in CONFIGURATIONS}
+        runs = {
+            c: (spans if c == shipping and model is None else _propose(data, det, c))
+            for c in CONFIGURATIONS
+        }
         fixed = [s for s in runs[CONFIGURATIONS[0]] if s.could_be_personal]
+        named = list(CONFIGURATIONS)
+        if model is None:
+            named[-1] = replace(shipping, name=shipping.name + SHIPS)
+        else:
+            named[-1] = replace(shipping, name=shipping.name + ", the rules alone")
         rows = [
             AblationRow(
-                configuration=c,
+                configuration=n,
                 fixed=_withheld_over(runs[c], fixed),
                 boxes=sum(1 for s in runs[c] if s.withheld),
             )
-            for c in CONFIGURATIONS
+            for c, n in zip(CONFIGURATIONS, named, strict=True)
         ]
+        if model is not None:
+            rows.append(
+                AblationRow(
+                    configuration=replace(
+                        shipping,
+                        name=f"all of it, then {getattr(model, 'model', 'the model')} on what "
+                        f"the rules left{SHIPS}",
+                    ),
+                    fixed=_withheld_over(spans, fixed),
+                    boxes=sum(1 for s in spans if s.withheld),
+                )
+            )
         dropped = sum(
             1
             for s in runs[CONFIGURATIONS[1]]
@@ -465,6 +500,13 @@ def run(
         by_rule=dict(sorted(by_rule.items(), key=lambda kv: -kv[1])),
         held_out=held_out,
         model_name=str(getattr(model, "model", "")) if model is not None else "",
+        threshold=(
+            None
+            if model is None
+            else threshold
+            if threshold is not None
+            else default_threshold_for(model)
+        ),
     )
 
 

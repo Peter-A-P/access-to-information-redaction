@@ -463,9 +463,7 @@ def report(
             model=decider,
             jurisdiction=jurisdiction,
             with_model_only=model_only,
-            model_confidence_threshold=(
-                _default_threshold(model_name) if threshold < 0 else threshold
-            ),
+            model_confidence_threshold=None if threshold < 0 else threshold,
             # The recorded cost is the published model's; another model's run states its own
             # spend in the model line and gets no cost line it did not pay for.
             cost_path=(
@@ -539,9 +537,7 @@ def eval_traps(
         model=decider,
         with_model_only=False,
         cost_path=None,
-        model_confidence_threshold=(
-            _default_threshold(model_name) if threshold < 0 else threshold
-        ),
+        model_confidence_threshold=None if threshold < 0 else threshold,
     )
     markdown = (
         "# Trap set\n\nRecords written to break a rule, scored apart from the headline "
@@ -946,6 +942,9 @@ def cost(
     since: Annotated[
         str, typer.Option(help="Ignore ledger rows before this UTC timestamp.")
     ] = "",
+    model_name: Annotated[
+        str, typer.Option(help="The model the answers came from. Defaults to the published one.")
+    ] = "",
 ) -> None:
     """Cost per page, out of the gateway ledger.
 
@@ -1005,7 +1004,7 @@ def cost(
 
     replay = _build_model(
         enabled=True,
-        model_name=DEFAULT_MODEL,
+        model_name=model_name or DEFAULT_MODEL,
         boundary_config=None,
         run_id=None,
         answer_cache=answer_cache,
@@ -1153,7 +1152,7 @@ def eval_releases(
     )
     result = releases_eval.run(
         manifest=manifest, root=root, held_out=held_out, model=decider,
-        threshold=_default_threshold(model_name or DEFAULT_MODEL),
+        threshold=None,
     )
     typer.echo(result.to_markdown())
     if out is not None:
@@ -1463,29 +1462,78 @@ def demo(
             help="Also serve the released pages in data/demo (`sever demo-records` builds them)."
         ),
     ] = True,
+    model: Annotated[
+        bool,
+        typer.Option(
+            "--model/--no-model",
+            help="Replay Jev's recorded answers (`sever demo-answers`). Never calls a model.",
+        ),
+    ] = True,
 ) -> None:
     """The public demonstration: the project's website, the live dashboard, and one private,
     forgotten reviewer session per visitor.
 
-    Six synthetic records and ten short excerpts of published releases, rules only, no
-    model and no spend. Meant to run behind a TLS proxy; see docs/deploy.md.
+    Six synthetic records and ten short excerpts of published releases, proposed by the
+    rules and then Jev 1.14, whose answers are replayed from a committed file: no gateway,
+    no network and no spend. Meant to run behind a TLS proxy; see docs/deploy.md.
     """
     import uvicorn
 
-    from sever.review.demo import DemoServer, demo_items, released_items
+    from sever.review.demo import DemoServer, demo_items, demo_model, released_items
 
     typer.echo("preparing the demonstration records...")
-    items = demo_items()
+    invented = demo_model(public_body_domains=(PUBLIC_BODY_DOMAIN,)) if model else None
+    items = demo_items(model=invented)
     if site is None:
         from sever.site import build as build_site
 
         site = Path(tempfile.mkdtemp(prefix="sever-site-"))
         build_site(site, items=items)
     if released:
-        items = items + released_items()
+        items = items + released_items(model=demo_model() if model else None)
     server = DemoServer(items=items, site=site, secure_cookie=not insecure_cookie)
     typer.echo(f"http://{host}:{port}/")
     uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
+
+@app.command("demo-answers")
+def demo_answers(
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    run_id: Annotated[str, typer.Option(help="Ledger run id.")] = "sever-jev114-demo",
+    released: Annotated[
+        bool, typer.Option(help="Record answers for the released pages in data/demo too.")
+    ] = True,
+) -> None:
+    """Record Jev's answers for the demonstration's records, through the 04 gateway.
+
+    Spends money, once: the demonstration replays this file and never calls a model. A span
+    already in the file is not sent again.
+    """
+    import os
+
+    from sever.decide.model import CAPS_PROJECT, DEFAULT_MODEL
+    from sever.review.demo import DEMO_ANSWERS, demo_items, demo_model, released_items
+
+    from_env = os.environ.get("BOUNDARY_CONFIG", "").strip()
+    config = boundary_config or (Path(from_env) if from_env else DEFAULT_BOUNDARY_CONFIG)
+    if not config.is_file():
+        raise typer.BadParameter(f"no gateway configuration at {config}")
+    require_boundary(DECISIONS_MINIMUM)
+    from boundary import Gateway
+
+    gateway = Gateway.from_config(config, project=CAPS_PROJECT)
+    typer.echo(
+        f"model layer ON: {DEFAULT_MODEL} through {config}, project {CAPS_PROJECT}, run id "
+        f"{run_id}, recording into {DEMO_ANSWERS}"
+    )
+    invented = demo_model(
+        gateway=gateway, run_id=run_id, public_body_domains=(PUBLIC_BODY_DOMAIN,)
+    )
+    items = demo_items(model=invented)
+    typer.echo(f"{len(items)} invented records: {invented.spend_summary()}")
+    if released:
+        pages = demo_model(gateway=gateway, run_id=run_id)
+        typer.echo(f"{len(released_items(model=pages))} released records: {pages.spend_summary()}")
+
 
 @app.command("demo-records")
 def demo_records(
