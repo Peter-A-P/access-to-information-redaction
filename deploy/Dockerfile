@@ -5,6 +5,9 @@
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# The spaCy model is a 382 MB download, and on 2026-10-21 it outlasted uv's 30-second
+# default and failed the build. Five minutes is a slow link, not a hung one.
+ENV UV_HTTP_TIMEOUT=300
 COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /usr/local/bin/uv
 
 WORKDIR /app
