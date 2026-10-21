@@ -1512,9 +1512,11 @@ kbd { font: 600 0.74rem/1 var(--mono); border: 1px solid var(--line-2); border-b
    (tools/clip.py). Portrait, so it is held to a column's width and centred. */
 .clip {
   display: grid; grid-template-columns: minmax(0, 40rem) minmax(0, 1fr); gap: 1.75rem;
-  align-items: center; margin: 1.8rem 0 0.6rem;
+  align-items: start; margin: 1.8rem 0 0.6rem;
 }
 @media (max-width: 56rem) { .clip { grid-template-columns: minmax(0, 1fr); } }
+/* The caption stays in view while the clip scrolls past, as the memorandum's key does. */
+.clip figcaption { position: sticky; top: 1rem; }
 .clip video {
   display: block; width: 100%; height: auto; aspect-ratio: 1080 / 1350;
   background: #f5f3ee; border: 1px solid var(--line); border-radius: var(--radius);
