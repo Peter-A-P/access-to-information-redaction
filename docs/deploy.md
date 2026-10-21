@@ -26,9 +26,8 @@ the model answers recorded for them, which are probabilities over categories and
 
 Done 2026-10-18 (PLAN.md 12.44). The host's 04 checkout stays at the tag it runs, with
 `deploy/Caddyfile` taken from 04's commit 864fdad (`git checkout 864fdad --
-deploy/Caddyfile`), until 04's next tagged deploy carries it. To update the demo, repeat the
-laptop half of the commands below and `sudo docker compose up -d --no-build` on the host;
-Caddy needs no restart for that.
+deploy/Caddyfile`), until 04's next tagged deploy carries it. To update the demo, run the
+commands below except the Caddy restart, which an update does not need.
 
 Three things only Peter can do, in this order:
 
@@ -65,22 +64,38 @@ Three things only Peter can do, in this order:
    all the time and is capped at one CPU. A load test run after this point should still
    say that it shares the host.
 
-Then, on the host, as `ubuntu`. This repository is private and the host holds no GitHub
-credential, so the image is built on the laptop and copied over:
+Then the image. This repository is private and the host holds no GitHub credential, so the
+laptop sends the committed source, about 12 MB, and the host builds the image from it:
 
 ```bash
 # on the laptop, from this repository; the released pages are gitignored, so build them
 # first from the packages in data/releases (docs/data.md has where each came from)
 uv run sever demo-records
-docker build --platform linux/amd64 -f deploy/Dockerfile -t sever-demo:latest .
-docker save sever-demo:latest | ssh boundary-vps 'sudo docker load'
+git archive --format=tar --prefix=src/ HEAD > /tmp/sever-src.tar
+tar -rf /tmp/sever-src.tar -s ',^,src/,' data/demo/*.pdf    # BSD tar; GNU tar: --transform
+gzip -f /tmp/sever-src.tar
+scp /tmp/sever-src.tar.gz boundary-vps:/tmp/sever-src.tar.gz
 scp deploy/compose.yaml boundary-vps:/srv/redaction/compose.yaml
 
-# on the host
+# on the host, as ubuntu; the running image is kept as :previous for a rollback
+sudo docker tag sever-demo:latest sever-demo:previous
+rm -rf /tmp/sever-build && mkdir /tmp/sever-build && tar -xzf /tmp/sever-src.tar.gz -C /tmp/sever-build
+cd /tmp/sever-build/src && sudo docker build -f deploy/Dockerfile -t sever-demo:latest .
 cd /srv/redaction && sudo docker compose up -d --no-build
-cd /srv/boundary/repo/deploy && sudo docker compose restart caddy
+cd /srv/boundary/repo/deploy && sudo docker compose restart caddy    # first time only
 curl -sI https://redaction.peterparker.ca/healthz
+rm -rf /tmp/sever-build /tmp/sever-src.tar.gz
 ```
+
+**Why on the host** (since 2026-10-21, PLAN.md 12.52). The image used to be built on the
+laptop and piped over SSH. Built for amd64 on an arm64 laptop it took more than forty
+minutes under emulation, against about three natively on the host; and the 1.2 GB upload
+over a home connection dropped every few minutes, and the dropped sessions counted as
+failures for fail2ban, which banned the laptop's address from SSH for an hour. The source
+goes over in one short connection. The build is the same Dockerfile from the same commit.
+
+To roll back: `sudo docker tag sever-demo:previous sever-demo:latest`, then the
+`compose up` line again.
 
 ## Checking it
 
