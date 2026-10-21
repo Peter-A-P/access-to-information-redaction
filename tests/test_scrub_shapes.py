@@ -125,7 +125,7 @@ def test_an_email_address_is_masked_even_though_nothing_detected_it() -> None:
     already missed an address here once, and on that occasion nothing would have caught it.
     """
     assert scrub_unrecognised("therese.gagne@example.gov.nl.ca") == "[EMAIL?]"
-    assert scrub_unrecognised("a.penashue@gov.nl.ca") == "[EMAIL?]"
+    assert scrub_unrecognised("a.penashue@gov.nl.ca.example") == "[EMAIL?]"
 
 
 def test_an_accented_address_is_masked_too() -> None:
@@ -141,7 +141,7 @@ def test_the_whole_address_goes_and_not_just_its_name_shaped_parts() -> None:
     """The word pass would otherwise chew an address into masked fragments and leave the
     domain standing, which reads as scrubbed and is not. The order of the passes is what
     makes this true, so it is asserted rather than assumed."""
-    out = scrub_unrecognised("Write to Marie.Chaulk@gov.nl.ca before Friday.")
+    out = scrub_unrecognised("Write to Marie.Chaulk@gov.nl.ca.example before Friday.")
     assert "gov.nl.ca" not in out
     assert "Chaulk" not in out
     assert "[EMAIL?]" in out

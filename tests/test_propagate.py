@@ -150,9 +150,9 @@ def test_an_email_is_matched_whole() -> None:
     doc = Document(
         doc_id="e",
         doc_type=DocumentType.EMAIL_CHAIN,
-        pages=(Page(number=1, text="a.tulk@gov.nl.ca wrote; copy a.tulk@gov.nl.ca.example too"),),
+        pages=(Page(number=1, text="a.tulk@gov.nl.ca.example wrote; copy a.tulk@gov.nl.ca.example.org too"),),
     )
-    found = occurrences(doc, "a.tulk@gov.nl.ca")
+    found = occurrences(doc, "a.tulk@gov.nl.ca.example")
     assert len(found) == 1, "a longer address is a different address"
 
 

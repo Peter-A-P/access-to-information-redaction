@@ -195,7 +195,7 @@ class Page:
 
         A newline always does. A full stop, question mark or exclamation mark does only
         when what follows is whitespace or the end of the block. That qualification is not
-        pedantry: without it "aaronpenashue@gov.nl.ca" ends a sentence three times, the
+        pedantry: without it "aaronpenashue@gov.nl.ca.example" ends a sentence three times, the
         context handed to the model is a truncated fragment, and, worse, the truncated
         email no longer matches the detected entity, so the placeholder policy does not
         substitute it and a name leaves the boundary inside a broken address. The

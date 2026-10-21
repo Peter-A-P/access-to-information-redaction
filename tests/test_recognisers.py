@@ -117,7 +117,7 @@ def test_a_multi_label_government_domain_is_an_email() -> None:
 
 
 def test_an_apostrophe_in_a_local_part_survives() -> None:
-    assert matches(EMAIL, "s.o'brien@gov.nl.ca") == ["s.o'brien@gov.nl.ca"]
+    assert matches(EMAIL, "s.o'brien@gov.nl.ca.example") == ["s.o'brien@gov.nl.ca.example"]
 
 
 # --- the identifiers whose context requirement is doing real work -------------
