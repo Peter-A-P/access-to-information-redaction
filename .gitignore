@@ -67,3 +67,6 @@ review/trial/
 
 # `sever site --out site`, built from the results; never committed.
 /site/
+
+# The LinkedIn clips (tools/clip.py renders the site's own into web/media)
+videos/
