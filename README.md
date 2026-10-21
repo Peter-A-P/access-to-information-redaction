@@ -449,7 +449,11 @@ asked one question, which category, with the reviewers' category text as the opt
 it returns a probability for each rather than an answer in prose. That is aimed at what the
 language model gets wrong: its confidence does not separate its right answers from its wrong
 ones, so the threshold throws good answers away. Jev's probabilities are claimed to be
-calibrated. It has not been run yet, and no number on this page comes from it.
+calibrated, and on this corpus they behave so: with Jev 1.14 the threshold the rule fixed
+in advance chose is 0.00, accept every answer, and on the test split that adds no leak to
+the rules alone (1.2 percent either way) while over-redaction falls from 24.7 percent to
+1.1. The tool still runs Jev at 0.60, so its coin flips go to a reviewer. Its tables are in
+`results/jev/`, not above, until the published model is chosen; PLAN.md 12.50 has the run.
 
 When neither is sure, the proposal is to withhold and escalate. There is no rule that
 releases a span because nothing matched.

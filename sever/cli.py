@@ -44,6 +44,14 @@ TRAP_DIR = Path(__file__).parent / "corpus" / "traps"
 DEFAULT_BOUNDARY_CONFIG = Path("../04-compliant-ai-gateway/config/boundary.yaml")
 
 
+def _default_threshold(model_name: str) -> float:
+    """The threshold a model runs at when none is given: a decision model has its own."""
+    from sever.decide.decision_model import DEFAULT_DECISION_THRESHOLD, is_decision_model
+    from sever.decide.pipeline import DEFAULT_THRESHOLD
+
+    return DEFAULT_DECISION_THRESHOLD if is_decision_model(model_name) else DEFAULT_THRESHOLD
+
+
 def _build_model(
     *,
     enabled: bool,
@@ -433,8 +441,8 @@ def report(
     network call and costs nothing, which is the configuration CI runs.
     """
     from sever.decide.model import DEFAULT_MODEL
-    from sever.decide.pipeline import DEFAULT_THRESHOLD
     from sever.eval import report as report_mod
+    from sever.eval.cost import DEFAULT_COST_PATH
 
     decider = _build_model(
         enabled=model,
@@ -456,7 +464,14 @@ def report(
             jurisdiction=jurisdiction,
             with_model_only=model_only,
             model_confidence_threshold=(
-                DEFAULT_THRESHOLD if threshold < 0 else threshold
+                _default_threshold(model_name) if threshold < 0 else threshold
+            ),
+            # The recorded cost is the published model's; another model's run states its own
+            # spend in the model line and gets no cost line it did not pay for.
+            cost_path=(
+                DEFAULT_COST_PATH
+                if (model_name or DEFAULT_MODEL) == DEFAULT_MODEL
+                else None
             ),
         )
     finally:
@@ -506,7 +521,6 @@ def eval_traps(
     """
     from sever.corpus.generate import build
     from sever.decide.model import DEFAULT_MODEL
-    from sever.decide.pipeline import DEFAULT_THRESHOLD
     from sever.eval import report as report_mod
 
     decider = _build_model(
@@ -525,7 +539,9 @@ def eval_traps(
         model=decider,
         with_model_only=False,
         cost_path=None,
-        model_confidence_threshold=DEFAULT_THRESHOLD if threshold < 0 else threshold,
+        model_confidence_threshold=(
+            _default_threshold(model_name) if threshold < 0 else threshold
+        ),
     )
     markdown = (
         "# Trap set\n\nRecords written to break a rule, scored apart from the headline "
@@ -1114,7 +1130,8 @@ def eval_releases(
         replay_only=replay_only,
     )
     result = releases_eval.run(
-        manifest=manifest, root=root, held_out=held_out, model=decider
+        manifest=manifest, root=root, held_out=held_out, model=decider,
+        threshold=_default_threshold(model_name or DEFAULT_MODEL),
     )
     typer.echo(result.to_markdown())
     if out is not None:

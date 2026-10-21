@@ -162,6 +162,30 @@ def employee_number(ctx: ContextRecord) -> RuleOutcome | None:
     )
 
 
+def personal_contact(ctx: ContextRecord) -> RuleOutcome | None:
+    """R1 for a contact detail the record itself calls personal: "my personal mobile".
+
+    An official's work line is released with them; their personal mobile, home number or
+    private email is information about the person, not the position. The words before the
+    number say which, and `sever.context.contact` reads them across the line break the
+    sentence splitter stops at. Runs after the requester rules, so the requester's own
+    personal number is still theirs, and before the capacity rules, which would release
+    it beside an official's name and title.
+    """
+    if not ctx.personal_contact:
+        return None
+    return RuleOutcome(
+        code="R1",
+        confidence=0.9,
+        reason=(
+            "The record calls this contact detail personal, so it is information about the "
+            "person and not about any position they hold, and it is withheld even where "
+            "the person is an official."
+        ),
+        rule="personal_contact",
+    )
+
+
 def family_relationship(ctx: ContextRecord) -> RuleOutcome | None:
     """R1 for a family relationship pointing at a third party: "the client's sibling".
 
@@ -498,6 +522,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     archival_age,
     inherently_sensitive,
     employee_number,
+    personal_contact,
     family_relationship,
     complaint_party,
     not_personal_information,

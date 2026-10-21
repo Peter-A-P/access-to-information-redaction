@@ -132,3 +132,14 @@ def test_no_persona_value_reaches_the_decision_model(corpus, detector) -> None: 
             offenders += [f"{doc.doc_id}: {s!r}" for s in secrets if s.casefold() in body]
     assert sent > 0
     assert not offenders, "\n".join(sorted(set(offenders))[:10])
+
+
+def test_a_decision_model_runs_at_its_own_threshold() -> None:
+    """Reported at 0.00, which the rule fixed in advance chose; run at 0.60, so the
+    model's coin flips still go to a reviewer (PLAN.md 12.50)."""
+    from sever.cli import _default_threshold
+    from sever.decide.decision_model import DEFAULT_DECISION_THRESHOLD
+    from sever.decide.pipeline import DEFAULT_THRESHOLD
+
+    assert _default_threshold(DEFAULT_DECISION_MODEL) == DEFAULT_DECISION_THRESHOLD == 0.60
+    assert _default_threshold("anthropic/claude-haiku-5-5") == DEFAULT_THRESHOLD

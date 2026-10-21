@@ -519,3 +519,20 @@ def test_the_requester_s_own_first_name_is_not_ambiguous_against_itself(
     )
     props = decide(doc, requester_config("Aaron Byrne"), detector)
     assert code_for(props, "Aaron said") == "K1"
+
+
+def test_an_official_s_personal_mobile_is_withheld_across_the_line_break() -> None:
+    """Jev called an official's "personal mobile" a work contact at 0.51 to 0.54, seven
+    times, because the words were on the line before the number."""
+    from sever.context.contact import personal_contact_before
+    from sever.ingest.document import Offsets
+
+    text = "I remained until the ambulance arrived. My personal mobile,\n709-555-1571, is recorded"
+    at = text.index("709")
+    assert personal_contact_before(text, Offsets(at, at + 12))
+    office = "My personal mobile is off. Call the office on 709-555-1000."
+    at = office.index("709")
+    assert not personal_contact_before(office, Offsets(at, at + 12))
+    work = "You can reach me on 709-555-1000."
+    at = work.index("709")
+    assert not personal_contact_before(work, Offsets(at, at + 12))

@@ -50,6 +50,16 @@ KEV_MODEL = "kev/kev-latest"
 # against this to choose the decider, rather than guessing from the model's name.
 DECISION_PROVIDERS = frozenset({"openrouter", "kev"})
 
+# The threshold the tool runs a decision model at, chosen on 2026-10-20 and deliberately
+# not the one reported. The rule fixed before looking (the lowest threshold at which the
+# model adds no leak over the rules alone, on the validation split) picked 0.00 for Jev
+# 1.14 once the personal-contact rule existed, and the test split confirmed it: no leak
+# added, over-redaction 1.1 percent. That is the reported result. Accepting every answer
+# would leave the model never unsure, against this repository's rule that an undecided
+# span is withheld and escalated, so the tool escalates Jev's coin flips: below 0.60 its
+# answer goes to the reviewer, at 0.5 points of over-redaction. PLAN.md 12.50.
+DEFAULT_DECISION_THRESHOLD = 0.60
+
 QUESTION_ID = "category"
 # Codes offered as options. See the module docstring for why E1 and E3 are not.
 NOT_OFFERED = frozenset({"E1", "E3"})

@@ -530,6 +530,11 @@ RULE_WORDS: dict[str, tuple[str, str, str]] = {
         "Withheld even in a signature block where the name and title beside it are "
         "released: the number is assigned to the person, not to the job.",
     ),
+    "personal_contact": (
+        "R1", "A number the record calls personal",
+        '"My personal mobile" is withheld even for an official: their work line is about '
+        "the job, their own phone is about them.",
+    ),
     "family_relationship": (
         "R1", "A family word that points at someone",
         '"The client\'s sibling" identifies the sibling to a requester who knows the family, '

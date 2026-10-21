@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 
 from sever.context.age import ARCHIVAL_YEARS, birth_year_beside, death_year_after, page_year
 from sever.context.complaint import ComplaintParties, is_party_sentence
+from sever.context.contact import personal_contact_before
 from sever.context.directory import DirectoryMatch, StaffDirectory
 from sever.context.own_affairs import own_affairs_messages
 from sever.context.register import PublicRegister, RegisterMatch
@@ -90,6 +91,10 @@ class ContextRecord:
     # aside there; see sever.context.own_affairs.
     own_affairs_message: bool = False
 
+    # Set on a telephone number, email address or address the record calls personal just
+    # before it ("my personal mobile"), read across line breaks; see sever.context.contact.
+    personal_contact: bool = False
+
     @property
     def entity_type(self) -> EntityType:
         return self.detection.entity_type
@@ -146,6 +151,7 @@ class ContextRecord:
             "message_index": None,
             "complaint_party": None,
             "own_affairs_message": False,
+            "personal_contact": False,
         }
         changes = {}
         for name in fields_to_blank:
@@ -165,6 +171,9 @@ class ContextRecord:
         }
         current.update(changes)
         return ContextRecord(**current)
+
+
+_CONTACT_TYPES = frozenset({EntityType.PHONE, EntityType.EMAIL, EntityType.ADDRESS})
 
 
 # Everything except the span and its sentence. The sentence-only baseline in PLAN.md
@@ -187,6 +196,7 @@ SENTENCE_ONLY_BLANKS: tuple[str, ...] = (
     "message_index",
     "complaint_party",
     "own_affairs_message",
+    "personal_contact",
 )
 
 
@@ -424,6 +434,10 @@ class ContextBuilder:
                     complaint_party=complaint_party,
                     own_affairs_message=any(
                         m.contains(det.offsets) for m in own_affairs[det.page]
+                    ),
+                    personal_contact=(
+                        det.entity_type in _CONTACT_TYPES
+                        and personal_contact_before(page.text, det.offsets)
                     ),
                 )
             )

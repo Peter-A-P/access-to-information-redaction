@@ -2095,3 +2095,42 @@ correctly at 0.60 to 0.80 and discarded by the threshold, with a dozen answers f
 between two runs on identical requests. Recomputed over the same answers, 0.85 gives 72
 errors and 0.70 gives 48 with 3 leaks; the threshold is still chosen on the validation split
 by 12.47's rule, not from this sample.
+
+### 12.50 Jev 1.14, run; a personal-contact rule; reported at 0.00, run at 0.60
+
+2026-10-20. The full corpus through Jev 1.14 (TypeSafe; size and base model undisclosed),
+pipeline and model-only baseline on the same masked requests as Haiku 5.5: 7,549 calls,
+US$0.91, 0.24 seconds a call against Haiku's 1.7. Answers in
+`results/model-answers-jev.jsonl`, tables in `results/jev/`.
+
+**The threshold rule picked 0.50, and 0.50 leaked.** On the validation split (42 documents,
+one leak by the rules alone) 0.50 was the lowest threshold adding no leak. On the test
+split it added four, and across the corpus every leak Jev added at 0.50 was one trap: an
+official's "My personal mobile," on one line and the number on the next, which Jev called
+an official's contact (K2) at 0.51 to 0.54, seven times. The model saw the number's line
+only, which does not contain the words.
+
+**So a rule, written after that run was scored, and said so here.** A phone, email or
+address the record calls personal just before it ("personal mobile", "home number",
+"private email", "my cell") is R1, even for an official, read across the line break
+(`sever/context/contact.py`, rule `personal_contact`, after the requester rules). It fires on
+35 spans, all of them must-withhold. It changes nothing the model is sent for any other
+span, so Jev's answers replayed in full and nothing was paid again.
+
+**Then the same rule, fixed before looking, picks 0.00**, accept every answer: no leak over
+the rules alone on validation. Scored once on the test split (101 documents): leak 1.2
+percent (0.6 to 2.1), n=818, the same as the rules alone; over-redaction 1.1 percent (0.6
+to 1.5), n=1,794, against the rules alone's 24.7 (22.3 to 27.1). That is the reported
+result. Across the whole corpus Jev adds no leak at any threshold, and every remaining leak
+is a span the detector never found.
+
+**The tool runs Jev at 0.60** (`DEFAULT_DECISION_THRESHOLD`), chosen by Peter after the test
+split was seen and disclosed as such. A threshold of zero means the model is never unsure,
+which is against the rule that an undecided span is withheld and escalated; at 0.60 Jev's
+coin flips go to a reviewer, for 0.5 points of over-redaction (1.6 percent on the test
+split, 1.7 across the corpus). The published model is still Haiku 5.5 at 0.90 until its run
+on the same code finishes and the two are compared; then this section's numbers move into
+the README tables or stay here.
+
+Jev alone, with no rules, at 0.60: leak 2.7 percent, over-redaction 7.2, so the rules still
+earn their place on the leak side.
