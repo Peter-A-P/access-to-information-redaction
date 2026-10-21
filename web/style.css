@@ -1374,6 +1374,8 @@ ul.reasons .why { color: var(--ink-faint); }
 .bar.b-leak, .swatch.b-leak { fill: var(--withhold); background: var(--withhold); }
 .bar.b-before, .swatch.b-before { fill: var(--line-2); background: var(--line-2); }
 .bar.b-now, .swatch.b-now { fill: var(--accent); background: var(--accent); }
+.bar.b-rules, .swatch.b-rules { fill: var(--alt); background: var(--alt); fill-opacity: 0.55; opacity: 0.85; }
+.system .leader { stroke: var(--ink-faint); stroke-width: 1; }
 .bar.seg-never, .swatch.seg-never { fill: var(--ink-faint); background: var(--ink-faint); }
 .bar.seg-mislabel, .swatch.seg-mislabel { fill: var(--alt); background: var(--alt); }
 .bar.seg-short, .swatch.seg-short { fill: var(--escalate); background: var(--escalate); }
@@ -1503,7 +1505,7 @@ kbd { font: 600 0.74rem/1 var(--mono); border: 1px solid var(--line-2); border-b
 
 /* The clip at the top of the overview: the tool deciding two pages, then redacting six
    (tools/clip.py). Portrait, so it is held to a column's width and centred. */
-.clip { margin: 1.6rem auto 0.4rem; max-width: 25rem; }
+.clip { margin: 1.8rem auto 0.6rem; max-width: 40rem; }
 .clip video {
   display: block; width: 100%; height: auto; aspect-ratio: 1080 / 1350;
   background: #f5f3ee; border: 1px solid var(--line); border-radius: var(--radius);

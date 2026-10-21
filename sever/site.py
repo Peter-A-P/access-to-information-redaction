@@ -58,6 +58,7 @@ ASSETS = ("style.css", "app.js", "dashboard.js", "review.css")
 # reviewer's screen and the dashboard. The reviewer's screen draws it too (base.html).
 MENU: tuple[tuple[str, str], ...] = (
     ("/", "Overview"),
+    ("/#model", "Jev, the model"),
     ("/review", "Review a record yourself"),
     ("/dashboard", "Every decision, live"),
     ("/how", "How it's built"),
@@ -372,12 +373,19 @@ def release_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
         if shipped is None:
             raise SiteError(f"results/{key}.md has no 'as it now ships' row")
         now = rate(shipped[1], f"{key} now")
+        # The rules alone on today's code, beside the tool with Jev, so what Jev adds on
+        # real records is a bar rather than a sentence.
+        alone = next((r for r in rows if r and r[0].endswith(", the rules alone")), None)
+        if alone is None:
+            raise SiteError(f"results/{key}.md has no rules-alone row; run it with --model")
+        rules_now = rate(alone[1], f"{key} rules alone")
         slug = key.replace("releases-", "").replace("releases", "defence")
         f[f"rel_{slug}_packages"] = corpus.group(1)
         f[f"rel_{slug}_pages"] = corpus.group(2)
         f[f"rel_{slug}_before"] = first.pct
         f[f"rel_{slug}_now"], f[f"rel_{slug}_now_ci"] = now.pct, now.ci
         f[f"rel_{slug}_spans"] = thousands(now.n)
+        f[f"rel_{slug}_rules"] = rules_now.pct
         sets.append(
             {
                 "key": slug,
@@ -386,6 +394,7 @@ def release_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
                 "packages": int(corpus.group(1)),
                 "pages": int(corpus.group(2)),
                 "before": first.as_json(),
+                "rules": rules_now.as_json(),
                 "now": now.as_json(),
             }
         )

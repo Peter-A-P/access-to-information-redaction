@@ -100,11 +100,17 @@ function drawTradeoff(systems) {
     g.append(el("line", { x1: x(s.over[1]), x2: x(s.over[2]), y1: y(s.leak[0]), y2: y(s.leak[0]), class: "whisker" }));
     g.append(el("line", { x1: x(s.over[0]), x2: x(s.over[0]), y1: y(s.leak[1]), y2: y(s.leak[2]), class: "whisker" }));
     g.append(el("circle", { cx: x(s.over[0]), cy: y(s.leak[0]), r: s.key === "full" ? 7 : 5.5, class: "pt" }));
-    /* The tool sits at the left edge, so its label goes to the right; the model alone sits
-       close to it, so its label goes above. */
+    /* The tool sits at the left edge at the same leak rate as the rules alone, so its label
+       is lifted well above both on a leader line; the others sit to the right of their
+       points. */
     const left = s.over[0] > 70;
-    const dy = s.key === "model_only" ? -28 : -9;
-    const tx = x(s.over[0]) + (left ? -12 : 12);
+    const lifted = s.key === "full";
+    const dy = lifted ? -96 : -9;
+    const tx = x(s.over[0]) + (left ? -12 : lifted ? 6 : 12);
+    if (lifted) {
+      g.append(el("line", { x1: x(s.over[0]), x2: x(s.over[0]), y1: y(s.leak[0]) - 9,
+        y2: y(s.leak[0]) + dy + 22, class: "leader" }));
+    }
     g.append(el("text", { x: tx, y: y(s.leak[0]) + dy, "text-anchor": left ? "end" : "start",
       class: "pt-label halo" }, SYSTEM_LABELS[s.key]));
     g.append(el("text", { x: tx, y: y(s.leak[0]) + dy + 16, "text-anchor": left ? "end" : "start",
@@ -261,13 +267,17 @@ function drawReviewers(data) {
 function drawReleases(sets) {
   const rows = sets.map((s) => ({
     label: s.label, sub: `${s.packages} packages, ${s.pages} pages, ${s.kind}`,
-    values: { before: [s.before[0]], now: s.now },
+    values: { before: [s.before[0]], rules: s.rules, now: s.now },
   }));
-  hbars("release-chart", rows, [["before", "b-before"], ["now", "b-now"]], {
+  hbars("release-chart", rows, [["before", "b-before"], ["rules", "b-rules"], ["now", "b-now"]], {
     left: 290, label: "Share of released spans the tool would withhold, per set",
     title: "Of what a person released, withheld by the tool",
   });
-  legend("release-legend", [["b-before", "Before 2026-10-17"], ["b-now", "The tool as it ships"]]);
+  legend("release-legend", [
+    ["b-before", "First scored, before 2026-10-17"],
+    ["b-rules", "The rules alone, today"],
+    ["b-now", "The tool as it ships: rules, then Jev"],
+  ]);
 }
 
 function drawScans(profiles) {

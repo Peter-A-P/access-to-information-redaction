@@ -3,9 +3,10 @@
 An access-to-information request means staff reading hundreds of pages and deciding, line
 by line, which personal information must be withheld and which must be released. Blunt
 PII tools redact all of it and are useless, so it is done by hand. This tool proposes every
-redaction with a reason tied to a category of the legislation, lets a reviewer approve or
-reject page by page with a full audit log, and publishes how often it redacts what must go
-and how often it keeps what must stay. Days of reading become hours of review.
+redaction with a reason tied to a category of the legislation, deterministic rules first and
+then [Jev, a decision model](#why-jev-and-what-it-is), on what they leave; lets a reviewer approve or reject page by page
+with a full audit log; and publishes how often it redacts what must go and how often it keeps
+what must stay. Days of reading become hours of review.
 
 **The tool proposes; a person decides.** There is no path from a proposal to a released
 document without a reviewer action on every page.
@@ -827,8 +828,9 @@ boundary, measured.
 
 ## How this was built
 
-Design, methodology, evaluation choices and judgement are Peter Parker's, including eight
-years inside a public body that answers access-to-information requests. AI coding
-assistants (Claude Code) were used for implementation and drafting, the way a senior
-engineer uses them in 2026. Every number in the results tables is reproducible from this
-repository with one command, and that reproducibility is the evidence that matters.
+I designed this, chose how it is measured and made the judgement calls, from eight years
+inside a public body that answers access-to-information requests, where the question this
+tool asks is asked about every page released. I used AI coding assistants (Claude Code) for
+implementation and drafting, the way a senior engineer uses them in 2026. Every number in the
+results tables is reproducible from this repository with one command, and that
+reproducibility is the evidence that matters.

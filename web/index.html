@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hundreds of Pages, Redacted in an Afternoon: access-to-information review, measured</title>
-<meta name="description" content="A tool that proposes every redaction in an access-to-information release with the provision it rests on, lets a person approve or overrule it page by page with a tamper-evident log, and publishes how often it withholds what must go and how often it keeps what must stay. Measured on labelled records, timed with real reviewers, and tested on published federal releases.">
+<title>Hundreds of Pages, Redacted in an Afternoon: access-to-information review with Jev, measured</title>
+<meta name="description" content="A tool that proposes every redaction in an access-to-information release with the provision it rests on, deterministic rules first and then Jev, a decision model, lets a person approve or overrule it page by page with a tamper-evident log, and publishes how often it withholds what must go and how often it keeps what must stay. Measured on labelled records, timed with real reviewers, and tested on published federal releases.">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
 <main>
 
   <header class="hero">
-    <p class="eyebrow">Access to information, with every number measured</p>
-    <h1>Hundreds of pages, <span class="hl">redacted in an afternoon</span>, and a&nbsp;person still decides every line</h1>
+    <p class="eyebrow">Access to information: rules, then Jev, a decision model, with every number measured</p>
+    <h1>Hundreds of pages, <span class="hl">redacted in an afternoon</span> with Jev, and a&nbsp;person still decides every line</h1>
     <p class="lead">
       When someone asks a public body for its records, staff read every page and decide, line
       by line, what must be withheld and what must be released. The law turns on context:
@@ -23,7 +23,11 @@
       answers the request in form and refuses it in substance, so the reading is still done by
       hand. This tool reads the record the way a reviewer does, proposes every redaction with
       the section of the law it rests on, and leaves the decision on every page to a person,
-      with a log nobody can quietly edit.
+      with a log nobody can quietly edit. What the rules cannot settle is decided by
+      <a href="#model">Jev</a>, a new kind of AI model: a decision model, which picks among the
+      categories of the law and says how likely each one is instead of writing an answer, and
+      which took what the tool withholds from the requester from {{rules_over}} with the rules
+      alone to {{full_over}}.
     </p>
     <figure class="clip">
       <video src="/media/jev-clip.mp4" poster="/media/jev-clip.jpg" autoplay muted loop playsinline preload="metadata" aria-describedby="clip-caption"></video>
@@ -445,12 +449,13 @@
     <figure class="chart-figure">
       <div id="release-chart" class="chart"></div>
       <div class="legend" id="release-legend"></div>
-      <figcaption>Share of the spans a person released that the tool would have withheld: as first scored, with the rules alone and no vocabulary, and as the tool ships, the rules then Jev, with 95% intervals for the second.</figcaption>
+      <figcaption>Share of the spans a person released that the tool would have withheld: as first scored, before the military vocabulary; the rules alone on today's code; and the tool as it ships, the rules then Jev. 95% intervals on the last two.</figcaption>
     </figure>
     <div class="verdict">
       <p><strong>This is the tool's weakest result, and it is published as such.</strong> On the
       Defence records it learned from, military ranks, layout read back from the text and Jev
-      take it from withholding everything to {{rel_defence_now}}. On records it never saw it
+      take it from withholding everything to {{rel_defence_now}}, where the rules alone now
+      withhold {{rel_defence_rules}}. On records it never saw it
       still withholds {{rel_heldout_now}} and {{rel_fresh_now}}: heads of state it has no
       register for, family words in century-old immigration files that the archive opened
       because everyone in them was born more than 110 years ago. Jev cuts what the rules
@@ -607,9 +612,9 @@
   <section class="section" id="built">
     <h2>How this was built</h2>
     <p>
-      Design, methodology, evaluation choices and judgement are Peter Parker's, from eight years
+      I designed this, chose how it is measured and made the judgement calls, from eight years
       inside a public body that answers access-to-information requests, where the question on
-      this page is asked about every page released. AI coding assistants (Claude Code) were used
+      this page is asked about every page released. I used AI coding assistants (Claude Code)
       for implementation and drafting, the way a senior engineer uses them in 2026. Every number
       on this page is reproducible from the repository.
     </p>
