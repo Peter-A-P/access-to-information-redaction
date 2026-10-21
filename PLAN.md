@@ -2287,3 +2287,19 @@ stands.
 
 The proposals are still the frozen rules-only set, so this is still a measurement of the
 weaker tool; the time with Jev's proposals is not measured.
+
+### 12.54 The dashboard keeps its totals; the website charts the Defence releases only
+
+2026-10-21. Every update to the site restarted the container and set the dashboard back to
+zero. `sever demo --stats-file` now writes the running totals, the same numbers
+`/dashboard.json` publishes and nothing else, to a named volume every half minute and on
+exit, and reads them back at start; the counts since the last update were carried over by
+seeding the volume from `/dashboard.json`. The per-minute activity of the last hour is not
+kept. The promise that nothing a visitor does is kept is unchanged: no text, no address, no
+identifier is in the file.
+
+The website's real-release chart now shows the Defence set only, at Peter's direction: it is
+the one collection the tool was adapted to (ranks, units, layout), and the other two sets
+measure what that adaptation is worth on collections nobody adapted it to, not how it does
+on one it was built for. The page still quotes them, 68.6 and 68.7 percent, in a note
+beside the chart, and the README and the results files keep all three sets.

@@ -186,3 +186,53 @@ def test_a_spread_is_not_counted_as_a_persons_decision(
                 assert d["spread"] >= 1
                 return
     pytest.skip("no repeated withheld value in these records")
+
+
+def test_the_dashboard_totals_survive_a_restart(
+    with_site: DemoServer, items: tuple[Item, ...], tmp_path: Path
+) -> None:
+    """An update to the site restarts the server; the totals are read back, never doubled,
+    and the saved file holds counts and no text."""
+    import json
+
+    from sever.review.stats import keep, save
+
+    c = TestClient(with_site)
+    c.get("/review")
+    item = items[0]
+    p = next(p for p in item.on_page(1) if p.detection.text.strip())
+    c.post(
+        f"/doc/{item.doc_id}/page/1/span",
+        data={"start": p.detection.offsets.start, "end": p.detection.offsets.end, "action": "reject"},
+    )
+    assert with_site.stats is not None
+    path = tmp_path / "stats.json"
+    save(with_site.stats, path)
+    saved = path.read_text()
+    assert p.detection.text not in saved and item.doc_id not in saved
+
+    restarted = DemoServer(items=items, secure_cookie=False)
+    assert restarted.stats is not None
+    keep(restarted.stats, path, every=3600).set()
+    d = restarted.stats.snapshot(live=0)
+    assert d["visitors"] == 1 and d["decisions"]["release"] == 1
+    assert d["since"] == json.loads(saved)["since"]
+    # The live endpoint's own output is a valid file too: that is how the totals are seeded.
+    other = DemoServer(items=items, secure_cookie=False)
+    assert other.stats is not None
+    other.stats.restore(TestClient(with_site).get("/dashboard.json").json())
+    assert other.stats.snapshot(live=0)["decisions_total"] == 1
+
+
+def test_an_unreadable_totals_file_is_set_aside_not_overwritten(
+    items: tuple[Item, ...], tmp_path: Path
+) -> None:
+    from sever.review.stats import keep
+
+    path = tmp_path / "stats.json"
+    path.write_text("{not json")
+    s = DemoServer(items=items, secure_cookie=False)
+    assert s.stats is not None
+    keep(s.stats, path, every=3600).set()
+    assert (tmp_path / "stats.json.unreadable").read_text() == "{not json"
+    assert s.stats.snapshot(live=0)["visitors"] == 0

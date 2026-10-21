@@ -37,7 +37,10 @@ RUN .venv/bin/python -c "from sever.review.demo import demo_model, released_item
 # owner-only, which the unprivileged user below could not read.
 RUN chmod -R a+rX /app
 RUN useradd --system --uid 10007 --home /nonexistent sever
+# The dashboard's running totals, on a named volume (deploy/compose.yaml) so an update keeps
+# them. A new named volume takes this directory's owner, so the unprivileged user can write.
+RUN mkdir /data && chown sever /data
 USER sever
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"
-CMD [".venv/bin/sever", "demo", "--host", "0.0.0.0", "--port", "8000", "--site", "/app/site"]
+CMD [".venv/bin/sever", "demo", "--host", "0.0.0.0", "--port", "8000", "--site", "/app/site", "--stats-file", "/data/stats.json"]

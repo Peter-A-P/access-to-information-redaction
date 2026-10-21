@@ -205,6 +205,8 @@ async function tick() {
     released(d);
     tool(d);
     const since = new Date(d.since).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    document.getElementById("since-heading").textContent =
+      `Since ${new Date(d.since).toLocaleDateString(undefined, { dateStyle: "long" })}`;
     status.replaceChildren(html("span", "pulse"), document.createTextNode(
       ` Live: counting since ${since}, last updated at ${new Date(d.now).toLocaleTimeString()}`));
   } catch (err) {

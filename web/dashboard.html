@@ -34,7 +34,7 @@
   </noscript>
 
   <section class="section" id="now">
-    <h2>Since the server started</h2>
+    <h2 id="since-heading">Since counting began</h2>
     <div class="headline six live-tiles">
       <div class="stat"><span class="figure" id="t-visitors">&ndash;</span><span class="caption">visitors given a private session</span></div>
       <div class="stat"><span class="figure" id="t-live">&ndash;</span><span class="caption">sessions active in the last two hours</span></div>
@@ -106,7 +106,9 @@
     </p>
     <div class="headline" id="tool-tiles"></div>
     <p class="note">
-      The counts live in the server's memory and start again when it restarts. Each visitor's
+      The counts are kept across updates to the site: the running totals, and nothing else, are
+      saved to one small file every half minute and read back when the server starts. The
+      last hour's activity starts again after a restart. Each visitor's
       own session, and its audit log, is deleted after two hours idle; what is counted here is
       the number of each kind of action and nothing about the person or the text. The raw
       counts are at <a href="/dashboard.json">/dashboard.json</a>.

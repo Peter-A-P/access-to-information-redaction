@@ -3,8 +3,11 @@
 Read by the dashboard at `/dashboard` through `/dashboard.json`. The promise the demonstration
 makes is that nothing a visitor does is kept, and this module keeps to it: it holds counts of
 each kind of action and nothing else. No span text, no address, no cookie, no time finer than
-the minute, and nothing written to disk. The counts live in the process and start again when
-it does, which the dashboard says.
+the minute. The counts live in the process, and with `--stats-file` the running totals are
+written to one small JSON file every half minute and when the server stops, and read back
+when it starts, so an update to the site does not set the dashboard back to zero. The file
+holds the same numbers `/dashboard.json` already publishes, and nothing else; the last hour's
+per-minute activity is not kept, because after a restart it would describe a gap.
 
 What is counted, and what is not:
 
@@ -25,12 +28,17 @@ What is counted, and what is not:
 
 from __future__ import annotations
 
+import atexit
+import contextlib
 import datetime as dt
+import json
+import os
 import threading
 import time
 from collections import deque
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from sever.review.app.main import BULK_RELEASE_REASON
@@ -243,6 +251,109 @@ class DemoStats:
             }
 
 
+    # -- keeping the totals across a restart ---------------------------------------------
+
+    def state(self) -> dict[str, Any]:
+        """The running totals, in the snapshot's own shape: what a restart must not lose."""
+        snap = self.snapshot(live=0)
+        released = {k: v for k, v in snap["released"].items() if k not in ("tool", "decisions_total")}
+        kept = {k: v for k, v in snap.items() if k in _KEPT}
+        kept["by_code"] = {
+            c: {"decided": v["decided"], "agreed": v["agreed"]} for c, v in snap["by_code"].items()
+        }
+        return {**kept, "released": released}
+
+    def restore(self, state: Mapping[str, Any]) -> None:
+        """Add the totals a previous run saved to this one's. Reads `/dashboard.json` too."""
+
+        def add(into: dict[str, int], saved: Mapping[str, Any]) -> None:
+            for k, v in saved.items():
+                if k in into:
+                    into[k] += int(v)
+
+        with self._lock:
+            if state.get("since"):
+                self.since = min(self.since, dt.datetime.fromisoformat(str(state["since"])))
+            self.visitors += int(state.get("visitors", 0))
+            add(self._decisions, state.get("decisions", {}))
+            self._recategorised += int(state.get("recategorised", 0))
+            self._bulk += int(state.get("bulk_released", 0))
+            self._spread += int(state.get("spread", 0))
+            self._pages += int(state.get("pages_completed", 0))
+            self._records += int(state.get("records_completed", 0))
+            add(self._pdfs, state.get("pdfs", {}))
+            for k, row in state.get("agreement", {}).items():
+                if k in self._agreement:
+                    add(self._agreement[k], row)
+            for code, row in state.get("by_code", {}).items():
+                try:
+                    self.taxonomy[code]
+                except KeyError:
+                    continue
+                mine = self._by_code.setdefault(code, {"decided": 0, "agreed": 0})
+                add(mine, row)
+            r, saved = self._released, state.get("released", {})
+            add(r["decisions"], saved.get("decisions", {}))
+            for k in ("pages_completed", "records_completed", "spread"):
+                r[k] += int(saved.get(k, 0))
+            for k, row in saved.get("agreement", {}).items():
+                if k in r["agreement"]:
+                    add(r["agreement"][k], row)
+
+
+_KEPT = (
+    "since",
+    "visitors",
+    "decisions",
+    "recategorised",
+    "bulk_released",
+    "spread",
+    "pages_completed",
+    "records_completed",
+    "pdfs",
+    "agreement",
+)
+
+SAVE_EVERY = 30.0
+
+
+def save(stats: DemoStats, path: Path) -> None:
+    """Write the totals beside the file and rename it over, so a crash mid-write leaves the
+    previous file whole."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(stats.state(), sort_keys=True), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def keep(stats: DemoStats, path: Path, *, every: float = SAVE_EVERY) -> threading.Event:
+    """Read the totals `path` holds into `stats`, then save them every `every` seconds and
+    when the process exits. Returns the event that stops the saving thread.
+
+    An unreadable file is set aside as `<name>.unreadable` rather than overwritten, so a
+    bad write never silently costs the history.
+    """
+    if path.is_file():
+        try:
+            stats.restore(json.loads(path.read_text(encoding="utf-8")))
+        except (ValueError, TypeError, KeyError):
+            path.replace(path.with_name(path.name + ".unreadable"))
+    stop = threading.Event()
+
+    def run() -> None:
+        while not stop.wait(every):
+            save(stats, path)
+
+    threading.Thread(target=run, name="stats-keeper", daemon=True).start()
+    def last() -> None:
+        stop.set()
+        # The folder can be gone by then, as a test's temporary directory is.
+        with contextlib.suppress(OSError):
+            save(stats, path)
+
+    atexit.register(last)
+    return stop
+
+
 def tool_counts(items: Sequence[Item], taxonomy: Taxonomy) -> dict[str, int]:
     """What the engine proposed on the demonstration's records."""
     out = {"records": len(items), "spans": 0, "withhold": 0, "escalate": 0, "release": 0,
@@ -261,4 +372,4 @@ def tool_counts(items: Sequence[Item], taxonomy: Taxonomy) -> dict[str, int]:
     return out
 
 
-__all__ = ["OUTCOMES", "WINDOW_MINUTES", "DemoStats", "tool_counts"]
+__all__ = ["OUTCOMES", "SAVE_EVERY", "WINDOW_MINUTES", "DemoStats", "keep", "save", "tool_counts"]

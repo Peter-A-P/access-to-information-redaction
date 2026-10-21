@@ -714,6 +714,10 @@ tbody tr.reference { background: var(--accent-soft); }
 .stat.violet .figure { color: var(--alt); }
 .stat.gold .figure { color: var(--escalate); }
 .stat.down .figure { color: var(--warn); }
+/* Two figures in one tile: the better one green, the worse red, "vs" in the ink between. */
+.stat.versus .figure .win { color: var(--good); }
+.stat.versus .figure .vs { color: var(--ink); font-size: 0.6em; letter-spacing: 0; padding: 0 0.1em; }
+.stat.versus .figure .loss { color: var(--warn); }
 
 .caption { display: block; margin-top: 0.3rem; font-size: 0.82rem; color: var(--ink-faint); line-height: 1.4; }
 

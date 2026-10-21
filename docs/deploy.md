@@ -16,7 +16,7 @@ demonstration adds to the reviewer application and why. It adds nothing else.
 On the shared OVHcloud VPS that serves project 04 (`docs/deploy.md` in 04's repository),
 as one more container behind 04's Caddy. It publishes no port. It joins 04's compose
 network so Caddy can reach it by name. The container is read-only, with a 256 MB `/tmp`
-for the visitors' audit logs. It drops every capability and is limited to one CPU and 2 GB.
+for the visitors' audit logs, and one named volume for the dashboard's totals (below). It drops every capability and is limited to one CPU and 2 GB.
 
 The image holds no credential and the demonstration calls nothing outside itself, so a
 compromise of it reaches six invented records, nineteen pages LAC has already published, and
@@ -96,6 +96,30 @@ goes over in one short connection. The build is the same Dockerfile from the sam
 
 To roll back: `sudo docker tag sever-demo:previous sever-demo:latest`, then the
 `compose up` line again.
+
+## The dashboard's totals survive an update
+
+The dashboard's running totals (visitors, decisions, pages, PDFs, agreement) are written
+by `sever demo --stats-file /data/stats.json` every half minute and when the container
+stops, and read back when it starts (`sever.review.stats.keep`). `/data` is the named volume
+`redaction_stats` (`deploy/compose.yaml`), so a new image keeps them. The file holds the
+numbers `/dashboard.json` already publishes and nothing else; the last hour's per-minute
+activity is not kept. A file that cannot be read is renamed `stats.json.unreadable`, never
+overwritten.
+
+The output of `/dashboard.json` is itself a valid file, which is how the totals were carried
+over from the containers that kept them only in memory (2026-10-21), and how to restore them
+if the volume is ever lost. Before the `compose up` line:
+
+```bash
+curl -s https://redaction.peterparker.ca/dashboard.json > /tmp/stats.json
+sudo docker volume create redaction_stats
+sudo docker run --rm -v redaction_stats:/data -v /tmp/stats.json:/seed.json:ro \
+  --entrypoint cp sever-demo:latest /seed.json /data/stats.json
+```
+
+Seeding replaces whatever file the volume held, so it is for an empty or lost volume only.
+Compose warns that the volume was not created by it, and uses it.
 
 ## Checking it
 

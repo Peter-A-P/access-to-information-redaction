@@ -1469,6 +1469,13 @@ def demo(
             help="Replay Jev's recorded answers (`sever demo-answers`). Never calls a model.",
         ),
     ] = True,
+    stats_file: Annotated[
+        Path | None,
+        typer.Option(
+            help="Keep the dashboard's totals across restarts in this JSON file: read at start, "
+            "saved every half minute and on exit. Counts only, as /dashboard.json publishes."
+        ),
+    ] = None,
 ) -> None:
     """The public demonstration: the project's website, the live dashboard, and one private,
     forgotten reviewer session per visitor.
@@ -1492,6 +1499,11 @@ def demo(
     if released:
         items = items + released_items(model=demo_model() if model else None)
     server = DemoServer(items=items, site=site, secure_cookie=not insecure_cookie)
+    if stats_file is not None:
+        from sever.review.stats import keep
+
+        assert server.stats is not None
+        keep(server.stats, stats_file)
     typer.echo(f"http://{host}:{port}/")
     uvicorn.run(server, host=host, port=port, log_level="warning", access_log=False)
 

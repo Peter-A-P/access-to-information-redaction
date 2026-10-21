@@ -349,10 +349,14 @@ def _number_word(n: int) -> str:
     return words[n] if n < len(words) else str(n)
 
 
+# The last field says whether the set is charted. Only the Defence records are: the tool
+# was adapted to them (ranks, units, layout), and to no other collection, so the other two
+# measure what adapting it is worth rather than how it does on a collection it was built
+# for. They are still read, and the page quotes them in a note beside the chart.
 RELEASE_SETS = (
-    ("releases", "Defence, 2001 to 2010", "learned from"),
-    ("releases-heldout", "External Affairs, Immigration", "held out"),
-    ("releases-fresh", "Immigration, Health, Justice", "held out, registered first"),
+    ("releases", "Defence, 2001 to 2010", "adapted to", True),
+    ("releases-heldout", "External Affairs, Immigration", "held out", False),
+    ("releases-fresh", "Immigration, Health, Justice", "held out, registered first", False),
 )
 
 
@@ -360,7 +364,8 @@ def release_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
     """The published federal releases: what the tool would withhold of what a person released."""
     f: dict[str, str] = {}
     sets: list[dict[str, Any]] = []
-    for key, label, kind in RELEASE_SETS:
+    others = 0
+    for key, label, kind, charted in RELEASE_SETS:
         text = _read(root, f"results/{key}.md")
         rows = table_rows(text)
         corpus = find(
@@ -386,6 +391,9 @@ def release_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
         f[f"rel_{slug}_now"], f[f"rel_{slug}_now_ci"] = now.pct, now.ci
         f[f"rel_{slug}_spans"] = thousands(now.n)
         f[f"rel_{slug}_rules"] = rules_now.pct
+        if not charted:
+            others += int(corpus.group(1))
+            continue
         sets.append(
             {
                 "key": slug,
@@ -400,6 +408,7 @@ def release_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
         )
     f["rel_pages_total"] = str(sum(s["pages"] for s in sets))
     f["rel_packages_total"] = str(sum(s["packages"] for s in sets))
+    f["rel_other_packages"] = str(others)
     return f, {"releases": sets}
 
 

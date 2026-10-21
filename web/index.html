@@ -351,8 +351,8 @@
     <div class="headline">
       <div class="stat up"><span class="figure">{{speedup}}&times;</span><span class="caption">as fast with proposals, holding the {{study_records}} records fixed ({{speedup_ci}})</span></div>
       <div class="stat"><span class="figure">{{secs_with}} s</span><span class="caption">a page with proposals ({{secs_with_ci}}), against {{secs_unaided}} s by hand ({{secs_unaided_ci}})</span></div>
-      <div class="stat up"><span class="figure">{{study_leak_with}}</span><span class="caption">leaked with proposals ({{study_leak_with_ci}}), against {{study_leak_unaided}} by hand ({{study_leak_unaided_ci}})</span></div>
-      <div class="stat up"><span class="figure">{{study_over_with}}</span><span class="caption">over-redacted with proposals, against {{study_tool_over}} for the tool's proposals with nobody reviewing</span></div>
+      <div class="stat versus"><span class="figure"><span class="win">{{study_leak_with}}</span> <span class="vs">vs</span> <span class="loss">{{study_leak_unaided}}</span></span><span class="caption">leaked with proposals ({{study_leak_with_ci}}) against by hand ({{study_leak_unaided_ci}})</span></div>
+      <div class="stat versus"><span class="figure"><span class="win">{{study_over_with}}</span> <span class="vs">vs</span> <span class="loss">{{study_tool_over}}</span></span><span class="caption">over-redacted by reviewers with proposals against the tool's proposals with nobody reviewing</span></div>
     </div>
     <h3>What that adds up to</h3>
     <p>
@@ -443,31 +443,37 @@
       releases are the opposite: real, untidy, and everything still visible was judged
       releasable by a person at Library and Archives Canada. So the question asked of them is
       one-sided but honest: <strong>of what a person released, how much would this tool have
-      withheld?</strong> {{rel_packages_total}} packages, {{rel_pages_total}} pages, in three
-      sets, the last two chosen by a rule written before any was downloaded.
+      withheld?</strong> {{rel_packages_total}} packages, {{rel_pages_total}} pages of Department
+      of National Defence records from 2001 to 2010, the collection the tool was adapted to.
     </p>
     <figure class="chart-figure">
       <div id="release-chart" class="chart"></div>
       <div class="legend" id="release-legend"></div>
-      <figcaption>Share of the spans a person released that the tool would have withheld: as first scored, before the military vocabulary; the rules alone on today's code; and the tool as it ships, the rules then Jev. 95% intervals on the last two.</figcaption>
+      <figcaption>Share of the spans a person released that the tool would have withheld, on the Defence records: as first scored, before the military vocabulary; the rules alone on today's code; and the tool as it ships, the rules then Jev. 95% intervals on the last two.</figcaption>
     </figure>
     <div class="verdict">
-      <p><strong>This is the tool's weakest result, and it is published as such.</strong> On the
-      Defence records it learned from, military ranks, layout read back from the text and Jev
-      take it from withholding everything to {{rel_defence_now}}, where the rules alone now
-      withhold {{rel_defence_rules}}. On records it never saw it
-      still withholds {{rel_heldout_now}} and {{rel_fresh_now}}: heads of state it has no
-      register for, family words in century-old immigration files that the archive opened
-      because everyone in them was born more than 110 years ago. Jev cuts what the rules
-      alone withhold on every set, but these are scanned forms with no layout and no
-      requester, and the page says so rather than quoting only the first set.</p>
+      <p><strong>This is the tool's weakest result, and it is published as such.</strong>
+      Military ranks and units, layout read back from the text, and Jev take it from
+      withholding everything to {{rel_defence_now}}, where the rules alone now withhold
+      {{rel_defence_rules}}. These are scanned forms with no layout and no requester, so every
+      effect pushes towards withholding, and the military vocabulary was written after reading
+      these packages, so this is not a blind test.</p>
     </div>
+    <p class="note">
+      The tool was also run on {{rel_other_packages}} packages from other collections (External
+      Affairs, Immigration, Health, Justice), chosen by a rule written before any was
+      downloaded, with nothing adapted to them. There it withholds {{rel_heldout_now}} and
+      {{rel_fresh_now}} of what a person released: heads of state it has no register for, and
+      family words in century-old immigration files the archive opened because everyone in
+      them was born more than 110 years ago. Those figures say how much adapting the tool to a
+      collection is worth, not how it does on one it was adapted to, so they are not charted.
+    </p>
     <details class="disclose">
       <summary>For the technical reader: why a leak rate cannot be reported here</summary>
       <ul>
         <li><strong>One-sided by construction.</strong> What sat under the original black boxes was removed before publication, so there is no must-withhold denominator. The scoring code raises rather than return a leak rate on this track.</li>
         <li><strong>A floor, not a forecast.</strong> These are OCR text layers of scanned forms with no layout and no configured requester, so every effect pushes towards withholding.</li>
-        <li><strong>The archive's own age rule</strong> (release once 110 years have passed since birth, Privacy Regulations s. 6(c)) was built and registered before the third set was opened; no page in it was old enough for the rule to read, so it decided nothing there, and that is reported too.</li>
+        <li><strong>The archive's own age rule</strong> (release once 110 years have passed since birth, Privacy Regulations s. 6(c)) was built and registered before the Health and Justice packages were opened; no page in it was old enough for the rule to read, so it decided nothing there, and that is reported too.</li>
         <li><a data-repo href="{{repository}}/blob/main/results/releases.md">releases.md</a>, <a data-repo href="{{repository}}/blob/main/results/releases-heldout.md">releases-heldout.md</a>, <a data-repo href="{{repository}}/blob/main/results/releases-fresh.md">releases-fresh.md</a>, and the selection rules in <a data-repo href="{{repository}}/blob/main/docs/data.md">docs/data.md</a>.</li>
       </ul>
     </details>
@@ -619,6 +625,19 @@
       this page is asked about every page released. I used AI coding assistants (Claude Code)
       for implementation and drafting, the way a senior engineer uses them in 2026. Every number
       on this page is reproducible from the repository.
+    </p>
+    <ul class="checks">
+      <li><strong>Three stages, and only the last can release anything.</strong> The engine proposes, a person decides on the reviewer's screen, and the export applies only those decisions, refusing until every page has one.</li>
+      <li><strong>Rules first, then Jev.</strong> Deterministic rules in a fixed order, each tied to a provision, settle most spans. Jev decides only what they leave, sees placeholders rather than names through project 04's gateway, and below {{model_threshold}} the span is withheld and escalated.</li>
+      <li><strong>True redaction, tested every time.</strong> The text under every box is removed, not covered, and each export is leak-tested on its text layer and on an OCR of the rendered page.</li>
+      <li><strong>A log that cannot be rewritten.</strong> Every reviewer action is an append-only, hash-chained row in DuckDB, and the schedule of severances sent to the requester is generated from that log alone.</li>
+      <li><strong>No figure on this page is typed.</strong> Each is read from a table a measurement command wrote, and the site's build fails if one is missing or no longer reads as it did.</li>
+      <li><strong>One small container.</strong> It runs beside the gateway on a virtual server in Quebec. Jev's answers for the demonstration are replayed from a file, so it calls no model and costs nothing to run.</li>
+    </ul>
+    <p>
+      For more, including the architecture diagrams, the rules in the order they run, the
+      reviewer's screen and where this demonstration runs, see
+      <a href="/how">How it's built</a>.
     </p>
     <details class="disclose">
       <summary>Glossary</summary>
