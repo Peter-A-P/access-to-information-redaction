@@ -238,18 +238,27 @@ function closePops() {
   document.querySelectorAll('mark.focus').forEach((m) => m.classList.remove('focus'));
 }
 
-// Put a panel to the right of the record, level with the text it is about, so it covers
-// as little of the record as it can: beside the record when the window has room, against
+// Put a panel just right of the record's longest line, level with the text it is about, so
+// it covers as little of the record as it can: beside the text when the window has room, against
 // the window's right edge when it does not, where a record's lines are shortest. On a
 // screen too narrow for that it goes under the text, or above it if there is no room.
+// Where the record's longest line ends, rather than where its box does: the box is wider
+// than the text, and a panel placed beyond it sits further from the span than it needs to.
+function textRight(record) {
+  const range = document.createRange();
+  range.selectNodeContents(record);
+  let right = 0;
+  for (const r of range.getClientRects()) right = Math.max(right, r.right);
+  return right || record.getBoundingClientRect().right;
+}
+
 function place(pop, rect) {
   pop.hidden = false;
-  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 12;
+  const w = pop.offsetWidth, h = pop.offsetHeight, gap = 20;  // room for a badge at a line end
   const record = document.getElementById('record');
   const right = window.scrollX + window.innerWidth - w - 8;
   if (record && window.innerWidth >= 2 * w) {
-    const box = record.getBoundingClientRect();
-    const left = Math.min(box.right + window.scrollX + gap, right);
+    const left = Math.min(textRight(record) + window.scrollX + gap, right);
     let top = rect.top + window.scrollY - 12;
     // Never over the highlight itself: if the panel would cover it, drop below its line.
     if (rect.right + window.scrollX > left) top = rect.bottom + window.scrollY + 6;
