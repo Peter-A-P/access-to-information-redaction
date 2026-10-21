@@ -4,7 +4,7 @@ An access-to-information request means staff reading hundreds of pages and decid
 by line, which personal information must be withheld and which must be released. Blunt
 PII tools redact all of it and are useless, so it is done by hand. This tool proposes every
 redaction with a reason tied to a category of the legislation, deterministic rules first and
-then [Jev, a decision model](#why-jev-and-what-it-is), on what they leave; lets a reviewer approve or reject page by page
+then [Jev, an AI decision model](#why-jev-and-what-it-is), on what they leave; lets a reviewer approve or reject page by page
 with a full audit log; and publishes how often it redacts what must go and how often it keeps
 what must stay. Days of reading become hours of review.
 
