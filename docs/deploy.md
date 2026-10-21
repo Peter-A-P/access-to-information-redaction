@@ -75,10 +75,11 @@ git archive --format=tar --prefix=src/ HEAD > /tmp/sever-src.tar
 tar -rf /tmp/sever-src.tar -s ',^,src/,' data/demo/*.pdf    # BSD tar; GNU tar: --transform
 gzip -f /tmp/sever-src.tar
 scp /tmp/sever-src.tar.gz boundary-vps:/tmp/sever-src.tar.gz
-scp deploy/compose.yaml boundary-vps:/srv/redaction/compose.yaml
+scp deploy/compose.yaml boundary-vps:/tmp/redaction-compose.yaml   # /srv/redaction is root's
 
 # on the host, as ubuntu; the running image is kept as :previous for a rollback
 sudo docker tag sever-demo:latest sever-demo:previous
+sudo mv /tmp/redaction-compose.yaml /srv/redaction/compose.yaml
 rm -rf /tmp/sever-build && mkdir /tmp/sever-build && tar -xzf /tmp/sever-src.tar.gz -C /tmp/sever-build
 cd /tmp/sever-build/src && sudo docker build -f deploy/Dockerfile -t sever-demo:latest .
 cd /srv/redaction && sudo docker compose up -d --no-build
