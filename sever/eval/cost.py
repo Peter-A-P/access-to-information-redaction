@@ -79,21 +79,21 @@ DEFAULT_COST_PATH = Path("results/cost.json")
 
 # The runs behind the tool's own rows, and the only ones whose spend is a cost of running
 # the pipeline over a page.
-PIPELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210:pipeline",)
+PIPELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2:pipeline",)
 
 # The model-only baseline. It asks about every span rather than the residual the rules
 # could not settle, so it paid for 1,357 answers the pipeline never needs. Its spend is a
 # cost of measuring the tool, not a cost of running it, and folding the two together would
 # have doubled the published cost per page for a configuration nobody would deploy.
-BASELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210:baseline",)
+BASELINE_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2:baseline",)
 
 # Everything that paid for a line in the committed answer cache. The integrity check is
 # against this, because the cache does not record which run bought which answer, and a
 # check over a subset would pass while a whole run was missing.
-PUBLISHED_RUNS: tuple[str, ...] = ("sever-haiku55-210",)
-# Rows under the published run id before this belong to an exploratory run that reused it
-# on 2026-10-19; the published run began at 14:10 UTC on 2026-10-20.
-PUBLISHED_SINCE = "2026-10-20T14:00:00Z"
+PUBLISHED_RUNS: tuple[str, ...] = ("sever-haiku55-210-r2",)
+# The published run began at 23:17 UTC on 2026-10-20, after the error fixes of PLAN.md
+# 12.49; nothing earlier under its id belongs to it.
+PUBLISHED_SINCE = "2026-10-20T23:00:00Z"
 
 
 class LedgerMismatch(RuntimeError):

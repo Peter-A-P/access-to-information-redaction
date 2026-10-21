@@ -1,5 +1,5 @@
 {
- "generated_on": "2026-10-20",
+ "generated_on": "2026-10-21",
  "corpus": {
   "documents": 210,
   "pages": 210,
@@ -15,20 +15,20 @@
  },
  "detector": "sever-detector",
  "model": "anthropic/claude-haiku-5-5",
- "model_run": "9559 answers replayed from the cache, nothing spent",
- "model_asks": 1932,
+ "model_run": "9921 answers replayed from the cache, nothing spent",
+ "model_asks": 2294,
  "model_only_asks": 7627,
  "jurisdiction": "federal",
  "cost": {
   "run_ids": [
-   "sever-haiku55-210:baseline",
-   "sever-haiku55-210:pipeline"
+   "sever-haiku55-210-r2:baseline",
+   "sever-haiku55-210-r2:pipeline"
   ],
-  "usd_per_page": 0.00523002380952381,
-  "undeduplicated_usd_per_page": 0.00533214036939314,
-  "cost_usd": 4.190282400000002,
+  "usd_per_page": 0.006438838095238095,
+  "undeduplicated_usd_per_page": 0.00654439281811085,
+  "cost_usd": 4.446247699999997,
   "paid_calls": 7549,
-  "asks": 1932
+  "asks": 2294
  },
  "systems": [
   {
@@ -36,32 +36,32 @@
    "note": "The full configuration. The rules decide what they can; what is left goes to the model on typed placeholders through the 04 gateway, and an answer below the confidence threshold is escalated rather than used.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "16.1% (14.8% to 17.3%), n=3780",
+   "over_redaction_rate": "13.8% (12.6% to 15.0%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "12.4% (11.4% to 13.4%), n=5460",
+   "escalation_rate": "11.1% (10.1% to 12.1%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 16,
-   "decomposition_leaks": 43,
+   "unlabelled_detections_withheld": 40,
+   "decomposition_leaks": 19,
    "decomposition_detector_missed": 17,
-   "decomposition_detector_mislabelled": 24,
+   "decomposition_detector_mislabelled": 1,
    "decomposition_box_too_short": 1,
-   "decomposition_decision_wrong": 1,
+   "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "2.6% (1.7% to 3.6%), n=1680",
-   "category_accuracy": "95.4% (93.6% to 96.9%), n=1637",
+   "leak_rate": "1.1% (0.7% to 1.7%), n=1680",
+   "category_accuracy": "94.5% (92.7% to 96.2%), n=1661",
    "per_code_over_redaction": {
-    "K1": "3.8% (2.5% to 5.2%), n=980",
-    "K2": "22.4% (20.6% to 24.3%), n=2170",
-    "K3": "0.7% (0.0% to 2.1%), n=280",
-    "K4": "48.6% (45.7% to 50.0%), n=70",
-    "K6": "16.8% (13.1% to 20.5%), n=280"
+    "K1": "4.2% (3.0% to 5.5%), n=980",
+    "K2": "22.0% (20.2% to 23.9%), n=2170",
+    "K3": "0.4% (0.0% to 1.1%), n=280",
+    "K4": "1.4% (0.0% to 4.3%), n=70",
+    "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "2.6% (1.7% to 3.6%), n=1680"
+    "R1": "1.1% (0.7% to 1.7%), n=1680"
    }
   },
   {
@@ -69,32 +69,32 @@
    "note": "The same model, the same context record and the same confidence threshold, with the deterministic layer removed: every span is sent rather than only the residual. The difference between this row and the one above is what the deterministic rules are worth.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "42.8% (41.2% to 44.5%), n=3780",
+   "over_redaction_rate": "38.4% (36.7% to 40.1%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "33.6% (32.2% to 35.1%), n=5460",
+   "escalation_rate": "30.5% (29.1% to 31.8%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 484,
-   "decomposition_leaks": 25,
+   "unlabelled_detections_withheld": 313,
+   "decomposition_leaks": 27,
    "decomposition_detector_missed": 17,
-   "decomposition_detector_mislabelled": 3,
+   "decomposition_detector_mislabelled": 1,
    "decomposition_box_too_short": 1,
-   "decomposition_decision_wrong": 4,
+   "decomposition_decision_wrong": 8,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "1.5% (1.0% to 2.1%), n=1680",
-   "category_accuracy": "82.1% (79.6% to 84.4%), n=1655",
+   "leak_rate": "1.6% (1.1% to 2.2%), n=1680",
+   "category_accuracy": "83.2% (80.8% to 85.4%), n=1653",
    "per_code_over_redaction": {
-    "K1": "15.6% (13.2% to 18.2%), n=980",
-    "K2": "54.1% (51.9% to 56.5%), n=2170",
-    "K3": "62.1% (56.1% to 67.9%), n=280",
+    "K1": "11.5% (9.1% to 14.1%), n=980",
+    "K2": "52.3% (50.0% to 54.8%), n=2170",
+    "K3": "47.5% (42.1% to 53.2%), n=280",
     "K4": "100.0% (93.2% to 100.0%), n=70",
-    "K6": "16.8% (13.1% to 20.5%), n=280"
+    "K6": "0.0% (0.0% to 1.4%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "1.5% (1.0% to 2.1%), n=1680"
+    "R1": "1.6% (1.1% to 2.2%), n=1680"
    }
   },
   {
@@ -102,32 +102,32 @@
    "note": "The model layer is off, so the residual the rules could not decide stays escalated rather than being decided. Escalations withhold, so they are counted in over-redaction. This row costs nothing to reproduce.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "22.4% (20.9% to 23.9%), n=3780",
+   "over_redaction_rate": "23.8% (22.3% to 25.3%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "36.0% (34.6% to 37.5%), n=5460",
+   "escalation_rate": "35.7% (34.3% to 37.1%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 16,
-   "decomposition_leaks": 42,
+   "unlabelled_detections_withheld": 393,
+   "decomposition_leaks": 19,
    "decomposition_detector_missed": 17,
-   "decomposition_detector_mislabelled": 24,
+   "decomposition_detector_mislabelled": 1,
    "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "2.5% (1.7% to 3.5%), n=1680",
-   "category_accuracy": "31.8% (27.9% to 35.7%), n=1638",
+   "leak_rate": "1.1% (0.7% to 1.7%), n=1680",
+   "category_accuracy": "33.5% (29.6% to 37.4%), n=1661",
    "per_code_over_redaction": {
     "K1": "9.1% (7.8% to 10.4%), n=980",
-    "K2": "30.1% (27.6% to 32.6%), n=2170",
+    "K2": "31.4% (29.0% to 33.8%), n=2170",
     "K3": "0.7% (0.0% to 2.1%), n=280",
-    "K4": "48.6% (45.7% to 50.0%), n=70",
-    "K6": "25.0% (21.3% to 28.6%), n=280"
+    "K4": "1.4% (0.0% to 4.3%), n=70",
+    "K6": "45.4% (39.6% to 51.2%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "2.5% (1.7% to 3.5%), n=1680"
+    "R1": "1.1% (0.7% to 1.7%), n=1680"
    }
   },
   {
@@ -168,37 +168,37 @@
    "note": "The same rules with the context record blanked: no block kind, no signature-block title, no register, no coreference.",
    "spans": 5460,
    "documents": 210,
-   "over_redaction_rate": "49.3% (47.1% to 51.4%), n=3780",
+   "over_redaction_rate": "51.9% (49.8% to 54.0%), n=3780",
    "unweighed_release_rate": "n/a (0)",
-   "escalation_rate": "57.8% (56.0% to 59.4%), n=5460",
+   "escalation_rate": "58.9% (57.2% to 60.6%), n=5460",
    "detector_recall": "98.6% (98.2% to 99.0%), n=5460",
    "unlabelled_detections": 2273,
-   "unlabelled_detections_withheld": 9,
-   "decomposition_leaks": 147,
+   "unlabelled_detections_withheld": 386,
+   "decomposition_leaks": 124,
    "decomposition_detector_missed": 17,
-   "decomposition_detector_mislabelled": 129,
+   "decomposition_detector_mislabelled": 106,
    "decomposition_box_too_short": 1,
    "decomposition_decision_wrong": 0,
    "decomposition_must_redact_spans": 1680,
    "decomposition_must_be_weighed_spans": 0,
    "decomposition_unweighed_releases": 0,
-   "leak_rate": "8.8% (6.9% to 10.8%), n=1680",
-   "category_accuracy": "16.0% (13.5% to 18.3%), n=1533",
+   "leak_rate": "7.4% (5.6% to 9.3%), n=1680",
+   "category_accuracy": "15.7% (13.3% to 18.0%), n=1556",
    "per_code_over_redaction": {
     "K1": "9.1% (7.8% to 10.4%), n=980",
-    "K2": "70.8% (68.2% to 73.1%), n=2170",
-    "K3": "48.6% (46.4% to 50.0%), n=280",
-    "K4": "48.6% (45.7% to 50.0%), n=70",
-    "K6": "25.0% (21.3% to 28.6%), n=280"
+    "K2": "72.4% (70.1% to 74.5%), n=2170",
+    "K3": "50.0% (50.0% to 50.0%), n=280",
+    "K4": "50.0% (50.0% to 50.0%), n=70",
+    "K6": "45.4% (39.6% to 51.2%), n=280"
    },
    "documents_resampled": 210,
    "per_code_leak": {
-    "R1": "8.8% (6.9% to 10.8%), n=1680"
+    "R1": "7.4% (5.6% to 9.3%), n=1680"
    }
   }
  ],
  "pdf_leak_test": {
-  "boxes_tested": 2259,
+  "boxes_tested": 2220,
   "recoverable": 0,
   "documents": 210,
   "ocr_channel_ran": true,

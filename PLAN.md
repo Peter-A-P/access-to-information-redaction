@@ -2134,3 +2134,12 @@ the README tables or stay here.
 
 Jev alone, with no rules, at 0.60: leak 2.7 percent, over-redaction 7.2, so the rules still
 earn their place on the leak side.
+
+**Haiku 5.5 on the same code (2026-10-21)**, rules then model at its 0.90: leak 1.1 percent
+(0.7 to 1.7), over-redaction 13.8 (12.6 to 15.0), against Jev at 0.60 with the same leak and
+1.7 percent over-redaction, at five times the cost per call and seven times the time. These
+are the README's tables until the published model is chosen. **Kev 4B**, the open-weights
+recreation, through OpenRouter (Phala), the same requests, US$0.76: its probabilities are
+spread so thin that from 0.50 up it accepts almost nothing and equals the rules alone, and
+accepting every answer it leaks about 11 percent. Answers in `results/model-answers-kev.jsonl`,
+tables in `results/kev/`; not analysed further.

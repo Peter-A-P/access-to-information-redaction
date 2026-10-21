@@ -1,32 +1,32 @@
 {
   "_comment": "Written by `sever cost`, which reads project 04's gateway ledger. Committed because that ledger is not in this repository, so `sever report` reads this instead. See sever/eval/cost.py.",
   "run_ids": [
-    "sever-haiku55-210:baseline",
-    "sever-haiku55-210:pipeline"
+    "sever-haiku55-210-r2:baseline",
+    "sever-haiku55-210-r2:pipeline"
   ],
   "pipeline_runs": [
-    "sever-haiku55-210:pipeline"
+    "sever-haiku55-210-r2:pipeline"
   ],
-  "recorded_on": "2026-10-20",
+  "recorded_on": "2026-10-21",
   "model": "claude-haiku-5-5",
   "calls": 7549,
-  "cost_usd": 4.190282400000002,
-  "input_tokens": 32856719,
-  "output_tokens": 1809221,
+  "cost_usd": 4.446247699999997,
+  "input_tokens": 35925957,
+  "output_tokens": 1707304,
   "uncosted": 0,
   "pages": 210,
   "documents": 210,
   "cached_answers": 7549,
-  "asks": 1932,
+  "asks": 2294,
   "per_run": {
-    "sever-haiku55-210:baseline": 3.091978,
-    "sever-haiku55-210:pipeline": 1.098305
+    "sever-haiku55-210-r2:baseline": 3.094092,
+    "sever-haiku55-210-r2:pipeline": 1.352156
   },
   "calls_per_run": {
-    "sever-haiku55-210:baseline": 5654,
-    "sever-haiku55-210:pipeline": 1895
+    "sever-haiku55-210-r2:baseline": 5292,
+    "sever-haiku55-210-r2:pipeline": 2257
   },
-  "usd_per_page": 0.00523002,
-  "undeduplicated_usd_per_page": 0.00533214,
-  "cad_per_page": 0.00706053
+  "usd_per_page": 0.00643884,
+  "undeduplicated_usd_per_page": 0.00654439,
+  "cad_per_page": 0.00869243
 }
