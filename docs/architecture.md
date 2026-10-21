@@ -80,6 +80,6 @@ federal releases against what was actually released (`sever.eval.coverage`,
 model, on placeholders and on the raw record (`results/placeholders.md`). The scanned track
 runs four degradation profiles through OCR with the character error rate measured
 (`results/scanned.md`). Cost per page comes from the gateway ledger (`sever.eval.cost`,
-`results/cost.json`). The reviewer study (`sever.review.study`) has one of the three reviewers
-it needs and is built rather than a result. The 03 gate compares rules-only with
+`results/cost.json`). The reviewer study (`sever.review.study`) has four reviewers, the number
+it was designed for (`results/reviewer.md`). The 03 gate compares rules-only with
 rules-then-model (`gate/spec.yaml`, `gate/decision.md`). Every table carries 95% intervals.

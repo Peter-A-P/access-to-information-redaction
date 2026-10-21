@@ -4,10 +4,10 @@
 
 | Arm | Seconds per page | Minutes per page | Pages per hour | Pages | Documents |
 |---|---|---:|---:|---:|---:|
-| proposals | 56s per page (51 to 62), 30 pages over 20 documents | 0.9 | 64 | 30 | 20 |
-| unaided | 130s per page (115 to 146), 30 pages over 20 documents | 2.2 | 28 | 30 | 20 |
+| proposals | 52s per page (47 to 58), 40 pages over 20 documents | 0.9 | 69 | 40 | 20 |
+| unaided | 117s per page (103 to 133), 38 pages over 20 documents | 1.9 | 31 | 38 | 20 |
 
-The proposals arm is **2.3 times** the speed of the unaided arm on this evidence.
+The proposals arm is **2.2 times** the speed of the unaided arm on this evidence.
 
 Intervals are 95 percent bootstrap percentile intervals resampled over documents rather than pages, because pages within a record are not independent: one record's density of third parties, and one reviewer's growing familiarity with its template, are single facts and not many.
 
@@ -19,8 +19,8 @@ Against the corpus labels, which are known by construction. A must-redact span i
 
 | What was released | Leak rate | Leak rate, partials that identify nobody not counted | Over-redaction rate | Unlabelled text withheld, characters per page | Pages |
 |---|---|---|---|---:|---:|
-| reviewer, with proposals | 2.4% (0.8% to 4.4%), n=247 | 0.4% (0.0% to 1.3%), n=247 | 0.6% (0.0% to 1.2%), n=533 | 0 | 30 |
-| reviewer, unaided | 6.8% (4.4% to 9.2%), n=236 | 6.4% (4.0% to 8.6%), n=236 | 0.7% (0.2% to 1.5%), n=541 | 2 | 30 |
+| reviewer, with proposals | 2.2% (0.6% to 3.9%), n=322 | 0.3% (0.0% to 1.0%), n=322 | 0.4% (0.0% to 0.9%), n=716 | 0 | 40 |
+| reviewer, unaided | 7.8% (5.6% to 9.7%), n=322 | 7.5% (5.3% to 9.5%), n=322 | 1.3% (0.4% to 2.4%), n=716 | 1 | 40 |
 | the tool's proposals, nobody reviewing, same records | 10.6% (5.0% to 16.7%), n=161 | 8.7% (3.1% to 15.3%), n=161 | 23.2% (18.5% to 27.8%), n=358 | 0 | 20 |
 
 The third column does not count two kinds of partial leak, which identify nobody: a number of nine or more digits with at most four of them showing, such as the last three digits of a twelve-digit MCP number (card masking shows four); and a job title whose role word was withheld, leaving only a qualifier such as "Access and Privacy" or a unit such as "Corporate Services", which several people share. Nothing else qualifies: a surname left beside a severed forename names someone. Both rules were set after the first real run, at its reviewer's prompting, so the strict column stays beside them.
@@ -29,7 +29,7 @@ The fifth column is text withheld outside every labelled span, such as the word 
 
 ## Record by record
 
-On the 20 records reviewed in both arms, unaided review took **2.3 times** as long as review with proposals (2.0 to 2.6, resampled over records). This is the comparison to quote: it holds the documents fixed and lets only the arm vary.
+On the 20 records reviewed in both arms, unaided review took **2.3 times** as long as review with proposals (1.9 to 2.7, resampled over records). This is the comparison to quote: it holds the documents fixed and lets only the arm vary.
 
 ## Each reviewer
 
@@ -38,5 +38,10 @@ On the 20 records reviewed in both arms, unaided review took **2.3 times** as lo
 | reviewer-1 | 1.1 | 2.2 | 20 |
 | reviewer-2 | 0.9 | 2.1 | 20 |
 | reviewer-3 | 0.8 | 2.2 | 20 |
+| reviewer-4 | 0.6 | 1.1 | 20 |
 
 Each reviewer did half the records with proposals and the other half unaided, never the same record twice, and the halves and their order swap between reviewers. The first page of each arm is practice and is in none of these numbers.
+
+## Pages set aside as interruptions
+
+2 pages are in the accuracy table but in none of the times: reviewer-4's hr_memorandum-147 (591s, unaided), reviewer-4's email_chain-104 (584s, unaided). Each took far longer than the same reviewer's other pages in that arm, and the person running the study set them aside as interruptions after the times were seen (`INTERRUPTED` in `sever/review/study.py`). The time as recorded is kept in `results/reviewer-study.jsonl`. Counted as timed, unaided review took **2.7 times** as long (2.1 to 3.5), so setting them aside lowers the result rather than raising it.

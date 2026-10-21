@@ -343,6 +343,18 @@ def _completed_positions(timings: Path) -> int:
 
 STUDY_RESULTS = Path("results/reviewer-study.jsonl")
 
+# Pages whose time is set aside as an interruption: still scored for accuracy, since what
+# the reviewer withheld is unaffected, but out of every timing. Each is named here rather
+# than caught by a threshold, because the decision was made after the times were seen, and a
+# rule written then would be fitted to them. The time as recorded stays in the results file
+# beside the row, and `results/reviewer.md` gives the result with it counted.
+INTERRUPTED: Mapping[tuple[str, str], str] = {
+    # Reviewer 4, 2026-10-21: each about ten minutes, where their other nine unaided pages
+    # took 41 to 95 seconds. Set aside by the person running the study.
+    ("reviewer-4", "hr_memorandum-147"): "about ten minutes, against 41 to 95 seconds",
+    ("reviewer-4", "email_chain-104"): "about ten minutes, against 41 to 95 seconds",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class PageResult:
@@ -382,9 +394,11 @@ class PageResult:
     # `is_partial_that_identifies_nobody`.
     leaked_fragments: int = 0
     tool_leaked_fragments: int = 0
+    # The time as recorded, for a page set aside in INTERRUPTED; `seconds` is then empty.
+    interrupted_seconds: float | None = None
 
     def as_json(self) -> dict[str, object]:
-        return {
+        out: dict[str, object] = {
             "reviewer": self.reviewer,
             "doc_id": self.doc_id,
             "page": 1,
@@ -404,6 +418,10 @@ class PageResult:
             "leaked_fragments": self.leaked_fragments,
             "tool_leaked_fragments": self.tool_leaked_fragments,
         }
+        # Only on the pages it applies to, so the other rows read as they always have.
+        if self.interrupted_seconds is not None:
+            out["interrupted_seconds"] = self.interrupted_seconds
+        return out
 
 
 def _unlabelled(
@@ -490,13 +508,16 @@ def collect(root: Path = STUDY_DIR, *, seed: int = STUDY_SEED) -> tuple[PageResu
             _, tlk, _, tov, tfr = _count(text, labels, unreviewed, taxonomy)
             loose_chars, loose_cuts = _unlabelled(text, labels, reviewed)
             tool_loose, _ = _unlabelled(text, labels, unreviewed)
+            timed = round(seconds[task.doc_id], 3) if task.doc_id in seconds else None
+            interrupted = (reviewer_name(number), task.doc_id) in INTERRUPTED
             out.append(
                 PageResult(
                     reviewer=reviewer_name(number),
                     doc_id=task.doc_id,
                     arm=task.arm.value,
                     practice=task.practice,
-                    seconds=round(seconds[task.doc_id], 3) if task.doc_id in seconds else None,
+                    seconds=None if interrupted else timed,
+                    interrupted_seconds=timed if interrupted else None,
                     must_redact=mr,
                     leaked=lk,
                     must_keep=mk,

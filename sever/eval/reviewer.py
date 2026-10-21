@@ -510,6 +510,34 @@ def study_markdown(rows: Sequence[dict[str, object]]) -> str:
         "the same record twice, and the halves and their order swap between reviewers. The "
         "first page of each arm is practice and is in none of these numbers.",
     ]
+    set_aside = [r for r in counted if r.get("interrupted_seconds") is not None]
+    if set_aside:
+        as_timed = [
+            {**r, "seconds": r["interrupted_seconds"]} if r.get("interrupted_seconds") is not None else r
+            for r in rows
+        ]
+        as_timed_ratio = paired_speedup(as_timed)
+        names = ", ".join(
+            f"{r['reviewer']}'s {r['doc_id']} ({float(str(r['interrupted_seconds'])):.0f}s, {r['mode']})"
+            for r in set_aside
+        )
+        lines += [
+            "",
+            "## Pages set aside as interruptions",
+            "",
+            f"{len(set_aside)} {'page is' if len(set_aside) == 1 else 'pages are'} in the accuracy table but in none of the times: "
+            f"{names}. Each took far longer than the same reviewer's other pages in that arm, "
+            f"and the person running the study set them aside as interruptions after the "
+            f"times were seen (`INTERRUPTED` in `sever/review/study.py`). The time as recorded "
+            f"is kept in `results/reviewer-study.jsonl`."
+            + (
+                f" Counted as timed, unaided review took **{as_timed_ratio.ratio:.1f} times** as long "
+                f"({as_timed_ratio.low:.1f} to {as_timed_ratio.high:.1f}), so setting them aside lowers the "
+                f"result rather than raising it."
+                if as_timed_ratio is not None
+                else ""
+            ),
+        ]
     return "\n".join(lines)
 
 
@@ -533,7 +561,9 @@ def write_study(rows: Sequence[dict[str, object]], path: Path) -> Path:
     study = Study(
         arms={m: estimate([t for t in counted if t.mode == m]) for m in sorted({t.mode for t in counted})},
         rows=tuple(timed),
-        completed_pages=len(rows),
+        # A page set aside as an interruption is reported in its own section, not as
+        # an untimed one.
+        completed_pages=sum(1 for r in rows if r.get("interrupted_seconds") is None),
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     body = study.to_markdown()

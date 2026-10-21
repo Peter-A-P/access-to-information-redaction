@@ -279,7 +279,8 @@ published, not when the code for it exists.
 - [x] PDF leak test published, out of N
 - [x] Reviewer minutes per page with and without proposals, with CI
       (`sever study` runs the whole study and `sever study report` scores it; see 12.29.
-      Three reviewers, 2026-10-10, 10-17 and 10-18; 2.3 times faster; see 12.36, 12.38, 12.42)
+      Four reviewers, 2026-10-10, 10-17, 10-18 and 10-21; 2.3 times faster; see 12.36, 12.38,
+      12.42, 12.53)
 - [x] `docs/escalation.md`: where the tool declines to decide, and why
 - [x] Cost per page from the gateway ledger
 - [x] Hosted demo with synthetic documents at redaction.peterparker.ca
@@ -2256,3 +2257,33 @@ which a browser needs to play a video.
 the timed tool is the weaker one), the scanned track (OCR text has not been sent to Jev), and
 the directory and name-shape tables (rules and detector only). Each says so where it is
 quoted.
+
+### 12.53 The fourth reviewer; two interrupted pages set aside
+
+2026-10-21. Reviewer 4 completed the study, which brings it to the four reviewers section 5
+designs for (scored after their session was stopped with Ctrl+C). Minutes a page, unaided
+then with proposals: 1.1 and 0.6, the fastest of the four in both arms.
+
+Two of their unaided pages took about ten minutes each (hr_memorandum-147, 591 seconds;
+email_chain-104, 584), against 41 to 95 seconds for their other nine. Counted, they move
+the record-by-record ratio from 2.3 to 2.7 (2.1 to 3.5). Peter set them aside as
+interruptions. They are named one by one in `INTERRUPTED` (`sever/review/study.py`) rather
+than caught by a time threshold, because the decision was made after the times were seen
+and a threshold written then would be fitted to them. A set-aside page keeps its accuracy
+counts, since what was withheld does not depend on the clock, drops out of every time, and
+keeps its recorded time in `results/reviewer-study.jsonl` as `interrupted_seconds`;
+`results/reviewer.md` lists the pages and the result with them counted. Setting them aside
+lowers the claim rather than raising it.
+
+Over all four, records held fixed: **unaided review takes 2.3 times as long (1.9 to 2.7)**,
+117 seconds a page against 52. Leaks 2.2 percent with proposals against 7.8 unaided (0.6 to
+3.9, 5.6 to 9.7); over-redaction 0.4 and 1.3. Reviewer 4's nine unaided misses are the
+hand-made kind (a bare first name later in the record four times, an email address both
+times it appeared, a street address, a complaint party's title, a "sibling"); their one
+leak with proposals is the frozen MCP defect, approved as drawn. Unaided they also withheld
+two file numbers and the client's own telephone and MCP numbers in the case notes, so three
+of four reviewers now read the requester's MCP number as one to withhold; the 12.38 ruling
+stands.
+
+The proposals are still the frozen rules-only set, so this is still a measurement of the
+weaker tool; the time with Jev's proposals is not measured.

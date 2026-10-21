@@ -185,8 +185,8 @@ percent of what must be released against 98.4. The one span between them is a pl
 the detector called a place; a tool that never released a span would have no leak rate and
 no reason to exist.
 
-**Three reviewers have done the study, and with proposals every one of them was more than
-twice as fast.** The proposals they were timed with were the rules alone, frozen before Jev
+**Four reviewers have done the study, the number it was designed for, and with proposals
+every one of them was faster, the first three more than twice as fast.** The proposals they were timed with were the rules alone, frozen before Jev
 existed, so the study measured the weaker tool: those proposals withheld 23.2 percent of
 what had to be released on the study's records, where the tool now withholds 1.7 across the
 corpus. How much faster Jev's proposals are to review is not yet measured. Each reviewed twenty test records, ten unaided and then ten with
@@ -194,12 +194,15 @@ proposals, after a practice page in each half, with the halves swapped between r
 so every record was reviewed in both arms ([results/reviewer.md](results/reviewer.md)).
 Unaided and then with proposals, in minutes a page: reviewer 1, eight years in
 access-to-information work, 2.2 and 1.1 (2026-10-10); reviewer 2, 2.1 and 0.9
-(2026-10-17); reviewer 3, 2.2 and 0.8 (2026-10-18). **Holding the records fixed, unaided
-review took 2.3 times as long as review with proposals (2.0 to 2.6)**: 130 seconds a page
-against 56. That is the time claim at the top of this page: a reviewer reads a page in
-under a minute instead of over two. Three people, all doing the proposals half second, so
-some of the gain is familiarity with the templates, and the interval resamples records
-rather than people.
+(2026-10-17); reviewer 3, 2.2 and 0.8 (2026-10-18); reviewer 4, 1.1 and 0.6 (2026-10-21).
+Two of reviewer 4's unaided pages took about ten minutes each, against 41 to 95 seconds for
+their other nine, and are set aside as interruptions: they still count for accuracy, and
+counted for time too, the ratio below would be 2.7 rather than 2.3, so setting them aside
+lowers the claim. **Holding the records fixed, unaided review took 2.3 times as long as
+review with proposals (1.9 to 2.7)**: 117 seconds a page against 52. That is the time claim
+at the top of this page: a reviewer reads a page in under a minute instead of about two.
+Four people, all doing the proposals half second, so some of the gain is familiarity with
+the templates, and the interval resamples records rather than people.
 
 The reviewer disagreed with the labels once, consistently, and the labels changed. In all
 four workplace-complaint memoranda they withheld the respondent's name and title and the
@@ -210,19 +213,24 @@ identifies the person in a division with one holder of that title. The corpus no
 both parties and their titles R1, and a `complaint_party` rule withholds them. Every table
 on this page carries the change.
 
-Scored against those labels, over all three reviewers, **the proposals half was also the
-more accurate: leaks 2.4 percent with proposals against 6.8 unaided** (0.8 to 4.4 against
-4.4 to 9.2, the first pair of intervals in the study that do not overlap), and 0.4 against
-6.4 without the partials that identify nobody. Over-redaction 0.6 and 0.7, against 10.6
-and 23.2 for the unreviewed proposals on the same records. Reviewer 3's nine unaided misses
+Scored against those labels, over all four reviewers, **the proposals half was also the
+more accurate: leaks 2.2 percent with proposals against 7.8 unaided** (0.6 to 3.9 against
+5.6 to 9.7, intervals that do not overlap), and 0.3 against 7.5 without the partials that
+identify nobody. Over-redaction 0.4 and 1.3, against 10.6 and 23.2 for the unreviewed
+proposals on the same records. Reviewer 4's nine unaided misses were the hand-made kind
+again: a first name standing alone later in the text four times ("Odette", "Ronan", "Aaron"
+twice), one email address both times it appeared, a street address, a complaint party's
+title and a "sibling". Their one leak with proposals was the frozen MCP defect, approved as
+drawn. Unaided, they also withheld two file numbers and, in the case notes, the client's own
+telephone and MCP numbers, which the labels release. Reviewer 3's nine unaided misses
 were the hand-made kind again: a complaint party's or a correspondent's first name standing
 alone later in the text ("Maeve", "Loretta"), a delegate's full name the second time it
 appears, an employee number, a "sibling", a complaint party's title, and two selections
 one character short of an email address and a street number. Their two leaks with proposals
 were both the tool's box approved as drawn: the frozen MCP defect, and "Happy Valley-Goose
 Bay" left outside a delegate's name. Like reviewer 2, they withheld the client's own MCP
-number in the case notes, in both arms; the label stands by Peter's ruling, but two of three
-reviewers now read it the other way. Reviewer 2's unaided misses were the kind a person makes by hand: two employee
+number in the case notes, in both arms; the label stands by Peter's ruling, but three of
+four reviewers now read it the other way. Reviewer 2's unaided misses were the kind a person makes by hand: two employee
 numbers in an official's signature block, a "sibling" the first reviewer's ruling withholds,
 a complaint party's first name, and two hand selections one character short of an email
 address and a telephone number. Their one leak with proposals was the frozen MCP defect
@@ -635,7 +643,7 @@ name can be an official on one page and a complainant on the next. A spread neve
 span the reviewer has already decided, withholds a span the tool proposed to release under
 a withholding code rather than the tool's keep code, and is its own audit row naming the
 page the decision was made on; the screen says how many other places it reached, and each
-can be released where it is. It is off in `sever study`, because the three reviewers were
+can be released where it is. It is off in `sever study`, because the four reviewers were
 timed without it. One of reviewer 3's nine unaided misses, a delegate's full name the second
 time it appeared, is the case it exists for.
 
@@ -803,7 +811,7 @@ recall against 92.6, which cut the leak rate from 14.1 percent to 5.4 at the tim
 | Built and measured | Built, not yet measured | Not built |
 |---|---|---|
 | Taxonomy, two jurisdictions, all 39 provisions verified | | |
-| Reviewer time study, three reviewers: 2.3 times faster with proposals, records held fixed | | |
+| Reviewer time study, four reviewers: 2.3 times faster with proposals, records held fixed | | |
 | 210-page labelled corpus, labels by construction | Hosted demo, live at https://redaction.peterparker.ca since 2026-10-18: the website (`sever site`), six invented records and ten released ones (`sever demo-records`), proposed by the rules then Jev with its answers replayed (`sever demo-answers`), and a live dashboard of visitors' decisions | |
 | Over-redaction on published federal releases: 6 packages, 82 pages | | |
 | Detection, context record, rules, escalation | | |

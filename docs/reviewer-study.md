@@ -42,8 +42,14 @@ If the session is still running when you score it, `sever study report` cannot o
 reviewer's audit log and fails with a lock error. Press Ctrl+C in the study terminal first.
 
 The study runs without one feature the ordinary reviewer screen has: withholding a value
-once does not withhold its other occurrences (`sever/review/propagate.py`). The three
+once does not withhold its other occurrences (`sever/review/propagate.py`). The four
 reviewers so far were timed without it, so a later one has to be as well.
+
+If a reviewer is interrupted with a page open, note the record. A page whose time is set
+aside is named in `INTERRUPTED` in `sever/review/study.py`: it still counts for accuracy,
+it drops out of every time, and `results/reviewer.md` lists it with the result it would
+have given counted. Reviewer 4 had two such pages, set aside after the times were seen, so
+the report also says which way setting them aside moved the result.
 
 ## What each person does
 

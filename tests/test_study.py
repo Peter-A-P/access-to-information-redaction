@@ -465,3 +465,29 @@ def test_a_partial_name_or_identifier_is_always_a_leak() -> None:
     )
     assert not is_partial_that_identifies_nobody(name, text, [(0, 5)])
     assert not is_partial_that_identifies_nobody(ident, text, [(19, 26)])
+
+
+def test_a_page_set_aside_as_an_interruption_counts_for_accuracy_and_not_for_time(
+    tmp_path: Path,
+) -> None:
+    def row(reviewer: str, doc: str, mode: str, seconds: float, **extra: object) -> dict[str, object]:
+        return {
+            "reviewer": reviewer, "doc_id": doc, "page": 1, "mode": mode, "practice": False,
+            "seconds": seconds, "must_redact": 4, "leaked": 1, "must_keep": 4,
+            "over_redacted": 0, "added": 0, "tool_leaked": 0, "tool_over_redacted": 0,
+            **extra,
+        }
+
+    rows: list[dict[str, object]] = []
+    for doc in ("a", "b", "c", "d"):
+        rows += [row("reviewer-1", doc, "proposals", 50.0), row("reviewer-2", doc, "unaided", 100.0)]
+    # Reviewer 2's page "d" ran to ten minutes; set aside, it keeps its leak but loses its time.
+    rows[-1] = {**rows[-1], "seconds": None, "interrupted_seconds": 600.0}
+    out = rv.write_study(tuple(rows), tmp_path / "reviewer.md").read_text()
+    assert "**2.0 times** as long as review with proposals" in out
+    assert "## Pages set aside as interruptions" in out
+    assert "reviewer-2's d (600s, unaided)" in out
+    assert "Counted as timed, unaided review took **4.5 times**" in out
+    assert "carry no timing" not in out
+    # Every unaided page is still in the accuracy table: 4 pages, 16 must-redact spans.
+    assert re.search(r"\| reviewer, unaided \| 25\.0% .*n=16 \|", out)
