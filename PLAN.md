@@ -2143,3 +2143,51 @@ recreation, through OpenRouter (Phala), the same requests, US$0.76: its probabil
 spread so thin that from 0.50 up it accepts almost nothing and equals the rules alone, and
 accepting every answer it leaks about 11 percent. Answers in `results/model-answers-kev.jsonl`,
 tables in `results/kev/`; not analysed further.
+
+### 12.51 Four model layers on one sample of the residual; Kev does not carry over
+
+2026-10-21. The threshold sweeps say what a threshold does to the published rates. They do
+not say whether a model's stated probability means what it says, which is the reason
+decision models came in (12.48). So the four model layers with answers on the current code
+are compared span by span on one fixed sample: `sever eval-sample`, replay only, tables in
+`results/decision-sample.md`, scoring in `sever/eval/decision_sample.py`.
+
+**The sample** (`data/decision-sample.json`) is a simple random 150 of the 449 spans the rules
+left to a model on the validation split, seed 20261020, drawn on 2026-10-20 at a0fdc88, before
+the personal-contact rule. Random rather than chosen for failure, so it estimates the
+residual. That rule now decides one of the 150, so 149 reach every model. It was drawn to
+run Kev-0.8B, which cannot do the corpus on this laptop: served by Kev's own server on the
+processor, fp32, it takes about 20 seconds a request (Kev-4B 76 to 102), so 7,549 requests
+would take a day and a half (a week). Its 150 answers are
+`results/model-answers-kev-0.8b.jsonl`, under 04's `kev` entry, whose model id is the same for
+every Kev size. Kev-4B's answers are the OpenRouter run above (fp8 there, against the full
+precision Kev's model card measures).
+
+| On the same 149 spans | Right code | Accepted at its threshold | Leaks | Kept spans withheld (of 69) |
+|---|---|---|---:|---:|
+| Haiku 5.5, at 0.90 | 96.0% (92.1 to 99.2) | 112 | 0 | 27 |
+| Jev 1.14, at 0.60 | 94.6% (90.9 to 97.9) | 144 | 0 | 8 |
+| Kev 4B, at 0.60 | 67.1% (60.4 to 73.9) | 1 | 0 | 69 |
+| Kev 0.8B, at 0.60 | 0.0% (0.0 to 5.6) | 0 | 0 | 69 |
+
+What it shows:
+
+* **Kev-0.8B reads nothing.** It answered only E2, R2 and K1, the first, last and second
+  options in the list, never above 0.21 where ten options give 0.10 by chance. Above 0.21 it
+  accepts nothing, so it is safe and decides nothing; accepting every answer leaks 18.
+* **Kev-4B reads, and does not say so.** Two answers in three are right, but every stated
+  probability is under 0.70 and most under 0.30, and the share right is the same at 0.2 as
+  at 0.4 (66 and 70 percent). The calibration its card reports does not carry over to this
+  question. So no threshold works: from 0.50 up it accepts almost nothing, and accepting
+  everything leaks 15 of the 80 must-withhold spans that reach it.
+* **Jev's and Haiku's stated probabilities both mean something here.** At 0.90 and above both
+  are right 98 to 100 percent of the time. 12.47's complaint about Haiku 5.5 (0.80 to 0.85
+  whether right or wrong) was made on the code before 12.49's fixes and does not hold on this
+  sample. What separates them is how much each says it knows: Jev accepts more at the
+  threshold it runs at and withholds 8 kept spans where Haiku withholds 27, the same gap as
+  the corpus figures (1.7 and 13.8 percent over-redaction).
+
+Not tested: whether the question's shape, ten options each a paragraph of the category guide,
+is outside what Kev was trained on and part of both Kev results. Kev's server offers a
+`permute` endpoint that would show 0.8B's position bias directly, and shorter options would
+test the shape; neither was run. `docs/rejected.md` section 8.

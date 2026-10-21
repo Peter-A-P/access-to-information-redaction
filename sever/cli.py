@@ -881,6 +881,28 @@ def eval_thresholds(
         typer.echo(f"\nwrote {sweep_mod.write(result, out)}")
 
 
+@app.command("eval-sample")
+def eval_sample(
+    sample: Annotated[
+        Path, typer.Option(help="The frozen sample of residual spans.")
+    ] = Path("data/decision-sample.json"),
+    out: Annotated[Path | None, typer.Option(help="Write the tables here.")] = Path(
+        "results/decision-sample.md"
+    ),
+) -> None:
+    """Haiku 5.5, Jev and two Kev sizes on one sample of the residual, from their caches.
+
+    Replay only: no gateway, no network, no spend. A span a cache does not hold is counted
+    as unanswered. See sever/eval/decision_sample.py for what is scored.
+    """
+    from sever.eval import decision_sample as sample_mod
+
+    sampled, scores = sample_mod.run(sample)
+    typer.echo(sample_mod.to_markdown(sampled, scores))
+    if out is not None:
+        typer.echo(f"\nwrote {sample_mod.write(sampled, scores, out)}")
+
+
 @app.command()
 def audit(
     path: Annotated[Path, typer.Argument(help="The audit database.")],

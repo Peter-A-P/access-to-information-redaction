@@ -454,6 +454,11 @@ in advance chose is 0.00, accept every answer, and on the test split that adds n
 the rules alone (1.2 percent either way) while over-redaction falls from 24.7 percent to
 1.1. The tool still runs Jev at 0.60, so its coin flips go to a reviewer. Its tables are in
 `results/jev/`, not above, until the published model is chosen; PLAN.md 12.50 has the run.
+Kev does not carry over. On one random sample of 149 residual spans, the same requests
+for every model ([`results/decision-sample.md`](results/decision-sample.md), `sever
+eval-sample`), Jev is right on 94.6 percent and Haiku 5.5 on 96.0, Kev 4B on 67.1 with every
+stated probability under 0.70, so no threshold separates its right answers from its wrong
+ones, and Kev 0.8B on none, choosing by an option's place in the list. PLAN.md 12.51.
 
 When neither is sure, the proposal is to withhold and escalate. There is no rule that
 releases a span because nothing matched.

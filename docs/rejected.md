@@ -1,12 +1,13 @@
 # What did not work
 
 Rule C of the portfolio: name an approach that was tried and rejected, with the evidence.
-Seven are recorded here. The first is the approach this project exists to replace, and the
+Eight are recorded here. The first is the approach this project exists to replace, and the
 measurement is the argument for the project. The second is a design idea inside the project
 that was wrong, caught by a test, and replaced. The third is a number that was guessed and
 turned out to be the wrong guess. The fourth is a measurement that was healthy and was
 looking at the wrong thing. The fifth is a test that passed for a reason that had nothing to
-do with what it was testing.
+do with what it was testing. The eighth is an open-weights model small enough for a laptop,
+which was safe only because it decided nothing.
 
 ## 1. Blunt redact-all-PII
 
@@ -347,9 +348,40 @@ stronger model given the same request is the same question asked more carefully,
 careful model with no evidence withholds. And a rule, or a prompt, that cannot fail on the
 test set has not been tested: write the counter-example before believing the number.
 
+## 8. An open-weights decision model, Kev, small enough to run here
+
+**The approach.** Jev, TypeSafe's decision model, decides the residual well (PLAN.md 12.50),
+but it is hosted. Kev is an open-weights recreation of it (github.com/jaredpalmer/kev,
+Apache-2.0) serving the same interface, and an open model on the public body's own machine
+is the one place 04's data policy lets unmasked personal data go. So Kev was tried on the
+same masked requests: Kev 0.8B on this laptop's processor, Kev 4B through OpenRouter.
+
+**Why it was rejected.** On one random sample of 149 residual spans, every model sent the
+same requests (`results/decision-sample.md`, PLAN.md 12.51):
+
+| Model | Right code | Highest stated probability | Leaks, every answer accepted |
+|---|---|---|---:|
+| Jev 1.14 | 94.6% (90.9% to 97.9%) | 0.95 and above | 0 |
+| Kev 4B | 67.1% (60.4% to 73.9%) | under 0.70 | 15 |
+| Kev 0.8B | 0.0% (0.0% to 5.6%) | 0.21 | 18 |
+
+Kev 0.8B answered only the first, second and last options in the list. Kev 4B reads the
+record, two answers in three right, but says the same low probability whether it is right
+or wrong (66 percent right at under 0.30, 70 percent at 0.30 to 0.50), so a threshold that
+stops its leaks also stops every answer. Either Kev at a threshold is the rules alone at the
+price of a model; either Kev without one leaks.
+
+**What replaced it.** Nothing local. Jev decides the residual through 04 on placeholders.
+
+**The general lesson.** A model that is safe at a threshold may be safe because it does
+nothing. Count what it accepts before crediting it with the leaks it did not cause. And
+calibration measured on the model's own test suites is a property of those suites: on a
+question shaped differently, here ten options each a paragraph long, it has to be measured
+again. Whether that shape is part of Kev's failure was not tested.
+
 ---
 
-All seven entries are reproducible: `sever report` produces the first table,
+All eight entries are reproducible: `sever report` produces the first table,
 `pytest tests/test_no_raw_entity_leaves.py` is the test that produced the second,
 `sever eval-thresholds` produces the third from the committed answer cache,
 `sever eval-sweep --profiles all` produces the fourth,
@@ -357,4 +389,4 @@ All seven entries are reproducible: `sever report` produces the first table,
 `sever eval-directory` produces the sixth, and `sever report --model --replay-only` and
 `sever eval-traps --model --replay-only` produce the seventh from the committed answers; the
 Sonnet and Opus comparison was a scratch experiment and is recorded here, not reproducible
-from the repository.
+from the repository; `sever eval-sample` produces the eighth from the committed answers.
