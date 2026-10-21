@@ -12,7 +12,7 @@ Built August 2027. The plan is in [PLAN.md](PLAN.md).
 - [PLAN.md](PLAN.md): the design. Do not deviate from it silently; if something in it turns
   out wrong, change the plan in the same commit as the code and say why in the commit
   message.
-- `docs/taxonomy.md` once it exists: the categories and their provisions, generated from
+- `docs/taxonomy.md`: the categories and their provisions, generated from
   the YAML, never hand-edited.
 
 ## Engineering standard
