@@ -2325,3 +2325,18 @@ question reaches Jev: found by 04's engine, replaced with placeholders by this t
 by the guard, sent only through the 04 gateway (data class `personal`), and answered with
 probabilities, so there is nothing personal to put back. The gateway carries and records the
 call; the masking happens here, before it (`sever.decide.placeholders`).
+
+### 12.56 Jev on the scanned track
+
+2026-10-21. `sever eval-scanned --model` runs the rules then Jev on the OCR text, with the
+rules alone scored on the same read-back beside it (the OCR runs once per page), and the
+paragraphs-only arm kept as the rules alone, the comparison it was written for. 3,937
+answers, US$0.49, in `results/model-answers-scanned.jsonl`, run id `sever-jev114-scanned`.
+
+Over-redaction with Jev: 1.4 percent native, 2.9 clean, 1.7 scanner, 2.0 photocopy, against
+24.0 to 26.4 for the rules alone on the same text. Leaks are the rules' own on the three
+working profiles. On fax, 65 percent of characters misread, Jev adds leaks: 74.8 percent
+against 69.7 for the rules alone, because the text it is asked about is mostly gone. The
+website's scan chart and the README's table are now the tool as it ships. The generated
+file's prose said the working profiles sat "within two points" of native; clean is 2.4, so
+it now says three, in the generator and in the file, which is otherwise as the run wrote it.

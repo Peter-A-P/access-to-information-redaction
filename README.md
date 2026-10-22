@@ -590,12 +590,16 @@ it. A leak test that has never caught a leak is not evidence of anything.
 does, reads it back with Tesseract, re-projects every label through a character alignment
 and scores the pipeline on what the OCR produced.
 
-| Input | Character error rate | Labels that survived | Detector recall | Leak rate | Over-redaction, read as paragraphs | Over-redaction, layout read back |
-|---|---:|---:|---|---|---|---|
-| native (no OCR) | 0.0% | 100.0% | 98.1% | 3.0% | | **22.1%** |
-| office scanner | 0.6% | 100.0% | 97.4% | 3.8% | 39.9% | **23.1%** |
-| photocopy | 0.7% | 100.0% | 97.2% | 6.0% | 39.6% | **23.0%** |
-| fax, 100 dpi | 65.2% | 46.9% | 54.8% | 78.7% | 40.1% | 40.1% |
+Over-redaction three ways: the rules alone reading every block as a paragraph, the rules
+alone with the layout read back, and the tool as it ships, the rules then Jev (2026-10-21,
+US$0.49 for 3,937 answers, replayed from `results/model-answers-scanned.jsonl`).
+
+| Input | Character error rate | Labels that survived | Detector recall | Leak rate, rules then Jev | Over-redaction, rules, as paragraphs | Rules, layout read back | **Rules then Jev** |
+|---|---:|---:|---|---|---|---|---|
+| native (no OCR) | 0.0% | 100.0% | 98.1% | 1.5% | | 24.0% | **1.4%** |
+| office scanner | 0.6% | 100.0% | 97.4% | 2.2% | 42.4% | 25.6% | **1.7%** |
+| photocopy | 0.7% | 100.0% | 97.2% | 4.8% | 42.5% | 25.9% | **2.0%** |
+| fax, 100 dpi | 65.2% | 46.9% | 54.8% | 74.8% | 54.8% | 54.8% | **46.1%** |
 
 The worry about OCR is that a misread name gets released. That barely happens until the page
 falls apart entirely. What happened first, on 50 scanned records, was that **the requester
@@ -606,11 +610,17 @@ The characters survived; the layout did not. Every block came back as body text,
 was role-bearing, and the rules lost the signature block and the letterhead, which is how
 they tell an official signing a letter from a third party named in it. **Reading the layout
 back from the OCR text closes almost all of that gap** (2026-10-17): the three working
-profiles are within two points of the native row, and the leak rate does not move, because
+profiles are within three points of the native row, and the leak rate does not move, because
 the blocks change and the text does not. The fax row does not recover, because at 100 dpi
 there is not enough text left to find a signature in. The recovery was written against the
 corpus's six layouts, so these rows are the most it can do, not what it does on a layout it
 has never seen; `results/releases.md` is that test, and it recovers much less there.
+
+**Jev carries over to scans.** On what the rules leave, it takes an office scan's
+over-redaction from 25.6 to 1.7 percent, against 1.4 on the native file, and on the three
+working profiles it leaks exactly what the rules alone leak. On a fax it does not help: the
+leak rate rises from 69.7 percent with the rules alone to 74.8, because the text it is asked
+about is mostly gone. A fax-quality record needs a person either way.
 
 ## The reviewer decides, and here is where they do it
 

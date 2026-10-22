@@ -4,24 +4,36 @@
 
 **Corpus:** 50 documents, 50 pages, the same generated records as the native track, rendered to PDF and read back with Tesseract.
 
+**Decided by:** the rules, then openrouter/typesafe/jev-1.14 on what they left at a confidence threshold of 0.60, through the 04 gateway on placeholders: the tool as it ships. The rules alone on the same read-back are in the second table.
+
 | Input | Character error rate | Mean OCR confidence | Labels that survived | Detector recall | Leak rate | Over-redaction |
 |---|---:|---:|---:|---|---|---|
-| native (no OCR) | 0.0% | n/a | 100.0% | 98.1% (97.1% to 98.9%), n=1304 | 3.0% (1.2% to 5.4%), n=400 | 22.1% (19.0% to 25.4%), n=904 |
-| clean | 0.7% | 95.1% | 100.0% | 97.2% (96.2% to 98.0%), n=1304 | 3.0% (1.2% to 5.4%), n=400 | 23.9% (20.3% to 27.6%), n=904 |
-| scanner | 0.6% | 95.3% | 100.0% | 97.4% (96.3% to 98.3%), n=1304 | 3.8% (1.7% to 6.2%), n=400 | 23.1% (19.7% to 26.8%), n=904 |
-| photocopy | 0.7% | 94.6% | 100.0% | 97.2% (96.1% to 98.1%), n=1304 | 6.0% (3.3% to 9.2%), n=400 | 23.0% (19.4% to 27.0%), n=904 |
-| fax | 65.2% | 18.7% | 46.9% | 54.8% (50.7% to 59.3%), n=611 | 78.7% (71.4% to 85.5%), n=155 | 40.1% (35.2% to 44.9%), n=456 |
+| native (no OCR) | 0.0% | n/a | 100.0% | 98.1% (97.1% to 98.9%), n=1304 | 1.5% (0.5% to 2.9%), n=400 | 1.4% (0.8% to 2.2%), n=904 |
+| clean | 0.7% | 95.1% | 100.0% | 97.2% (96.2% to 98.0%), n=1304 | 1.5% (0.5% to 2.9%), n=400 | 2.9% (1.8% to 4.0%), n=904 |
+| scanner | 0.6% | 95.3% | 100.0% | 97.4% (96.3% to 98.3%), n=1304 | 2.2% (1.0% to 3.7%), n=400 | 1.7% (0.9% to 2.5%), n=904 |
+| photocopy | 0.7% | 94.6% | 100.0% | 97.2% (96.1% to 98.1%), n=1304 | 4.8% (2.4% to 7.6%), n=400 | 2.0% (1.1% to 3.1%), n=904 |
+| fax | 65.2% | 18.7% | 46.9% | 54.8% (50.7% to 59.3%), n=611 | 74.8% (67.7% to 81.6%), n=155 | 46.1% (41.4% to 50.6%), n=456 |
+
+**The rules alone, on the same read-back**
+
+| Input | Leak rate, rules alone | Over-redaction, rules alone |
+|---|---|---|
+| native (no OCR) | 1.5% (0.5% to 2.9%), n=400 | 24.0% (20.8% to 27.3%), n=904 |
+| clean | 1.5% (0.5% to 2.9%), n=400 | 26.4% (22.9% to 30.1%), n=904 |
+| scanner | 2.2% (1.0% to 3.7%), n=400 | 25.6% (22.2% to 29.1%), n=904 |
+| photocopy | 4.8% (2.4% to 7.6%), n=400 | 25.9% (22.3% to 29.8%), n=904 |
+| fax | 69.7% (62.3% to 77.0%), n=155 | 54.8% (50.6% to 59.1%), n=456 |
 
 **What reading the layout back is worth on a scan**
 
-The same read-back scored twice: with every paragraph BODY, which is how this track was scored until 2026-10-17, and with the blocks read back from the OCR text by `recover_blocks`. The text is identical, so the difference is the blocks.
+The same read-back scored twice: with every paragraph BODY, which is how this track was scored until 2026-10-17, and with the blocks read back from the OCR text by `recover_blocks`. The text is identical, so the difference is the blocks. Both columns are the rules alone, as they were when this was measured.
 
 | Input | Leak, paragraphs only | Leak, layout recovered | Over-redaction, paragraphs only | Over-redaction, layout recovered |
 |---|---|---|---|---|
-| clean | 3.0% (1.2% to 5.4%), n=400 | 3.0% (1.2% to 5.4%), n=400 | 39.2% (33.3% to 45.2%), n=904 | 23.9% (20.3% to 27.6%), n=904 |
-| scanner | 3.8% (1.7% to 6.2%), n=400 | 3.8% (1.7% to 6.2%), n=400 | 39.9% (34.1% to 46.0%), n=904 | 23.1% (19.7% to 26.8%), n=904 |
-| photocopy | 6.0% (3.3% to 9.2%), n=400 | 6.0% (3.3% to 9.2%), n=400 | 39.6% (33.6% to 45.9%), n=904 | 23.0% (19.4% to 27.0%), n=904 |
-| fax | 78.7% (71.4% to 85.5%), n=155 | 78.7% (71.4% to 85.5%), n=155 | 40.1% (35.2% to 44.9%), n=456 | 40.1% (35.2% to 44.9%), n=456 |
+| clean | 1.5% (0.5% to 2.9%), n=400 | 1.5% (0.5% to 2.9%), n=400 | 41.7% (35.9% to 47.6%), n=904 | 26.4% (22.9% to 30.1%), n=904 |
+| scanner | 2.2% (1.0% to 3.7%), n=400 | 2.2% (1.0% to 3.7%), n=400 | 42.4% (36.5% to 48.2%), n=904 | 25.6% (22.2% to 29.1%), n=904 |
+| photocopy | 4.8% (2.4% to 7.6%), n=400 | 4.8% (2.4% to 7.6%), n=400 | 42.5% (36.6% to 48.5%), n=904 | 25.9% (22.3% to 29.8%), n=904 |
+| fax | 69.7% (62.3% to 77.0%), n=155 | 69.7% (62.3% to 77.0%), n=155 | 54.8% (50.6% to 59.1%), n=456 | 54.8% (50.6% to 59.1%), n=456 |
 
 **What each profile is**
 
@@ -34,7 +46,7 @@ The same read-back scored twice: with every paragraph BODY, which is how this tr
 
 The `fax` row is 100 dpi, at which 9.5 point text stops being recoverable at all. It is kept because knowing where the floor falls out is worth more than a table of rows that all work.
 
-**What a scan cost was the layout, and the layout reads back from the text.** Read as paragraphs, a near-perfect scan cost about a fifth of a point of recall and some eighteen points of over-redaction: the characters were almost all there and the structure was not, so nothing was role-bearing, the rules lost the signature block and the letterhead, and a person they could not place was escalated and withheld. With the blocks read back from the OCR text by `recover_blocks`, the three working profiles are within two points of the native row, and the leak rate does not move. The structure was in the text all along, in the line breaks and in the words a signature block and an email header are made of. That is on the six templates the recovery was written against, so it is the most it can do; `results/releases.md` is a layout it was not written against, and recovers much less there.
+**What a scan cost was the layout, and the layout reads back from the text.** Read as paragraphs, a near-perfect scan cost about a fifth of a point of recall and some eighteen points of over-redaction: the characters were almost all there and the structure was not, so nothing was role-bearing, the rules lost the signature block and the letterhead, and a person they could not place was escalated and withheld. With the blocks read back from the OCR text by `recover_blocks`, the three working profiles are within three points of the native row, and the leak rate does not move. The structure was in the text all along, in the line breaks and in the words a signature block and an email header are made of. That is on the six templates the recovery was written against, so it is the most it can do; `results/releases.md` is a layout it was not written against, and recovers much less there.
 
 That is worth stating plainly because the obvious worry about OCR is the opposite one. The fear is that a misread name gets released. On these numbers that barely happens until the page falls apart entirely; what happened first, before the layout was read back, was that the requester got a blacker page.
 

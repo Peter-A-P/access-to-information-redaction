@@ -430,6 +430,13 @@ def scan_figures(root: Path) -> tuple[dict[str, str], dict[str, Any]]:
     if not flat:
         raise SiteError("results/scanned.md has no layout table row for the scanner")
     f["scan_scanner_flat_over"] = rate(flat[0][3], "scanner flat").pct
+    # The rules alone on the same read-back, written when the track runs with Jev.
+    rules = {r[0]: r for r in rows if r and len(r) == 3}
+    for name, label in (("native", "native (no OCR)"), ("scanner", "scanner"), ("fax", "fax")):
+        if label not in rules:
+            raise SiteError("results/scanned.md has no rules-alone table; run it with --model")
+        f[f"scan_{name}_rules_over"] = rate(rules[label][2], f"{name} rules over").pct
+        f[f"scan_{name}_rules_leak"] = rate(rules[label][1], f"{name} rules leak").pct
     f["scan_documents"] = find(text, r"\*\*Corpus:\*\* (\d+) documents", "scan corpus").group(1)
     layout = table_rows(_read(root, "results/layout.md"))
     f["layout_flat_over"] = rate(row(layout, "flattened", "layout")[2], "flat").pct

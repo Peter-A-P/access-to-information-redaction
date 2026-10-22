@@ -426,16 +426,18 @@
     <figure class="chart-figure">
       <div id="scan-chart" class="chart"></div>
       <div class="legend" id="scan-legend"></div>
-      <figcaption>Leak rate and over-redaction by input, rules only, with 95% intervals. The character error rate is under each name.</figcaption>
+      <figcaption>Leak rate and over-redaction by input, for the tool as it ships, the rules then Jev, with 95% intervals. The character error rate is under each name.</figcaption>
     </figure>
     <div class="verdict">
-      <p>This track is measured with the rules alone; Jev has not been run on OCR text.</p>
-      <p><strong>A scanner or a photocopier costs about a point; a fax costs the record.</strong>
-      Reading the layout back takes an office scanner's over-redaction from
-      {{scan_scanner_flat_over}} to {{scan_scanner_over}}, against {{scan_native_over}} on the
-      native file. At {{scan_fax_cer}} of characters misread, a fax destroys the values
-      before any detector sees them, and the leak rate is {{scan_fax_leak}}. Fax-quality
-      records need a person, and the tool's number says so.</p>
+      <p><strong>A scanner costs little; a fax costs the record.</strong> With the layout read
+      back and Jev deciding what the rules leave, an office scan withholds
+      {{scan_scanner_over}} of what must be released, against {{scan_native_over}} on the
+      native file and {{scan_scanner_rules_over}} with the rules alone. Reading the layout back
+      is what makes the rules usable on a scan at all: read as plain paragraphs, they withhold
+      {{scan_scanner_flat_over}}. At {{scan_fax_cer}} of characters misread, a fax destroys the
+      values before any detector sees them, and the leak rate is {{scan_fax_leak}}, against
+      {{scan_fax_rules_leak}} for the rules alone: on text that broken Jev's guesses are
+      guesses. Fax-quality records need a person, and the tool's number says so.</p>
     </div>
   </section>
 

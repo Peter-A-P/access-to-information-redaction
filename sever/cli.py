@@ -1191,14 +1191,29 @@ def eval_scanned(
     out: Annotated[Path | None, typer.Option(help="Write the table here.")] = Path(
         "results/scanned.md"
     ),
+    model: Annotated[
+        bool,
+        typer.Option("--model/--no-model", help="Rules then Jev, as the tool ships. Spends money."),
+    ] = False,
+    model_name: Annotated[str, typer.Option(help="Gateway model identifier.")] = "",
+    boundary_config: Annotated[Path | None, typer.Option()] = None,
+    run_id: Annotated[str | None, typer.Option()] = None,
+    answer_cache: Annotated[
+        Path | None, typer.Option(help="Replay model answers from here, and record new ones.")
+    ] = Path("results/model-answers-scanned.jsonl"),
+    replay_only: Annotated[
+        bool, typer.Option("--replay-only", help="Read the answer cache and never send.")
+    ] = False,
 ) -> None:
     """The scanned track: character error rate, and what it costs the decisions.
 
     Renders each document, degrades it the way a scanner does, reads it back with
     Tesseract, re-projects the labels through a character alignment and scores the
     pipeline on what the OCR produced. Needs Tesseract, which is a system binary rather
-    than a Python package. Spends nothing.
+    than a Python package. Spends nothing without `--model`; with it, the rules then Jev,
+    with the answers recorded in `--answer-cache` so later runs replay them.
     """
+    from sever.decide.model import DEFAULT_MODEL
     from sever.eval import scanned as scan_mod
     from sever.ingest.ocr import PROFILES, TesseractMissing
 
@@ -1211,7 +1226,16 @@ def eval_scanned(
         f"Every page is rasterised and read by a separate process, so this is slow."
     )
     try:
-        result = scan_mod.run(documents=documents, seed=seed, profiles=chosen)
+        decider = _build_model(
+            enabled=model,
+            model_name=model_name or DEFAULT_MODEL,
+            boundary_config=boundary_config,
+            run_id=run_id,
+            answer_cache=answer_cache,
+            replay_only=replay_only,
+            public_body_domains=(PUBLIC_BODY_DOMAIN,),
+        )
+        result = scan_mod.run(documents=documents, seed=seed, profiles=chosen, model=decider)
     except TesseractMissing as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo("")

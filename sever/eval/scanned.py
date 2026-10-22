@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from sever.corpus.generate import Corpus, build
-from sever.decide.pipeline import DecisionEngine
+from sever.decide.pipeline import DecisionEngine, ModelDecider, default_threshold_for
 from sever.detect.engine import SeverDetector
 from sever.detect.types import Detector
 from sever.eval.confusion import Interval, Scored, score
@@ -66,6 +66,9 @@ class TrackResult:
     # The same read-back with every paragraph BODY, which is how this track was scored
     # until 2026-10-17. None when the run did not score it.
     flat: Scored | None = None
+    # With a model: the rules alone on the same read-back, so the table can say what the
+    # model adds on a scan. None on a rules-only run, where `scored` is the rules alone.
+    rules: Scored | None = None
 
     @property
     def survival(self) -> float:
@@ -92,12 +95,25 @@ class ScanTrack:
     pages: int = 0
     native: Scored | None = None
     tracks: list[TrackResult] = field(default_factory=list)
+    native_rules: Scored | None = None
+    model_name: str | None = None
+    threshold: float | None = None
 
     def to_markdown(self) -> str:
         lines = [
             f"**Corpus:** {self.documents} documents, {self.pages} pages, the same generated "
             f"records as the native track, rendered to PDF and read back with Tesseract.",
             "",
+        ]
+        if self.model_name is not None:
+            lines += [
+                f"**Decided by:** the rules, then {self.model_name} on what they left at a "
+                f"confidence threshold of {self.threshold:.2f}, through the 04 gateway on "
+                f"placeholders: the tool as it ships. The rules alone on the same read-back "
+                f"are in the second table.",
+                "",
+            ]
+        lines += [
             "| Input | Character error rate | Mean OCR confidence | Labels that survived | "
             "Detector recall | Leak rate | Over-redaction |",
             "|---|---:|---:|---:|---|---|---|",
@@ -113,6 +129,24 @@ class ScanTrack:
                 f"| {t.profile} | {t.cer:.1%} | {t.mean_confidence:.1%} | {t.survival:.1%} | "
                 f"{t.recall} | {t.leak} | {t.over} |"
             )
+        if self.model_name is not None and all(t.rules is not None for t in self.tracks):
+            lines += [
+                "",
+                "**The rules alone, on the same read-back**",
+                "",
+                "| Input | Leak rate, rules alone | Over-redaction, rules alone |",
+                "|---|---|---|",
+            ]
+            if self.native_rules is not None:
+                lines.append(
+                    f"| native (no OCR) | {self.native_rules.leak_rate()} | "
+                    f"{self.native_rules.over_redaction_rate()} |"
+                )
+            for t in self.tracks:
+                assert t.rules is not None
+                lines.append(
+                    f"| {t.profile} | {t.rules.leak_rate()} | {t.rules.over_redaction_rate()} |"
+                )
         if any(t.flat is not None for t in self.tracks):
             lines += [
                 "",
@@ -121,7 +155,9 @@ class ScanTrack:
                 "The same read-back scored twice: with every paragraph BODY, which is how "
                 "this track was scored until 2026-10-17, and with the blocks read back from "
                 "the OCR text by `recover_blocks`. The text is identical, so the difference "
-                "is the blocks.",
+                "is the blocks. "
+                + ("Both columns are the rules alone, as they were when this was measured."
+                   if self.model_name is not None else ""),
                 "",
                 "| Input | Leak, paragraphs only | Leak, layout recovered | "
                 "Over-redaction, paragraphs only | Over-redaction, layout recovered |",
@@ -130,9 +166,10 @@ class ScanTrack:
             for t in self.tracks:
                 if t.flat is None:
                     continue
+                recovered = t.rules or t.scored
                 lines.append(
-                    f"| {t.profile} | {t.flat.leak_rate()} | {t.leak} | "
-                    f"{t.flat.over_redaction_rate()} | {t.over} |"
+                    f"| {t.profile} | {t.flat.leak_rate()} | {recovered.leak_rate()} | "
+                    f"{t.flat.over_redaction_rate()} | {recovered.over_redaction_rate()} |"
                 )
         lines += [
             "",
@@ -158,7 +195,7 @@ class ScanTrack:
             "and the structure was not, so nothing was role-bearing, the rules lost the "
             "signature block and the letterhead, and a person they could not place was "
             "escalated and withheld. With the blocks read back from the OCR text by "
-            "`recover_blocks`, the three working profiles are within two points of the native"
+            "`recover_blocks`, the three working profiles are within three points of the native"
             " row, and the leak rate does not move. The structure was in the text all along, "
             "in the line breaks and in the words a signature block and an email header are "
             "made of. That is on the six templates the recovery was written against, so it is"
@@ -206,8 +243,14 @@ def run(
     detector: Detector | None = None,
     corpus: Corpus | None = None,
     work_dir: Path | None = None,
+    model: ModelDecider | None = None,
 ) -> ScanTrack:
-    """Score the same documents native and scanned, at each degradation profile."""
+    """Score the same documents native and scanned, at each degradation profile.
+
+    With `model`, the main table is the tool as it ships, the rules then the model, and the
+    rules alone are scored on the same OCR output beside it; the paragraphs-only arm stays
+    the rules alone, the comparison it was written for. The OCR runs once per page either
+    way."""
     if not available():
         raise TesseractMissing(
             "the scan track needs Tesseract, which is a system binary and not a Python "
@@ -218,6 +261,16 @@ def run(
     taxonomy = default_taxonomy()
 
     native: dict[str, tuple[object, object]] = {}
+    native_rules: dict[str, tuple[object, object]] = {}
+    rule_pools: dict[str, dict[str, tuple[object, object]]] = {p: {} for p in profiles}
+
+    def engine(config: object, *, with_model: bool) -> DecisionEngine:
+        return DecisionEngine(
+            config=config,  # type: ignore[arg-type]
+            detector=det,
+            taxonomy=taxonomy,
+            model=model if with_model else None,
+        )
     pools: dict[str, dict[str, tuple[object, object]]] = {p: {} for p in profiles}
     flat_pools: dict[str, dict[str, tuple[object, object]]] = {p: {} for p in profiles}
     destroyed: dict[str, int] = dict.fromkeys(profiles, 0)
@@ -233,10 +286,9 @@ def run(
             doc = item.rendered.document
             labels = item.rendered.labels
             config = config_for(item)
-            native[doc.doc_id] = (
-                DecisionEngine(config=config, detector=det, taxonomy=taxonomy).propose(doc),
-                labels,
-            )
+            native[doc.doc_id] = (engine(config, with_model=True).propose(doc), labels)
+            if model is not None:
+                native_rules[doc.doc_id] = (engine(config, with_model=False).propose(doc), labels)
             total_labels += len(labels.spans)
             page_characters = sum(len(p.text) for p in doc)
             characters += page_characters
@@ -246,15 +298,16 @@ def run(
                 # it fresh rather than reusing the native detections: reusing them would be
                 # the whole measurement, answered in advance.
                 pools[name][doc.doc_id] = (
-                    DecisionEngine(
-                        config=config, detector=det, taxonomy=taxonomy
-                    ).propose(scanned.document),
+                    engine(config, with_model=True).propose(scanned.document),
                     scanned.labels,
                 )
+                if model is not None:
+                    rule_pools[name][doc.doc_id] = (
+                        engine(config, with_model=False).propose(scanned.document),
+                        scanned.labels,
+                    )
                 flat_pools[name][doc.doc_id] = (
-                    DecisionEngine(
-                        config=config, detector=det, taxonomy=taxonomy
-                    ).propose(flattened(scanned.document)),
+                    engine(config, with_model=False).propose(flattened(scanned.document)),
                     scanned.labels,
                 )
                 destroyed[name] += scanned.destroyed
@@ -267,6 +320,13 @@ def run(
         documents=len(c),
         pages=c.page_count,
         native=score(native, taxonomy=taxonomy),  # type: ignore[arg-type]
+        native_rules=(
+            score(native_rules, taxonomy=taxonomy)  # type: ignore[arg-type]
+            if model is not None
+            else None
+        ),
+        model_name=getattr(model, "model", None) if model is not None else None,
+        threshold=default_threshold_for(model) if model is not None else None,
         tracks=[
             TrackResult(
                 profile=name,
@@ -277,6 +337,11 @@ def run(
                 labels_destroyed=destroyed[name],
                 scored=score(pools[name], taxonomy=taxonomy),  # type: ignore[arg-type]
                 flat=score(flat_pools[name], taxonomy=taxonomy),  # type: ignore[arg-type]
+                rules=(
+                    score(rule_pools[name], taxonomy=taxonomy)  # type: ignore[arg-type]
+                    if model is not None
+                    else None
+                ),
             )
             for name in profiles
         ],
