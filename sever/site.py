@@ -22,9 +22,10 @@ Nothing inline in the site's own pages: the scripts and styles are files, so the
 under a content security policy that allows nothing inline. (The reviewer's screen keeps
 its own inline script, which is why the host's policy still allows it; see docs/deploy.md.)
 
-The repository is private until it is published. Links into it are written in the
-templates as `<a data-repo href=...>`; built with `public=False` they become plain text, so
-the public site never links to a page a stranger cannot open.
+Links into the repository are written in the templates as `<a data-repo href=...>`. The
+repository has been public since v0.1.0 (2026-10-21), so they are links; built with
+`public=False`, as a fork that keeps its repository private would build it, they become
+plain text, so the site never links to a page a stranger cannot open.
 """
 
 from __future__ import annotations
@@ -45,8 +46,7 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 REPOSITORY = "https://github.com/Peter-A-P/access-to-information-redaction"
-# The project's card on peterparker.ca. Its own page there is built from the README, which
-# the portfolio reads only once the repository is public; until then the card is the page.
+# The project's card on peterparker.ca. Its own page there is built from the README.
 PROJECT_PAGE = "https://peterparker.ca/#access-to-information-redaction"
 TITLE = "Hundreds of Pages, Redacted in an Afternoon"
 
@@ -872,7 +872,7 @@ def build(
     *,
     items: Sequence[Item] | None = None,
     root: Path = ROOT,
-    public: bool = False,
+    public: bool = True,
     today: dt.date | None = None,
 ) -> Built:
     """Write the site to `out`. `items` are the demonstration's records; built from the

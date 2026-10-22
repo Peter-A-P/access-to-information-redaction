@@ -1599,8 +1599,11 @@ def site(
     out: Annotated[Path, typer.Option(help="Where to write the website.")] = Path("site"),
     public: Annotated[
         bool,
-        typer.Option(help="Link into the repository. Only once the repository is public."),
-    ] = False,
+        typer.Option(
+            "--public/--private",
+            help="Link into the repository, which is public. --private writes plain names instead.",
+        ),
+    ] = True,
 ) -> None:
     """Build the project's website from the results files, the taxonomy and the
     demonstration's records. Fails if any figure it prints cannot be read."""

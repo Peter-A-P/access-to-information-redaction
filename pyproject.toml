@@ -62,7 +62,7 @@ clip = [
   "imageio-ffmpeg>=0.6,<1",
 ]
 # There is no `gateway` extra, and there cannot be one. Model decisions go through project
-# 04's library, `boundary`, which is a private repository and not on PyPI. The name
+# 04's library, `boundary`, which is not on PyPI. The name
 # `boundary` on PyPI belongs to an unrelated package that stops at 0.3.4, so a dependency
 # line here does not fetch project 04: it fetches a stranger's package of the same name,
 # quietly, and CI resolving it is how that was found. The library is installed by path

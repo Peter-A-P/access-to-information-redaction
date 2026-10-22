@@ -285,7 +285,7 @@ published, not when the code for it exists.
 - [x] Cost per page from the gateway ledger
 - [x] Hosted demo with synthetic documents at redaction.peterparker.ca
 - [x] One rejected approach documented with evidence (Rule C)
-- [ ] Repository public, `v0.1.0` tagged
+- [x] Repository public, `v0.1.0` tagged (2026-10-21; see 12.57)
 
 ## 11. Deferred
 
@@ -2340,3 +2340,13 @@ against 69.7 for the rules alone, because the text it is asked about is mostly g
 website's scan chart and the README's table are now the tool as it ships. The generated
 file's prose said the working profiles sat "within two points" of native; clean is 2.4, so
 it now says three, in the generator and in the file, which is otherwise as the run wrote it.
+
+### 12.57 Public, v0.1.0
+
+2026-10-21. The repository is public and tagged `v0.1.0`, the last box in section 10. Before
+it went public: a scan of every tracked file and the full history found no credential, nothing
+from the private plan, and no employer material; five test addresses on the real
+`gov.nl.ca` domain moved to `.example`; `docs/deploy.md` was cut to the container, with the
+host's runbook kept out of the repository; an MIT `LICENSE` was added, as `pyproject.toml`
+already declared. `sever site` now links into the repository by default (`--private` writes
+plain names), so the website's links to results files and docs are live.

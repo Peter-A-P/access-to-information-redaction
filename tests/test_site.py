@@ -2,7 +2,7 @@
 
 The site is the first thing a stranger reads, so it is held to what the README is held to:
 no number that a measurement command did not write, no page that silently drops a figure
-it could not read, and no link into the repository while the repository is private.
+it could not read, and no link into the repository when it is built as private.
 """
 
 from __future__ import annotations
@@ -75,10 +75,20 @@ def test_a_token_without_a_value_fails_the_build() -> None:
         site.fill("{{present}} and {{missing}}", {"present": "x"}, page="t")
 
 
-def test_a_private_repository_is_never_linked(built: Path) -> None:
+def test_the_public_repository_is_linked_from_the_site(built: Path) -> None:
+    index = page(built, "index.html")
+    assert f'href="{site.REPOSITORY}/blob/main/results/reviewer.md"' in index
+    assert "data-repo" not in index and "repo-ref" not in index
+
+
+def test_a_site_built_as_private_never_links_the_repository(
+    items: tuple[Item, ...], tmp_path: Path
+) -> None:
+    out = tmp_path / "site"
+    site.build(out, items=items, public=False)
     for name in site.PAGES:
-        assert "github.com" not in page(built, name)
-    assert "repo-ref" in page(built, "index.html")
+        assert "github.com" not in page(out, name)
+    assert "repo-ref" in page(out, "index.html")
 
 
 def test_a_public_repository_is_linked() -> None:

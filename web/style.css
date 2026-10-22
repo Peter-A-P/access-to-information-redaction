@@ -1428,7 +1428,7 @@ table.law th[scope="row"] { font-weight: 500; font-size: 0.9rem; }
 .does.flag { color: var(--ink-faint); }
 .cites { display: block; font-size: 0.8rem; color: var(--ink-faint); line-height: 1.4; }
 
-/* A link into the repository while it is private: the name, not a link that 404s. */
+/* A link into the repository on a site built as private: the name, not a link that 404s. */
 .repo-ref { font-family: var(--mono); font-size: 0.86em; color: var(--ink-soft); }
 
 /* ---------------------------------------------------------------- how it's built */
