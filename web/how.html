@@ -15,27 +15,11 @@
     <p class="eyebrow">Architecture</p>
     <h1>How it's built</h1>
     <p class="lead">
-      The path of one page from the file to the released PDF; the rules, in the order they
-      apply; how a number gets from a measurement onto the overview; and where this
-      demonstration runs. Each picture is drawn from the same code paths it describes.
+      This page opens the tool up. It follows a single page from the file it arrives in to the
+      PDF that goes back to the requester, lists the rules in the order they run, shows the
+      reviewer's screen, traces where each number on the overview comes from, and ends with
+      where this demonstration runs and who built it.
     </p>
-    <p class="hero-note"><a href="/">Back to the overview</a></p>
-  </header>
-
-  <nav class="toc" aria-label="On this page">
-    <p class="eyebrow">On this page</p>
-    <ol>
-      <li><a href="#built">How this was built</a></li>
-      <li><a href="#path">From a file to a released record</a></li>
-      <li><a href="#rules">The rules, in order</a></li>
-      <li><a href="#screen">The reviewer's screen</a></li>
-      <li><a href="#numbers">How a number reaches this site</a></li>
-      <li><a href="#runs">Where this demonstration runs</a></li>
-    </ol>
-  </nav>
-
-  <section class="section" id="built">
-    <h2>How this was built</h2>
     <div class="headline">
       <div class="stat"><span class="figure">{{tests}}</span><span class="caption">test functions, including the PDF leak test, the requester-never-a-third-party test and the audit log's immutability</span></div>
       <div class="stat"><span class="figure">{{code_lines}}</span><span class="caption">lines of typed Python, strict type checking and linting clean on every push</span></div>
@@ -49,33 +33,20 @@
       <li>mypy --strict</li><li>ruff</li><li>pytest</li><li>uv</li><li>Docker</li><li>Caddy</li>
       <li>GitHub Actions</li><li>OVHcloud</li><li>Cloudflare</li>
     </ul>
-    <p>
-      I designed this, chose how it is measured and made the judgement calls, from eight years
-      inside a public body that answers access-to-information requests, where the question this
-      tool asks is asked about every page released. I used AI coding assistants (Claude Code)
-      for implementation and drafting, the way a senior engineer uses them in 2026. Every number
-      on this site is reproducible from the repository.
-    </p>
-    <ul class="checks">
-      <li><strong>Three stages, and only the last can release anything.</strong> The engine proposes, a person decides on the reviewer's screen, and the export applies only those decisions, refusing until every page has one.</li>
-      <li><strong>Rules first, then Jev.</strong> Deterministic rules in a fixed order, each tied to a provision, settle most spans. Jev decides only what they leave, and below {{model_threshold}} the span is withheld and escalated.</li>
-      <li><strong>No personal information reaches Jev.</strong> Every name, contact and identifier is replaced with a placeholder before a request is built, a check refuses any request that still holds a value that was found, and the request goes out only through the portfolio's AI gateway, which logs it as personal data. Jev answers with probabilities, so nothing personal comes back (<a href="/#jev-privacy">how</a>).</li>
-      <li><strong>True redaction, tested every time.</strong> The text under every box is removed, not covered, and each export is leak-tested on its text layer and on an OCR of the rendered page.</li>
-      <li><strong>A log that cannot be rewritten.</strong> Every reviewer action is an append-only, hash-chained row in DuckDB, and the schedule of severances sent to the requester is generated from that log alone.</li>
-      <li><strong>No figure on this site is typed.</strong> Each is read from a table a measurement command wrote, and the site's build fails if one is missing or no longer reads as it did.</li>
-      <li><strong>One small container.</strong> It runs beside the gateway on a virtual server in Quebec. Jev's answers for the demonstration are replayed from a file, so it calls no model and costs nothing to run.</li>
-    </ul>
-    <details class="disclose">
-      <summary>For the technical reader: the rules the code enforces on itself</summary>
-      <ul>
-        <li><strong>No path to release without a person.</strong> The export asks the session's release gate, which reads the audit log and raises while any page lacks a completion row.</li>
-        <li><strong>Withhold and escalate when unsure.</strong> An undecided span is withheld and flagged; no rule releases a span because nothing matched.</li>
-        <li><strong>The audit log is append-only.</strong> A reviewer who changes their mind adds a row; each row's hash covers the one before it, and the log stores a hash of the withheld text rather than a second copy of it.</li>
-        <li><strong>Every model call goes through the gateway as personal data</strong>, and a test asserts that no raw detected value appears in an outbound request.</li>
-        <li><strong>Every reported number carries an interval and its track</strong>, and every table is written by the command that measured it. This site reads those tables, so it cannot disagree with them.</li>
-      </ul>
-    </details>
-  </section>
+    <p class="hero-note"><a href="/">Back to the overview</a></p>
+  </header>
+
+  <nav class="toc" aria-label="On this page">
+    <p class="eyebrow">On this page</p>
+    <ol>
+      <li><a href="#path">From a file to a released record</a></li>
+      <li><a href="#rules">The rules, in order</a></li>
+      <li><a href="#screen">The reviewer's screen</a></li>
+      <li><a href="#numbers">How a number reaches this site</a></li>
+      <li><a href="#runs">Where this demonstration runs</a></li>
+      <li><a href="#built">How this was built</a></li>
+    </ol>
+  </nav>
 
   <section class="section" id="path">
     <h2>From a file to a released record</h2>
@@ -208,6 +179,36 @@
       address, no identifier. The running totals are saved to one small file so an update to
       the site does not reset them; the file holds the same numbers the dashboard publishes.
     </p>
+  </section>
+
+  <section class="section" id="built">
+    <h2>How this was built</h2>
+    <p>
+      I designed this, chose how it is measured and made the judgement calls, from eight years
+      inside a public body that answers access-to-information requests, where the question this
+      tool asks is asked about every page released. I used AI coding assistants (Claude Code)
+      for implementation and drafting, the way a senior engineer uses them in 2026. Every number
+      on this site is reproducible from the repository.
+    </p>
+    <ul class="checks">
+      <li><strong>Three stages, and only the last can release anything.</strong> The engine proposes, a person decides on the reviewer's screen, and the export applies only those decisions, refusing until every page has one.</li>
+      <li><strong>Rules first, then Jev.</strong> Deterministic rules in a fixed order, each tied to a provision, settle most spans. Jev decides only what they leave, and below {{model_threshold}} the span is withheld and escalated.</li>
+      <li><strong>No personal information reaches Jev.</strong> Every name, contact and identifier is replaced with a placeholder before a request is built, a check refuses any request that still holds a value that was found, and the request goes out only through the portfolio's AI gateway, which logs it as personal data. Jev answers with probabilities, so nothing personal comes back (<a href="/#jev-privacy">how</a>).</li>
+      <li><strong>True redaction, tested every time.</strong> The text under every box is removed, not covered, and each export is leak-tested on its text layer and on an OCR of the rendered page.</li>
+      <li><strong>A log that cannot be rewritten.</strong> Every reviewer action is an append-only, hash-chained row in DuckDB, and the schedule of severances sent to the requester is generated from that log alone.</li>
+      <li><strong>No figure on this site is typed.</strong> Each is read from a table a measurement command wrote, and the site's build fails if one is missing or no longer reads as it did.</li>
+      <li><strong>One small container.</strong> It runs beside the gateway on a virtual server in Quebec. Jev's answers for the demonstration are replayed from a file, so it calls no model and costs nothing to run.</li>
+    </ul>
+    <details class="disclose">
+      <summary>For the technical reader: the rules the code enforces on itself</summary>
+      <ul>
+        <li><strong>No path to release without a person.</strong> The export asks the session's release gate, which reads the audit log and raises while any page lacks a completion row.</li>
+        <li><strong>Withhold and escalate when unsure.</strong> An undecided span is withheld and flagged; no rule releases a span because nothing matched.</li>
+        <li><strong>The audit log is append-only.</strong> A reviewer who changes their mind adds a row; each row's hash covers the one before it, and the log stores a hash of the withheld text rather than a second copy of it.</li>
+        <li><strong>Every model call goes through the gateway as personal data</strong>, and a test asserts that no raw detected value appears in an outbound request.</li>
+        <li><strong>Every reported number carries an interval and its track</strong>, and every table is written by the command that measured it. This site reads those tables, so it cannot disagree with them.</li>
+      </ul>
+    </details>
   </section>
 
   <p class="arch-back"><a href="/">Back to the overview</a></p>

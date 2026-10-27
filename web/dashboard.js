@@ -26,13 +26,6 @@ function html(name, cls, text) {
 const fmt = (n) => Number(n).toLocaleString();
 const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
 
-const OUTCOMES = [
-  ["withhold", "o-withhold", "Withheld"],
-  ["escalate", "o-escalate", "Escalated"],
-  ["release", "o-release", "Released"],
-  ["add", "o-add", "Selected by hand"],
-];
-
 /* The categories by a name short enough for a chart label; the overview uses the same. */
 const SHORT = {
   "The requester's own personal information": "The requester's own",
@@ -44,16 +37,6 @@ const SHORT = {
 };
 const shortName = (name) => SHORT[name] || (name.length > 30 ? `${name.slice(0, 28)}...` : name);
 
-function legend(hostId, items) {
-  const host = document.getElementById(hostId);
-  if (!host || host.childElementCount) return;
-  for (const [, cls, label] of items) {
-    const item = html("span", "legend-item");
-    item.append(html("span", `swatch solid ${cls}`), document.createTextNode(label));
-    host.append(item);
-  }
-}
-
 function tiles(d) {
   set("t-visitors", fmt(d.visitors));
   set("t-live", fmt(d.live));
@@ -64,45 +47,6 @@ function tiles(d) {
     ? `released PDFs clean when leak-tested, over ${fmt(d.pdfs.boxes)} boxes; a PDF that fails is never sent`
     : "released PDFs so far; each is leak-tested before it is sent, and one that fails is never sent");
   set("t-spread", fmt(d.spread));
-}
-
-/* Decisions per minute over the last hour, stacked by outcome. */
-function minutes(d) {
-  const host = document.getElementById("minute-chart");
-  const W = 720, H = 220, L = 40, R = 12, T = 12, B = 30;
-  const rows = d.minutes;
-  const totals = rows.map((m) => OUTCOMES.reduce((a, [k]) => a + (m[k] || 0), 0));
-  const max = Math.max(4, ...totals);
-  const bw = (W - L - R) / rows.length;
-  const y = (v) => T + (H - T - B) * (1 - v / max);
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Decisions per minute over the last hour" });
-  const step = max > 40 ? 20 : max > 16 ? 10 : max > 8 ? 4 : 2;
-  for (let t = 0; t <= max; t += step) {
-    svg.append(el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gridline" }));
-    svg.append(el("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end", class: "tick" }, String(t)));
-  }
-  rows.forEach((m, i) => {
-    let at = 0;
-    for (const [k, cls] of OUTCOMES) {
-      const v = m[k] || 0;
-      if (!v) continue;
-      const r = el("rect", { x: L + i * bw + 1, y: y(at + v), width: Math.max(1, bw - 2), height: y(at) - y(at + v), class: `bar ${cls}` });
-      r.append(el("title", {}, `${new Date(m.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}: ${v} ${k}`));
-      svg.append(r);
-      at += v;
-    }
-  });
-  for (const i of [0, 15, 30, 45, rows.length - 1]) {
-    if (!rows[i]) continue;
-    const label = i === rows.length - 1 ? "now" : `${rows.length - 1 - i} min ago`;
-    svg.append(el("text", { x: L + i * bw + bw / 2, y: H - 10, "text-anchor": "middle", class: "tick" }, label));
-  }
-  if (totals.every((t) => t === 0)) {
-    svg.append(el("text", { x: (L + W - R) / 2, y: (T + H - B) / 2, "text-anchor": "middle", class: "empty-label halo" },
-      "No decisions in the last hour. Review a record and they appear here."));
-  }
-  host.replaceChildren(svg);
-  legend("minute-legend", OUTCOMES);
 }
 
 /* Agreement by category: of the proposals in each category that visitors decided, the share
@@ -200,7 +144,6 @@ async function tick() {
     failures = 0;
     document.getElementById("failure").hidden = true;
     tiles(d);
-    minutes(d);
     agreement(d);
     released(d);
     tool(d);

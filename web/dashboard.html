@@ -45,16 +45,6 @@
     </div>
   </section>
 
-  <section class="section" id="minutes">
-    <h2>The last hour, minute by minute</h2>
-    <p class="section-lead">Decisions per minute, by what the person decided. Automatic spreads are not in it; only a person's own actions are.</p>
-    <figure class="chart-figure">
-      <div id="minute-chart" class="chart"></div>
-      <div class="legend" id="minute-legend"></div>
-      <figcaption id="minute-caption">Updated every five seconds.</figcaption>
-    </figure>
-  </section>
-
   <section class="section" id="agreement">
     <h2>People against the tool</h2>
     <p class="section-lead">
@@ -107,8 +97,7 @@
     <div class="headline" id="tool-tiles"></div>
     <p class="note">
       The counts are kept across updates to the site: the running totals, and nothing else, are
-      saved to one small file every half minute and read back when the server starts. The
-      last hour's activity starts again after a restart. Each visitor's
+      saved to one small file every half minute and read back when the server starts. Each visitor's
       own session, and its audit log, is deleted after two hours idle; what is counted here is
       the number of each kind of action and nothing about the person or the text. The raw
       counts are at <a href="/dashboard.json">/dashboard.json</a>.
