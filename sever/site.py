@@ -52,7 +52,7 @@ TITLE = "Hundreds of Pages, Redacted in an Afternoon"
 
 # The templates, filled with tokens, and the files copied as they are.
 PAGES = ("index.html", "how.html", "dashboard.html")
-ASSETS = ("style.css", "app.js", "dashboard.js", "review.css")
+ASSETS = ("style.css", "app.js", "dashboard.js", "review.css", "og.png")
 
 # The site's menu, the same on every page of the host: the two pages of the website, the
 # reviewer's screen and the dashboard. The reviewer's screen draws it too (base.html).
