@@ -126,6 +126,24 @@ def test_reading_about_it_needs_no_session(with_site: DemoServer, path: str) -> 
     assert len(with_site) == 0
 
 
+@pytest.mark.parametrize("path", ["/favicon.svg", "/icon.png", "/robots.txt"])
+def test_the_icons_and_robots_are_files_not_sessions(with_site: DemoServer, path: str) -> None:
+    r = TestClient(with_site).get(path, follow_redirects=False)
+    assert r.status_code == 200 and "set-cookie" not in r.headers
+    assert len(with_site) == 0
+
+
+@pytest.mark.parametrize("path", ["/architecture.html", "/how.html"])
+def test_the_house_address_of_the_architecture_page_redirects_to_it(
+    with_site: DemoServer, path: str
+) -> None:
+    """The other project sites put this page at /architecture.html; a link written for that
+    layout lands on /how, with no session."""
+    r = TestClient(with_site).get(path, follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/how"
+    assert "set-cookie" not in r.headers and len(with_site) == 0
+
+
 def test_a_file_the_site_does_not_have_is_a_404_not_a_session(with_site: DemoServer) -> None:
     r = TestClient(with_site).get("/fonts/nothing.woff2", follow_redirects=False)
     assert r.status_code == 404 and len(with_site) == 0

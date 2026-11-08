@@ -39,6 +39,25 @@ async function getJson(path) {
 
 const pct = (v) => `${v.toFixed(1)}%`;
 
+/* A mark a reader can ask about: focusable, named, and shown in the readout line under its
+   chart on pointer, focus or tap. Nothing goes in an SVG <title>, whose tooltip would follow
+   the pointer across the whole chart. */
+function readable(node, text, readoutId) {
+  node.setAttribute("tabindex", "0");
+  node.setAttribute("aria-label", text);
+  node.classList.add("mark");
+  const show = () => {
+    const out = document.getElementById(readoutId);
+    if (out) out.textContent = text;
+  };
+  node.addEventListener("pointerenter", show);
+  node.addEventListener("focus", show);
+  node.addEventListener("click", show);
+  return node;
+}
+
+const interval = (v) => (v.length > 2 && v[1] !== v[2] ? `, 95% interval ${pct(v[1])} to ${pct(v[2])}` : "");
+
 function legend(hostId, items) {
   const host = document.getElementById(hostId);
   if (!host) return;
@@ -93,10 +112,13 @@ function drawTradeoff(systems) {
   svg.append(el("rect", { x: x(0), y: y(maxLeak * 0.22), width: x(18) - x(0),
     height: y(0) - y(maxLeak * 0.22), class: "good-zone" }));
   svg.append(el("text", { x: x(1), y: y(0) - 8, class: "zone-label" }, "Better on both"));
+  /* Labels go on a layer drawn after every point, so no whisker paints over one. */
+  const labels = el("g", { "aria-hidden": "true" });
   for (const s of systems) {
     const cls = `sys-${s.key}`;
-    const g = el("g", { class: `system ${cls}`, tabindex: 0,
-      "aria-label": `${SYSTEM_LABELS[s.key]}: leak ${pct(s.leak[0])}, over-redaction ${pct(s.over[0])}` });
+    const g = readable(el("g", { class: `system ${cls}` }),
+      `${SYSTEM_LABELS[s.key]}: leak rate ${pct(s.leak[0])}${interval(s.leak)}; ` +
+      `over-redaction ${pct(s.over[0])}${interval(s.over)}`, "tradeoff-readout");
     g.append(el("line", { x1: x(s.over[1]), x2: x(s.over[2]), y1: y(s.leak[0]), y2: y(s.leak[0]), class: "whisker" }));
     g.append(el("line", { x1: x(s.over[0]), x2: x(s.over[0]), y1: y(s.leak[1]), y2: y(s.leak[2]), class: "whisker" }));
     g.append(el("circle", { cx: x(s.over[0]), cy: y(s.leak[0]), r: s.key === "full" ? 7 : 5.5, class: "pt" }));
@@ -111,19 +133,21 @@ function drawTradeoff(systems) {
       g.append(el("line", { x1: x(s.over[0]), x2: x(s.over[0]), y1: y(s.leak[0]) - 9,
         y2: y(s.leak[0]) + dy + 22, class: "leader" }));
     }
-    g.append(el("text", { x: tx, y: y(s.leak[0]) + dy, "text-anchor": left ? "end" : "start",
+    labels.append(el("text", { x: tx, y: y(s.leak[0]) + dy, "text-anchor": left ? "end" : "start",
       class: "pt-label halo" }, SYSTEM_LABELS[s.key]));
-    g.append(el("text", { x: tx, y: y(s.leak[0]) + dy + 16, "text-anchor": left ? "end" : "start",
+    labels.append(el("text", { x: tx, y: y(s.leak[0]) + dy + 16, "text-anchor": left ? "end" : "start",
       class: "pt-sub halo" }, `${pct(s.leak[0])} leak, ${pct(s.over[0])} over`));
     svg.append(g);
   }
+  svg.append(labels);
   host.replaceChildren(svg);
 }
 
 /* ------------------------------------------------------------------ bars with intervals */
 
 /* Horizontal bars, one row per entry and one bar per series, each with its interval.
-   rows: [{label, sub, values: {series: [v, lo, hi]}}]; series: [[key, cls, label]]. */
+   rows: [{label, sub, values: {series: [v, lo, hi]}}]; series: [[key, cls, label]].
+   opts.readout names the line under the chart that shows the bar a reader points at. */
 function hbars(hostId, rows, series, opts) {
   const host = document.getElementById(hostId);
   if (!host) return;
@@ -144,22 +168,26 @@ function hbars(hostId, rows, series, opts) {
       svg.append(el("text", { x: L - 12, y: top + rowH / 2 + 12, "text-anchor": "end",
         class: "row-note" }, r.sub));
     }
-    series.forEach(([key, cls], j) => {
+    series.forEach(([key, cls, name], j) => {
       const v = r.values[key];
       if (!v) return;
       const y0 = top + j * (barH + gap);
-      svg.append(el("rect", { x: L, y: y0, width: Math.max(1.5, x(v[0]) - L), height: barH,
+      const what = [r.label, r.sub].filter(Boolean).join(", ");
+      const g = readable(el("g"), `${what}: ${name ? `${name} ` : ""}${opts.fmt ? opts.fmt(v[0]) : pct(v[0])}` +
+        interval(v), opts.readout);
+      g.append(el("rect", { x: L, y: y0, width: Math.max(1.5, x(v[0]) - L), height: barH,
         rx: 2, class: `bar ${cls}` }));
       if (v.length > 2 && v[1] !== v[2]) {
-        svg.append(el("line", { x1: x(v[1]), x2: x(v[2]), y1: y0 + barH / 2, y2: y0 + barH / 2,
+        g.append(el("line", { x1: x(v[1]), x2: x(v[2]), y1: y0 + barH / 2, y2: y0 + barH / 2,
           class: "whisker" }));
         for (const end of [v[1], v[2]]) {
-          svg.append(el("line", { x1: x(end), x2: x(end), y1: y0 + 3, y2: y0 + barH - 3, class: "whisker" }));
+          g.append(el("line", { x1: x(end), x2: x(end), y1: y0 + 3, y2: y0 + barH - 3, class: "whisker" }));
         }
       }
       const tip = v.length > 2 ? v[2] : v[0];
-      svg.append(el("text", { x: x(tip) + 6, y: y0 + barH - 2, class: "bar-value" },
+      g.append(el("text", { x: x(tip) + 6, y: y0 + barH - 2, class: "bar-value" },
         opts.fmt ? opts.fmt(v[0]) : pct(v[0])));
+      svg.append(g);
     });
   });
   host.replaceChildren(svg);
@@ -173,8 +201,9 @@ function drawCategories(data) {
   for (const [code, v] of Object.entries(data.per_code_leak)) {
     rows.push({ label: `${code} ${shortName(names[code] || "")}`.trim(), sub: "leak rate", values: { leak: v } });
   }
-  hbars("category-chart", rows, [["over", "b-over"], ["leak", "b-leak"]], {
+  hbars("category-chart", rows, [["over", "b-over", "over-redaction"], ["leak", "b-leak", ""]], {
     left: 250, label: "Over-redaction by category, and the leak rate for third parties",
+    readout: "category-readout",
     title: "Withheld though it must be released (leak rate for R1)",
   });
 }
@@ -221,7 +250,9 @@ function drawLeaks(systems) {
       const v = s.decomposition[k];
       if (v > 0) {
         const r = el("rect", { x: x(at), y: y0, width: Math.max(1, x(at + v) - x(at)), height: barH, class: `bar ${cls}` });
-        r.append(el("title", {}, `${parts.find((p) => p[0] === k)[2]}: ${v}`));
+        const total = parts.reduce((a, [kk]) => a + s.decomposition[kk], 0);
+        readable(r, `${SYSTEM_LABELS[s.key]}: ${parts.find((p) => p[0] === k)[2].toLowerCase()}, ` +
+          `${v} of its ${total} leaks`, "leak-readout");
         svg.append(r);
         if (x(at + v) - x(at) > 22) {
           svg.append(el("text", { x: (x(at) + x(at + v)) / 2, y: y0 + barH / 2 + 4, "text-anchor": "middle", class: "seg-label" }, String(v)));
@@ -252,11 +283,14 @@ function drawReviewers(data) {
   rows.forEach((r, i) => {
     const y = T + i * rowH + rowH / 2;
     svg.append(el("text", { x: L - 14, y: y + 4, "text-anchor": "end", class: "row-label" }, r.name));
-    svg.append(el("line", { x1: x(r.with), x2: x(r.unaided), y1: y, y2: y, class: "dumbbell" }));
-    svg.append(el("circle", { cx: x(r.unaided), cy: y, r: 7, class: "dot-unaided" }));
-    svg.append(el("circle", { cx: x(r.with), cy: y, r: 7, class: "dot-with" }));
-    svg.append(el("text", { x: x(r.unaided) + 12, y: y + 4, class: "bar-value" }, `${r.unaided.toFixed(1)}`));
-    svg.append(el("text", { x: x(r.with) - 12, y: y + 4, "text-anchor": "end", class: "bar-value" }, `${r.with.toFixed(1)}`));
+    const g = readable(el("g"), `${r.name}: ${r.unaided.toFixed(1)} minutes a page by hand, ` +
+      `${r.with.toFixed(1)} with the proposals`, "reviewer-readout");
+    g.append(el("line", { x1: x(r.with), x2: x(r.unaided), y1: y, y2: y, class: "dumbbell" }));
+    g.append(el("circle", { cx: x(r.unaided), cy: y, r: 7, class: "dot-unaided" }));
+    g.append(el("circle", { cx: x(r.with), cy: y, r: 7, class: "dot-with" }));
+    g.append(el("text", { x: x(r.unaided) + 12, y: y + 4, class: "bar-value" }, `${r.unaided.toFixed(1)}`));
+    g.append(el("text", { x: x(r.with) - 12, y: y + 4, "text-anchor": "end", class: "bar-value" }, `${r.with.toFixed(1)}`));
+    svg.append(g);
   });
   host.replaceChildren(svg);
   legend("reviewer-legend", [["sw-with", "With the tool's proposals"], ["sw-unaided", "By hand"]]);
@@ -269,8 +303,9 @@ function drawReleases(sets) {
     label: s.label, sub: `${s.packages} packages, ${s.pages} pages, ${s.kind}`,
     values: { before: [s.before[0]], rules: s.rules, now: s.now },
   }));
-  hbars("release-chart", rows, [["before", "b-before"], ["rules", "b-rules"], ["now", "b-now"]], {
-    left: 290, label: "Share of released spans the tool would withhold, per set",
+  hbars("release-chart", rows, [["before", "b-before", "first scored"], ["rules", "b-rules", "the rules alone"],
+    ["now", "b-now", "the tool as it ships"]], {
+    left: 290, label: "Share of released spans the tool would withhold, per set", readout: "release-readout",
     title: "Of what a person released, withheld by the tool",
   });
   legend("release-legend", [
@@ -286,8 +321,8 @@ function drawScans(profiles) {
     sub: p.name === "native" ? "the original file" : `${p.cer} of characters misread`,
     values: { leak: p.leak, over: p.over },
   }));
-  hbars("scan-chart", rows, [["leak", "b-leak"], ["over", "b-over"]], {
-    left: 210, label: "Leak rate and over-redaction by input", title: "",
+  hbars("scan-chart", rows, [["leak", "b-leak", "leak rate"], ["over", "b-over", "over-redaction"]], {
+    left: 210, label: "Leak rate and over-redaction by input", title: "", readout: "scan-readout",
   });
   legend("scan-legend", [["b-leak", "Leak rate"], ["b-over", "Over-redaction"]]);
 }
@@ -360,15 +395,3 @@ async function main() {
 }
 
 main();
-
-/* The clip plays by itself, muted, unless the reader has asked for less motion; then it
-   waits with its controls showing. */
-(function () {
-  const clip = document.querySelector(".clip video");
-  if (!clip || !window.matchMedia) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    clip.removeAttribute("autoplay");
-    clip.pause();
-    clip.controls = true;
-  }
-})();

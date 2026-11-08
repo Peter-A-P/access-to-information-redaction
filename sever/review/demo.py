@@ -169,6 +169,9 @@ class _Visitor:
 # The site's pages by the path they are served at, and the content types of its files.
 PAGES = {"/": "index.html", "/index.html": "index.html", "/how": "how.html",
          "/dashboard": "dashboard.html"}
+# Addresses that moved, or that the other project sites use for the same page: a permanent
+# redirect, so a link written for the house layout lands on the page and not in a session.
+MOVED = {"/architecture.html": "/how", "/how.html": "/how"}
 _ASSET = re.compile(
     r"^/(?:[a-z]+\.(?:css|js)|fonts/[A-Za-z0-9-]+\.(?:woff2|txt)|data/site\.json"
     r"|media/[a-z0-9-]+\.(?:mp4|jpg))$"
@@ -294,6 +297,9 @@ class DemoServer:
         path = scope.get("path", "/")
         if path == "/healthz":
             await _plain(send, 200, b"ok")
+            return
+        if path in MOVED:
+            await _moved(send, MOVED[path])
             return
         if path == "/dashboard.json":
             assert self.stats is not None
@@ -477,6 +483,20 @@ async def _send_range(send: Send, f: _File, wanted: str) -> None:
         }
     )
     await send({"type": "http.response.body", "body": part})
+
+
+async def _moved(send: Send, location: str) -> None:
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 301,
+            "headers": [
+                (b"location", location.encode()),
+                (b"cache-control", b"public, max-age=3600"),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": b""})
 
 
 async def _plain(send: Send, status: int, body: bytes) -> None:
